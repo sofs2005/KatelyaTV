@@ -1,7 +1,7 @@
 # MoonTV
 
 <div align="center">
-  <img src="public/logo.png" alt="LibreTV Logo" width="120">
+  <img src="public/logo.png" alt="MoonTV Logo" width="120">
 </div>
 
 > 🎬 **MoonTV** 是一个开箱即用的、跨平台的影视聚合播放器。它基于 **Next.js 14** + **Tailwind&nbsp;CSS** + **TypeScript** 构建，支持多资源搜索、在线播放、收藏同步、播放记录、本地/云端存储，让你可以随时随地畅享海量免费影视内容。
@@ -13,6 +13,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-4.x-3178c6?logo=typescript)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Docker Ready](https://img.shields.io/badge/Docker-ready-blue?logo=docker)
+![PWA Ready](https://img.shields.io/badge/PWA-ready-orange?logo=pwa)
 
 </div>
 
@@ -20,14 +21,16 @@
 
 ## ✨ 功能特性
 
-- 🔍 **多源聚合搜索**：内置数十个免费资源站点，一次搜索立刻返回全源结果。
-- 📄 **丰富详情页**：支持剧集列表、演员、年份、简介等完整信息展示。
-- ▶️ **流畅在线播放**：集成 HLS.js & ArtPlayer。
-- ❤️ **收藏 + 继续观看**：支持 Redis/D1 存储，多端同步进度。
-- 📱 **PWA**：离线缓存、安装到桌面/主屏，移动端原生体验。
-- 🌗 **响应式布局**：桌面侧边栏 + 移动底部导航，自适应各种屏幕尺寸。
+- 🔍 **多源聚合搜索**：内置20+个免费资源站点，一次搜索立刻返回全源结果，支持电影、电视剧、综艺等多种类型。
+- 📄 **丰富详情页**：支持剧集列表、演员、年份、简介等完整信息展示，集成豆瓣评分和热门推荐。
+- ▶️ **流畅在线播放**：集成 HLS.js & ArtPlayer，支持多种视频格式，自动跳过广告切片。
+- 📺 **观看历史记录**：智能记录播放进度，支持断点续播，多设备同步观看状态。
+- ❤️ **收藏 + 继续观看**：支持 Redis/D1/Upstash 存储，多端同步进度，个性化推荐。
+- 📱 **PWA 支持**：离线缓存、安装到桌面/主屏，移动端原生体验，支持推送通知。
+- 🌗 **响应式布局**：桌面侧边栏 + 移动底部导航，自适应各种屏幕尺寸，支持深色模式。
+- 👥 **多用户系统**：支持用户注册、登录、权限管理，数据隔离和同步。
 - 🚀 **极简部署**：一条 Docker 命令即可将完整服务跑起来，或免费部署到 Vercel 和 Cloudflare。
-- 👿 **智能去广告**：自动跳过视频中的切片广告（实验性）
+- 🎨 **现代化UI**：基于 Tailwind CSS 构建，支持主题切换，流畅的动画效果。
 
 <details>
   <summary>点击查看项目截图</summary>
@@ -39,6 +42,7 @@
 ## 🗺 目录
 
 - [技术栈](#技术栈)
+- [核心功能](#核心功能)
 - [部署](#部署)
 - [Docker Compose 最佳实践](#Docker-Compose-最佳实践)
 - [环境变量](#环境变量)
@@ -50,22 +54,50 @@
 - [License](#license)
 - [致谢](#致谢)
 
-## 技术栈
+## 🛠 技术栈
 
 | 分类      | 主要依赖                                                                                              |
 | --------- | ----------------------------------------------------------------------------------------------------- |
 | 前端框架  | [Next.js 14](https://nextjs.org/) · App Router                                                        |
-| UI & 样式 | [Tailwind&nbsp;CSS 3](https://tailwindcss.com/)                                                       |
+| UI & 样式 | [Tailwind&nbsp;CSS 3](https://tailwindcss.com/) · [Framer Motion](https://www.framer.com/motion/)     |
 | 语言      | TypeScript 4                                                                                          |
 | 播放器    | [ArtPlayer](https://github.com/zhw2590582/ArtPlayer) · [HLS.js](https://github.com/video-dev/hls.js/) |
-| 代码质量  | ESLint · Prettier · Jest                                                                              |
+| 状态管理  | React Hooks · Context API                                                                             |
+| 代码质量  | ESLint · Prettier · Jest · Husky                                                                      |
 | 部署      | Docker · Vercel · CloudFlare pages                                                                    |
 
-## 部署
+## 🎯 核心功能
+
+### 观看历史记录
+- **智能进度记录**：自动记录每个视频的播放进度、观看时长、当前集数
+- **断点续播**：支持从上次观看位置继续播放，无需手动寻找
+- **多设备同步**：通过 Redis/D1/Upstash 存储，实现跨设备观看记录同步
+- **历史管理**：支持查看、删除单条记录或清空全部历史
+- **进度条显示**：在视频卡片上显示观看进度百分比
+
+### 多源聚合搜索
+- **20+ 资源站点**：集成电影天堂、黑木耳、如意资源等热门站点
+- **统一搜索接口**：一次搜索返回多个源的结果，提高资源获取成功率
+- **智能去重**：自动识别重复内容，优化搜索结果展示
+- **分类筛选**：支持按电影、电视剧、综艺等类型筛选
+
+### 收藏与同步
+- **个性化收藏**：支持收藏喜欢的影视作品，创建个人片单
+- **多端同步**：收藏数据云端存储，多设备访问保持一致
+- **观看状态**：收藏夹中显示观看进度和当前集数
+- **批量管理**：支持批量删除和清空收藏
+
+### PWA 特性
+- **离线缓存**：支持离线访问已缓存的内容
+- **桌面安装**：可安装到桌面，提供原生应用体验
+- **推送通知**：支持新内容推送和更新提醒
+- **响应式设计**：完美适配各种屏幕尺寸
+
+## 🚀 部署
 
 本项目**支持 Vercel、Docker 和 Cloudflare** 部署。
 
-存储支持矩阵
+### 存储支持矩阵
 
 |               | Docker | Vercel | Cloudflare |
 | :-----------: | :----: | :----: | :--------: |
@@ -74,8 +106,7 @@
 | Cloudflare D1 |        |        |     ✅     |
 | Upstash Redis |   ☑️   |   ✅   |     ☑️     |
 
-✅：经测试支持
-
+✅：经测试支持  
 ☑️：理论上支持，未测试
 
 除 localstorage 方式外，其他方式都支持多账户、记录同步和管理页面
@@ -141,7 +172,7 @@ docker run -d --name moontv -p 3000:3000 --env PASSWORD=your_password ghcr.io/se
 
 访问 `http://服务器 IP:3000` 即可。（需自行到服务器控制台放通 `3000` 端口）
 
-## Docker Compose 最佳实践
+## 🐳 Docker Compose 最佳实践
 
 若你使用 docker compose 部署，以下是一些 compose 示例
 
@@ -199,13 +230,13 @@ networks:
     driver: bridge
 ```
 
-## 自动同步最近更改
+## 🔄 自动同步最近更改
 
 建议在 fork 的仓库中启用本仓库自带的 GitHub Actions 自动同步功能（见 `.github/workflows/sync.yml`）。
 
 如需手动同步主仓库更新，也可以使用 GitHub 官方的 [Sync fork](https://docs.github.com/cn/github/collaborating-with-issues-and-pull-requests/syncing-a-fork) 功能。
 
-## 环境变量
+## ⚙️ 环境变量
 
 | 变量                        | 说明                                                        | 可选值                           | 默认值                                                                                                                     |
 | --------------------------- | ----------------------------------------------------------- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
@@ -222,7 +253,7 @@ networks:
 | NEXT_PUBLIC_IMAGE_PROXY     | 默认的浏览器端图片代理                                      | url prefix                       | (空)                                                                                                                       |
 | NEXT_PUBLIC_DOUBAN_PROXY    | 默认的浏览器端豆瓣数据代理                                  | url prefix                       | (空)                                                                                                                       |
 
-## 配置说明
+## 📋 配置说明
 
 所有可自定义项集中在根目录的 `config.json` 中：
 
@@ -251,7 +282,7 @@ MoonTV 支持标准的苹果 CMS V10 API 格式。
 
 修改后 **无需重新构建**，服务会在启动时读取一次。
 
-## 管理员配置
+## 👨‍💼 管理员配置
 
 **该特性目前仅支持通过非 localstorage 存储的部署方式使用**
 
@@ -261,19 +292,26 @@ MoonTV 支持标准的苹果 CMS V10 API 格式。
 
 站长或管理员访问 `/admin` 即可进行管理员配置
 
-## AndroidTV 使用
+## 📱 AndroidTV 使用
 
 目前该项目可以配合 [OrionTV](https://github.com/zimplexing/OrionTV) 在 Android TV 上使用，可以直接作为 OrionTV 后端
 
 暂时收藏夹与播放记录和网页端隔离，后续会支持同步用户数据
 
-## Roadmap
+## 🗓️ Roadmap
 
 - [x] 深色模式
 - [x] 持久化存储
 - [x] 多账户
+- [x] 观看历史记录
+- [x] PWA 支持
+- [x] 豆瓣集成
+- [ ] 弹幕系统
+- [ ] 字幕支持
+- [ ] 下载功能
+- [ ] 社交分享
 
-## 安全与隐私提醒
+## ⚠️ 安全与隐私提醒
 
 ### 强烈建议设置密码保护
 
@@ -296,11 +334,11 @@ MoonTV 支持标准的苹果 CMS V10 API 格式。
 - 如因公开分享导致的任何法律问题，用户需自行承担责任
 - 项目开发者不对用户的使用行为承担任何法律责任
 
-## License
+## 📄 License
 
 [MIT](LICENSE) © 2025 MoonTV & Contributors
 
-## 致谢
+## 🙏 致谢
 
 - [ts-nextjs-tailwind-starter](https://github.com/theodorusclarence/ts-nextjs-tailwind-starter) — 项目最初基于该脚手架。
 - [LibreTV](https://github.com/LibreSpark/LibreTV) — 由此启发，站在巨人的肩膀上。
