@@ -1,8 +1,7 @@
 'use client';
 
-import { Settings } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { Maximize, Pause, Play, Volume2, VolumeX } from 'lucide-react';
+import { Maximize, Pause, Play, Settings, Volume2, VolumeX } from 'lucide-react';
 
 interface IPTVChannel {
   id: string;
@@ -18,7 +17,7 @@ interface IPTVPlayerProps {
   onChannelChange?: (channel: IPTVChannel) => void;
 }
 
-export function IPTVPlayer({ channels, currentChannel, onChannelChange: _onChannelChange }: IPTVPlayerProps) {
+export function IPTVPlayer({ channels: _channels, currentChannel, onChannelChange: _onChannelChange }: IPTVPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -119,7 +118,7 @@ export function IPTVPlayer({ channels, currentChannel, onChannelChange: _onChann
   };
 
   // 按组分类频道（暂未使用，为未来功能预留）
-  // const groupedChannels = channels.reduce((acc, channel) => {
+  // const groupedChannels = _channels.reduce((acc, channel) => {
   //   const group = channel.group || '其他';
   //   if (!acc[group]) acc[group] = [];
   //   acc[group].push(channel);
