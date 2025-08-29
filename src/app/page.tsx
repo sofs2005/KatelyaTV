@@ -66,7 +66,7 @@ const BottomKatelyaLogo = () => {
       <div className='text-center'>
         <div className='bottom-logo'>KatelyaTV</div>
         <div className='mt-2 text-sm text-gray-500 dark:text-gray-400 opacity-75'>
-          Powered by MoonTV Core
+          Powered by KatelyaTV Core
         </div>
       </div>
     </div>
