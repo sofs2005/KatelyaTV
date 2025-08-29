@@ -1,5 +1,6 @@
 'use client';
 
+import { Settings } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Maximize, Pause, Play, Volume2, VolumeX } from 'lucide-react';
 
