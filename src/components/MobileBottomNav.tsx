@@ -61,8 +61,8 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
       }}
     >
       {/* 顶部装饰线 */}
-      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent"></div>
-      
+      <div className='absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent'></div>
+
       <ul className='flex items-center'>
         {navItems.map((item) => {
           const active = isActive(item.href);
@@ -71,16 +71,16 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
               <Link
                 href={item.href}
                 className={`flex flex-col items-center justify-center w-full h-14 gap-1 text-xs transition-all duration-200 relative ${
-                  active 
-                    ? 'transform -translate-y-1' 
+                  active
+                    ? 'transform -translate-y-1'
                     : 'hover:transform hover:-translate-y-0.5'
                 }`}
               >
                 {/* 激活状态的背景光晕 */}
                 {active && (
-                  <div className="absolute inset-0 bg-purple-500/10 rounded-lg mx-2 my-1 border border-purple-300/20"></div>
+                  <div className='absolute inset-0 bg-purple-500/10 rounded-lg mx-2 my-1 border border-purple-300/20'></div>
                 )}
-                
+
                 <item.icon
                   className={`h-6 w-6 transition-all duration-200 ${
                     active

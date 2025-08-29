@@ -26,30 +26,26 @@ import VideoCard from '@/components/VideoCard';
 // 主内容区大型 KatelyaTV Logo 组件
 const MainKatelyaLogo = () => {
   return (
-    <div className="main-logo-container">
+    <div className='main-logo-container'>
       {/* 背景光效 */}
-      <div className="logo-background-glow"></div>
-      
+      <div className='logo-background-glow'></div>
+
       {/* 主 Logo */}
-      <div className="main-katelya-logo">
-        KatelyaTV
-      </div>
-      
+      <div className='main-katelya-logo'>KatelyaTV</div>
+
       {/* 副标题 */}
-      <div className="mt-3 text-center">
-        <div className="main-logo-subtitle">
-          极致影视体验，尽在指尖
-        </div>
+      <div className='mt-3 text-center'>
+        <div className='main-logo-subtitle'>极致影视体验，尽在指尖</div>
       </div>
-      
+
       {/* 装饰性粒子效果 */}
-      <div className="logo-particles">
-        <div className="particle particle-1"></div>
-        <div className="particle particle-2"></div>
-        <div className="particle particle-3"></div>
-        <div className="particle particle-4"></div>
-        <div className="particle particle-5"></div>
-        <div className="particle particle-6"></div>
+      <div className='logo-particles'>
+        <div className='particle particle-1'></div>
+        <div className='particle particle-2'></div>
+        <div className='particle particle-3'></div>
+        <div className='particle particle-4'></div>
+        <div className='particle particle-5'></div>
+        <div className='particle particle-6'></div>
       </div>
     </div>
   );
@@ -58,20 +54,18 @@ const MainKatelyaLogo = () => {
 // KatelyaTV 底部 Logo 组件
 const BottomKatelyaLogo = () => {
   return (
-    <div className="bottom-logo-container">
+    <div className='bottom-logo-container'>
       {/* 浮动几何形状装饰 */}
-      <div className="floating-shapes">
-        <div className="shape"></div>
-        <div className="shape"></div>
-        <div className="shape"></div>
-        <div className="shape"></div>
+      <div className='floating-shapes'>
+        <div className='shape'></div>
+        <div className='shape'></div>
+        <div className='shape'></div>
+        <div className='shape'></div>
       </div>
-      
-      <div className="text-center">
-        <div className="bottom-logo">
-          KatelyaTV
-        </div>
-        <div className="mt-2 text-sm text-gray-500 dark:text-gray-400 opacity-75">
+
+      <div className='text-center'>
+        <div className='bottom-logo'>KatelyaTV</div>
+        <div className='mt-2 text-sm text-gray-500 dark:text-gray-400 opacity-75'>
           Powered by MoonTV Core
         </div>
       </div>
@@ -215,7 +209,7 @@ function HomeClient() {
       <div className='px-4 sm:px-8 lg:px-12 py-4 sm:py-8 overflow-visible'>
         {/* 主内容区大型 KatelyaTV Logo - 仅在首页显示 */}
         {activeTab === 'home' && <MainKatelyaLogo />}
-        
+
         {/* 顶部 Tab 切换 */}
         <div className='mb-8 flex justify-center'>
           <CapsuleSwitch
@@ -253,7 +247,10 @@ function HomeClient() {
                 {/* 优化收藏夹网格布局，确保在新的居中布局下完美对齐 */}
                 <div className='grid grid-cols-3 gap-x-2 gap-y-14 sm:gap-y-20 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,_minmax(11rem,_1fr))] sm:gap-x-6 lg:gap-x-8 justify-items-center'>
                   {favoriteItems.map((item) => (
-                    <div key={item.id + item.source} className='w-full max-w-44'>
+                    <div
+                      key={item.id + item.source}
+                      className='w-full max-w-44'
+                    >
                       <VideoCard
                         query={item.search_title}
                         {...item}
@@ -269,7 +266,7 @@ function HomeClient() {
                   )}
                 </div>
               </section>
-              
+
               {/* 收藏夹页面底部 Logo */}
               <BottomKatelyaLogo />
             </>
@@ -420,7 +417,7 @@ function HomeClient() {
                       ))}
                 </ScrollableRow>
               </section>
-              
+
               {/* 首页底部 Logo */}
               <BottomKatelyaLogo />
             </>

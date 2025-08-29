@@ -4,15 +4,16 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
-    opacity: .5;
+    opacity: 0.5;
   }
 }
 
-/* 页面进入动画 */
+/* 页面进入动画 - iOS Safari兼容 */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -28,7 +29,7 @@
   animation: fadeInUp 0.6s ease-out forwards;
 }
 
-/* KatelyaTV Logo 彩虹渐变动画 */
+/* KatelyaTV Logo 彩虹渐变动画 - 简化版本 */
 .katelya-logo {
   background: linear-gradient(
     45deg,
@@ -45,27 +46,19 @@
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: rainbow-flow 4s ease-in-out infinite, logo-glow 2s ease-in-out infinite alternate;
+  animation: rainbow-flow 4s ease-in-out infinite;
   position: relative;
   font-weight: 800;
   letter-spacing: -0.02em;
 }
 
 @keyframes rainbow-flow {
-  0%, 100% {
+  0%,
+  100% {
     background-position: 0% 50%;
   }
   50% {
     background-position: 100% 50%;
-  }
-}
-
-@keyframes logo-glow {
-  0% {
-    filter: drop-shadow(0 0 5px rgba(108, 92, 231, 0.4));
-  }
-  100% {
-    filter: drop-shadow(0 0 20px rgba(108, 92, 231, 0.8)) drop-shadow(0 0 30px rgba(255, 107, 107, 0.4));
   }
 }
 
@@ -81,7 +74,7 @@
   margin-bottom: 2rem;
 }
 
-/* 背景光效 */
+/* 背景光效 - 简化版本 */
 .logo-background-glow {
   position: absolute;
   top: 50%;
@@ -96,13 +89,14 @@
     rgba(76, 205, 196, 0.08) 60%,
     transparent 100%
   );
-  animation: glow-pulse 4s ease-in-out infinite, glow-rotate 20s linear infinite;
+  animation: glow-pulse 4s ease-in-out infinite;
   border-radius: 50%;
   z-index: 0;
 }
 
 @keyframes glow-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.6;
     transform: translate(-50%, -50%) scale(1);
   }
@@ -112,16 +106,7 @@
   }
 }
 
-@keyframes glow-rotate {
-  0% {
-    transform: translate(-50%, -50%) rotate(0deg);
-  }
-  100% {
-    transform: translate(-50%, -50%) rotate(360deg);
-  }
-}
-
-/* 主内容区大型 Logo */
+/* 主内容区大型 Logo - 简化版本 */
 .main-katelya-logo {
   font-size: 4rem;
   font-weight: 900;
@@ -141,7 +126,7 @@
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: rainbow-flow-main 6s ease-in-out infinite, logo-float 3s ease-in-out infinite, logo-glow-main 4s ease-in-out infinite;
+  animation: rainbow-flow-main 6s ease-in-out infinite;
   position: relative;
   z-index: 2;
   letter-spacing: 0.02em;
@@ -151,7 +136,8 @@
 }
 
 @keyframes rainbow-flow-main {
-  0%, 100% {
+  0%,
+  100% {
     background-position: 0% 50%;
   }
   25% {
@@ -165,54 +151,21 @@
   }
 }
 
-@keyframes logo-float {
-  0%, 100% {
-    transform: translateY(0px) scale(1);
-  }
-  50% {
-    transform: translateY(-8px) scale(1.02);
-  }
-}
-
-@keyframes logo-glow-main {
-  0%, 100% {
-    filter: drop-shadow(0 0 20px rgba(147, 112, 219, 0.4)) drop-shadow(0 0 40px rgba(255, 107, 107, 0.2));
-  }
-  33% {
-    filter: drop-shadow(0 0 30px rgba(76, 205, 196, 0.4)) drop-shadow(0 0 50px rgba(69, 183, 209, 0.3));
-  }
-  66% {
-    filter: drop-shadow(0 0 25px rgba(255, 198, 69, 0.4)) drop-shadow(0 0 45px rgba(253, 121, 168, 0.3));
-  }
-}
-
 /* 主 Logo 副标题 */
 .main-logo-subtitle {
   font-size: 1.1rem;
   font-weight: 500;
   color: rgba(147, 112, 219, 0.8);
-  animation: subtitle-shimmer 5s ease-in-out infinite;
   position: relative;
   z-index: 2;
   letter-spacing: 0.1em;
 }
 
 .dark .main-logo-subtitle {
-  color: rgba(186, 85, 211, 0.9);
+  color: rgba(196, 181, 253, 0.8);
 }
 
-@keyframes subtitle-shimmer {
-  0%, 100% {
-    opacity: 0.7;
-    transform: translateY(0px);
-  }
-  50% {
-    opacity: 1;
-    transform: translateY(-2px);
-  }
-}
-
-/* Logo 装饰性粒子效果 */
+/* 装饰性粒子效果 - 简化版本 */
 .logo-particles {
   position: absolute;
   top: 0;
@@ -227,25 +180,25 @@
   position: absolute;
   border-radius: 50%;
   opacity: 0.6;
-  animation: particle-float 8s linear infinite;
+  animation: particle-float 6s ease-in-out infinite;
 }
 
 .particle-1 {
   top: 20%;
-  left: 15%;
+  right: 20%;
   width: 8px;
   height: 8px;
-  background: linear-gradient(45deg, #ff6b6b, #fd79a8);
-  animation-delay: 0s;
+  background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+  animation-delay: -2s;
 }
 
 .particle-2 {
-  top: 70%;
-  right: 20%;
+  top: 60%;
+  left: 20%;
   width: 6px;
   height: 6px;
-  background: linear-gradient(45deg, #4ecdc4, #45b7d1);
-  animation-delay: -2s;
+  background: linear-gradient(45deg, #45b7d1, #96ceb4);
+  animation-delay: -3s;
 }
 
 .particle-3 {
@@ -285,20 +238,21 @@
 }
 
 @keyframes particle-float {
-  0%, 100% {
-    transform: translateY(0px) translateX(0px) rotate(0deg);
+  0%,
+  100% {
+    transform: translateY(0px) translateX(0px);
     opacity: 0.3;
   }
   25% {
-    transform: translateY(-20px) translateX(10px) rotate(90deg);
+    transform: translateY(-20px) translateX(10px);
     opacity: 0.8;
   }
   50% {
-    transform: translateY(-10px) translateX(-15px) rotate(180deg);
+    transform: translateY(-10px) translateX(-15px);
     opacity: 0.6;
   }
   75% {
-    transform: translateY(-25px) translateX(5px) rotate(270deg);
+    transform: translateY(-25px) translateX(5px);
     opacity: 0.9;
   }
 }
@@ -309,20 +263,20 @@
     padding: 2rem 0 3rem 0;
     margin-bottom: 1.5rem;
   }
-  
+
   .main-katelya-logo {
     font-size: 2.5rem;
   }
-  
+
   .main-logo-subtitle {
     font-size: 0.9rem;
   }
-  
+
   .logo-background-glow {
     width: 400px;
     height: 250px;
   }
-  
+
   .particle {
     transform: scale(0.8);
   }
@@ -332,11 +286,11 @@
   .main-katelya-logo {
     font-size: 2rem;
   }
-  
+
   .main-logo-subtitle {
     font-size: 0.8rem;
   }
-  
+
   .logo-background-glow {
     width: 300px;
     height: 200px;
@@ -353,34 +307,83 @@
   overflow: hidden;
 }
 
-.bottom-logo-container::before {
-  content: '';
+/* 浮动几何形状装饰 - 简化版本 */
+.floating-shapes {
   position: absolute;
   top: 0;
-  left: -100%;
+  left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(147, 112, 219, 0.1),
-    transparent
-  );
-  animation: shimmer-sweep 3s ease-in-out infinite;
+  pointer-events: none;
 }
 
-@keyframes shimmer-sweep {
-  0% {
-    left: -100%;
-  }
+.shape {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.1;
+  animation: float 8s ease-in-out infinite;
+}
+
+.shape:nth-child(1) {
+  top: 20%;
+  left: 10%;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+  animation-delay: -1s;
+}
+
+.shape:nth-child(2) {
+  top: 60%;
+  right: 15%;
+  width: 15px;
+  height: 15px;
+  background: linear-gradient(45deg, #45b7d1, #96ceb4);
+  animation-delay: -3s;
+}
+
+.shape:nth-child(3) {
+  bottom: 30%;
+  left: 20%;
+  width: 25px;
+  height: 25px;
+  background: linear-gradient(45deg, #ffc645, #fd79a8);
+  animation-delay: -2s;
+}
+
+.shape:nth-child(4) {
+  top: 40%;
+  right: 25%;
+  width: 18px;
+  height: 18px;
+  background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+  animation-delay: -4s;
+}
+
+@keyframes float {
+  0%,
   100% {
-    left: 100%;
+    transform: translateY(0px) rotate(0deg);
+    opacity: 0.1;
+  }
+  25% {
+    transform: translateY(-15px) rotate(90deg);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(-10px) rotate(180deg);
+    opacity: 0.2;
+  }
+  75% {
+    transform: translateY(-20px) rotate(270deg);
+    opacity: 0.4;
   }
 }
 
+/* 底部 Logo */
 .bottom-logo {
-  font-size: 2.5rem;
-  font-weight: 800;
+  font-size: 1.5rem;
+  font-weight: 700;
   background: linear-gradient(
     45deg,
     #ff6b6b,
@@ -390,526 +393,148 @@
     #ffc645,
     #fd79a8,
     #6c5ce7,
-    #a29bfe,
-    #ff6b6b
+    #a29bfe
   );
   background-size: 400% 400%;
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: rainbow-flow 3s ease-in-out infinite, pulse-scale 2s ease-in-out infinite;
+  animation: rainbow-flow 4s ease-in-out infinite;
   position: relative;
-  z-index: 1;
-  letter-spacing: 0.05em;
-  text-shadow: 0 0 30px rgba(147, 112, 219, 0.5);
+  z-index: 2;
 }
 
-@keyframes pulse-scale {
-  0%, 100% {
-    transform: scale(1);
+/* iOS Safari兼容性优化 */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari特定样式 */
+  .animate-pulse {
+    animation: none;
   }
-  50% {
-    transform: scale(1.05);
-  }
-}
 
-/* 移动端底部 Logo 调整 */
-@media (max-width: 768px) {
+  .particle {
+    animation: none;
+    opacity: 0.4;
+  }
+
+  .shape {
+    animation: none;
+    opacity: 0.2;
+  }
+
+  .logo-background-glow {
+    animation: none;
+  }
+
+  .main-katelya-logo {
+    animation: none;
+  }
+
+  .katelya-logo {
+    animation: none;
+  }
+
   .bottom-logo {
-    font-size: 1.8rem;
-  }
-  
-  .bottom-logo-container {
-    padding: 1.5rem 0;
+    animation: none;
   }
 }
 
-/* 按钮悬停效果增强 */
-.btn-purple {
-  background: linear-gradient(135deg, #9370db, #ba55d3);
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.btn-purple::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s;
-}
-
-.btn-purple:hover::before {
-  left: 100%;
-}
-
-.btn-purple:hover {
-  background: linear-gradient(135deg, #8a2be2, #9370db);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(147, 112, 219, 0.4);
-}
-
-/* 导航项悬停动画 */
-.nav-item {
-  position: relative;
-  overflow: hidden;
-}
-
-.nav-item::before {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: -100%;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #9370db, transparent);
-  transition: left 0.3s ease;
-}
-
-.nav-item:hover::before {
-  left: 0;
-}
-
-/* 卡片悬停增强效果 */
-.card-hover {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-}
-
-.card-hover::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, transparent, rgba(147, 112, 219, 0.1), transparent);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-
-.card-hover:hover::after {
-  opacity: 1;
-}
-
-.card-hover:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 20px 40px rgba(147, 112, 219, 0.2);
-}
-
-/* 浮动几何图形 */
-.floating-shapes {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: -1;
-  overflow: hidden;
-}
-
-.shape {
-  position: absolute;
-  opacity: 0.1;
-  animation: float-rotate 20s linear infinite;
-}
-
-.shape:nth-child(1) {
-  top: 10%;
-  left: 10%;
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
-  border-radius: 50%;
-  animation-delay: 0s;
-}
-
-.shape:nth-child(2) {
-  top: 70%;
-  right: 15%;
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(45deg, #6c5ce7, #a29bfe);
-  transform: rotate(45deg);
-  animation-delay: -5s;
-}
-
-.shape:nth-child(3) {
-  bottom: 20%;
-  left: 20%;
-  width: 80px;
-  height: 20px;
-  background: linear-gradient(45deg, #ffc645, #fd79a8);
-  border-radius: 10px;
-  animation-delay: -10s;
-}
-
-.shape:nth-child(4) {
-  top: 30%;
-  right: 30%;
-  width: 50px;
-  height: 50px;
-  background: linear-gradient(45deg, #96ceb4, #45b7d1);
-  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-  animation-delay: -15s;
-}
-
-@keyframes float-rotate {
-  0% {
-    transform: translateY(0px) rotate(0deg);
-    opacity: 0.1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-  100% {
-    transform: translateY(-20px) rotate(360deg);
-    opacity: 0.1;
-  }
-}
-
+/* 基础样式 */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@layer utilities {
-  .scrollbar-hide {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
-  }
-
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none; /* Chrome, Safari and Opera */
-  }
-}
-
-:root {
-  --foreground-rgb: 255, 255, 255;
-}
-
-html,
-body {
-  height: 100%;
-  overflow-x: hidden;
-  /* 阻止 iOS Safari 拉动回弹 */
-  overscroll-behavior: none;
-}
-
-body {
-  color: rgb(var(--foreground-rgb));
-  position: relative;
-}
-
-/* 动态背景特效 - 增强版 */
-body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -2;
-  pointer-events: none;
-  background: linear-gradient(45deg, #e6e6fa, #dda0dd, #c8a2c8, #f0e6ff, #e6e6fa, #d8bfd8, #e6e6fa);
-  background-size: 400% 400%;
-  animation: gradientFlow 12s ease infinite;
-}
-
-/* 流光背景动画 */
-@keyframes gradientFlow {
-  0% {
-    background-position: 0% 50%;
-  }
-  33% {
-    background-position: 100% 0%;
-  }
-  66% {
-    background-position: 0% 100%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-/* 暗色模式背景 */
-html.dark body::before {
-  background: linear-gradient(45deg, #2a0845, #4a0e4e, #1a0a2e, #16213e, #2a0845, #3d1f69, #2a0845);
-  background-size: 400% 400%;
-  animation: gradientFlow 12s ease infinite;
-}
-
-/* 增强的浮动装饰元素 */
-body::after {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -1;
-  pointer-events: none;
-  background-image: 
-    radial-gradient(3px 3px at 20px 30px, rgba(147, 112, 219, 0.5), transparent),
-    radial-gradient(2px 2px at 40px 70px, rgba(186, 85, 211, 0.4), transparent),
-    radial-gradient(1px 1px at 90px 40px, rgba(221, 160, 221, 0.5), transparent),
-    radial-gradient(2px 2px at 130px 80px, rgba(147, 112, 219, 0.4), transparent),
-    radial-gradient(3px 3px at 160px 30px, rgba(138, 43, 226, 0.5), transparent),
-    radial-gradient(1px 1px at 200px 90px, rgba(219, 112, 147, 0.4), transparent),
-    radial-gradient(2px 2px at 250px 50px, rgba(147, 112, 219, 0.5), transparent),
-    radial-gradient(4px 4px at 300px 120px, rgba(255, 107, 107, 0.3), transparent),
-    radial-gradient(2px 2px at 350px 40px, rgba(76, 205, 196, 0.4), transparent);
-  background-repeat: repeat;
-  background-size: 350px 250px;
-  animation: sparkle 25s linear infinite, float 18s ease-in-out infinite;
-}
-
-@keyframes sparkle {
-  0%, 100% {
-    opacity: 0.6;
-  }
-  25% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.8;
-  }
-  75% {
-    opacity: 1;
-  }
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px) translateX(0px) rotate(0deg);
-  }
-  25% {
-    transform: translateY(-15px) translateX(10px) rotate(90deg);
-  }
-  50% {
-    transform: translateY(-8px) translateX(-8px) rotate(180deg);
-  }
-  75% {
-    transform: translateY(-20px) translateX(5px) rotate(270deg);
-  }
-}
-
-/* 自定义滚动条样式 - 增强版 */
+/* 自定义滚动条 */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(147, 112, 219, 0.1);
-  border-radius: 4px;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(147, 112, 219, 0.3), rgba(186, 85, 211, 0.4));
+  background: rgba(156, 163, 175, 0.5);
   border-radius: 4px;
-  transition: all 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(147, 112, 219, 0.6), rgba(186, 85, 211, 0.7));
+  background: rgba(156, 163, 175, 0.7);
 }
 
-/* 视频卡片悬停效果 */
-.video-card-hover {
-  transition: transform 0.3s ease;
+/* 暗色主题滚动条 */
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(75, 85, 99, 0.5);
 }
 
-.video-card-hover:hover {
-  transform: scale(1.05);
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(75, 85, 99, 0.7);
 }
 
-/* 渐变遮罩 */
-.gradient-overlay {
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0) 0%,
-    rgba(0, 0, 0, 0.8) 100%
-  );
-}
-
-/* 优化的圆角容器样式 - 主内容区 - 修改透明度为50% */
-.rounded-container {
-  border-radius: 20px;
-  overflow: hidden;
-  /* 将透明度从0.85调整为0.5 (50%) */
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(25px);
-  border: 1px solid rgba(147, 112, 219, 0.2);
-  box-shadow: 
-    0 8px 40px rgba(147, 112, 219, 0.12),
-    0 1px 0 rgba(255, 255, 255, 0.9) inset,
-    0 0 0 1px rgba(147, 112, 219, 0.05) inset;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  /* 确保容器占据完整的分配空间 */
-  height: 100%;
-  width: 100%;
-}
-
-.rounded-container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(147, 112, 219, 0.5), rgba(255, 107, 107, 0.3), rgba(147, 112, 219, 0.5), transparent);
-  animation: shimmerTop 4s ease-in-out infinite;
-}
-
-@keyframes shimmerTop {
-  0%, 100% {
-    opacity: 0;
-    transform: translateX(-100%);
-  }
-  50% {
-    opacity: 1;
-    transform: translateX(100%);
-  }
-}
-
-.dark .rounded-container {
-  /* 暗色模式下也将透明度调整为0.5 (50%) */
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(147, 112, 219, 0.3);
-  box-shadow: 
-    0 8px 40px rgba(147, 112, 219, 0.25),
-    0 1px 0 rgba(147, 112, 219, 0.15) inset,
-    0 0 0 1px rgba(147, 112, 219, 0.1) inset;
-}
-
-.dark .rounded-container::before {
-  background: linear-gradient(90deg, transparent, rgba(147, 112, 219, 0.7), rgba(255, 107, 107, 0.4), rgba(147, 112, 219, 0.7), transparent);
-}
-
-/* 悬停效果 */
-.rounded-container:hover {
-  transform: translateY(-3px);
-  box-shadow: 
-    0 15px 50px rgba(147, 112, 219, 0.2),
-    0 1px 0 rgba(255, 255, 255, 0.95) inset,
-    0 0 0 1px rgba(147, 112, 219, 0.1) inset;
-}
-
-.dark .rounded-container:hover {
-  box-shadow: 
-    0 15px 50px rgba(147, 112, 219, 0.35),
-    0 1px 0 rgba(147, 112, 219, 0.25) inset,
-    0 0 0 1px rgba(147, 112, 219, 0.2) inset;
-}
-
-/* 响应式容器边距 */
-@media (max-width: 768px) {
-  .rounded-container {
-    border-radius: 16px;
-    /* 移动端时恢复全宽 */
-    width: 100% !important;
-  }
-}
-
-/* 隐藏移动端（<768px）垂直滚动条 */
-@media (max-width: 767px) {
-  html,
-  body {
-    -ms-overflow-style: none; /* IE & Edge */
-    scrollbar-width: none; /* Firefox */
-  }
-
-  html::-webkit-scrollbar,
-  body::-webkit-scrollbar {
-    display: none; /* Chrome Safari */
-  }
-}
-
-/* 隐藏所有滚动条（兼容 WebKit、Firefox、IE/Edge） */
+/* 基础样式重置 */
 * {
-  -ms-overflow-style: none; /* IE & Edge */
-  scrollbar-width: none; /* Firefox */
+  box-sizing: border-box;
 }
 
-*::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+html {
+  scroll-behavior: smooth;
 }
 
-/* View Transitions API 动画 */
-@keyframes slide-from-top {
-  from {
-    clip-path: polygon(0 0, 100% 0, 100% 0, 0 0);
-  }
-  to {
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-  }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
 }
 
-@keyframes slide-from-bottom {
-  from {
-    clip-path: polygon(0 100%, 100% 100%, 100% 100%, 0 100%);
-  }
-  to {
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-  }
+/* 链接样式 */
+a {
+  color: inherit;
+  text-decoration: none;
 }
 
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: 0.8s;
-  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  animation-fill-mode: both;
+/* 按钮样式 */
+button {
+  cursor: pointer;
 }
 
-/*
-  切换时，旧的视图不应该有动画，它应该在下面，等待被新的视图覆盖。
-  这可以防止在动画完成前，页面底部提前变色。
-*/
-::view-transition-old(root) {
-  animation: none;
+/* 输入框样式 */
+input,
+textarea {
+  font-family: inherit;
 }
 
-/* 从浅色到深色：新内容（深色）从顶部滑入 */
-html.dark::view-transition-new(root) {
-  animation-name: slide-from-top;
+/* 图片样式 */
+img {
+  max-width: 100%;
+  height: auto;
 }
 
-/* 从深色到浅色：新内容（浅色）从底部滑入 */
-html:not(.dark)::view-transition-new(root) {
-  animation-name: slide-from-bottom;
+/* 选择文本样式 */
+::selection {
+  background: rgba(147, 112, 219, 0.3);
+  color: inherit;
 }
 
-/* 强制播放器内部的 video 元素高度为 100%，并保持内容完整显示 */
-div[data-media-provider] video {
-  height: 100%;
-  object-fit: contain;
+.dark ::selection {
+  background: rgba(196, 181, 253, 0.3);
 }
 
-.art-poster {
-  background-size: contain !important; /* 使图片完整展示 */
-  background-position: center center !important; /* 居中显示 */
-  background-repeat: no-repeat !important; /* 防止重复 */
-  background-color: #000 !important; /* 其余区域填充为黑色 */
+/* 焦点样式 */
+:focus {
+  outline: 2px solid rgba(147, 112, 219, 0.5);
+  outline-offset: 2px;
 }
 
-/* 隐藏移动端竖屏时的 pip 按钮 */
-@media (max-width: 768px) {
-  .art-control-pip {
-    display: none !important;
-  }
-
-  .art-control-fullscreenWeb {
-    display: none !important;
-  }
-
-  .art-control-volume {
-    display: none !important;
+/* 减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

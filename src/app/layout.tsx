@@ -36,11 +36,11 @@ export const viewport: Viewport = {
 // 浮动几何形状组件
 const FloatingShapes = () => {
   return (
-    <div className="floating-shapes">
-      <div className="shape"></div>
-      <div className="shape"></div>
-      <div className="shape"></div>
-      <div className="shape"></div>
+    <div className='floating-shapes'>
+      <div className='shape'></div>
+      <div className='shape'></div>
+      <div className='shape'></div>
+      <div className='shape'></div>
     </div>
   );
 };
@@ -93,7 +93,7 @@ export default async function RootLayout({
       >
         {/* 浮动几何形状装饰 */}
         <FloatingShapes />
-        
+
         <ThemeProvider
           attribute='class'
           defaultTheme='system'
