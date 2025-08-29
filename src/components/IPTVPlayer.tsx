@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Play, Pause, Volume2, VolumeX, Maximize, Settings } from 'lucide-react';
+import { Maximize, Pause, Play, Volume2, VolumeX } from 'lucide-react';
 
 interface IPTVChannel {
   id: string;
@@ -17,7 +17,7 @@ interface IPTVPlayerProps {
   onChannelChange?: (channel: IPTVChannel) => void;
 }
 
-export function IPTVPlayer({ channels, currentChannel, onChannelChange }: IPTVPlayerProps) {
+export function IPTVPlayer({ channels, currentChannel, onChannelChange: _onChannelChange }: IPTVPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -38,7 +38,9 @@ export function IPTVPlayer({ channels, currentChannel, onChannelChange }: IPTVPl
     const handleCanPlay = () => {
       setIsLoading(false);
       if (isPlaying) {
-        video.play().catch(console.error);
+        video.play().catch(() => {
+          // 忽略播放错误
+        });
       }
     };
     const handleError = () => {
@@ -68,7 +70,9 @@ export function IPTVPlayer({ channels, currentChannel, onChannelChange }: IPTVPl
     if (isPlaying) {
       video.pause();
     } else {
-      video.play().catch(console.error);
+      video.play().catch(() => {
+        // 忽略播放错误
+      });
     }
     setIsPlaying(!isPlaying);
   };
@@ -97,7 +101,9 @@ export function IPTVPlayer({ channels, currentChannel, onChannelChange }: IPTVPl
     if (document.fullscreenElement) {
       document.exitFullscreen();
     } else {
-      video.requestFullscreen().catch(console.error);
+      video.requestFullscreen().catch(() => {
+        // 忽略全屏错误
+      });
     }
   };
 
@@ -111,12 +117,13 @@ export function IPTVPlayer({ channels, currentChannel, onChannelChange }: IPTVPl
     }, 3000);
   };
 
-  const groupedChannels = channels.reduce((acc, channel) => {
-    const group = channel.group || '其他';
-    if (!acc[group]) acc[group] = [];
-    acc[group].push(channel);
-    return acc;
-  }, {} as Record<string, IPTVChannel[]>);
+  // 按组分类频道（暂未使用，为未来功能预留）
+  // const groupedChannels = channels.reduce((acc, channel) => {
+  //   const group = channel.group || '其他';
+  //   if (!acc[group]) acc[group] = [];
+  //   acc[group].push(channel);
+  //   return acc;
+  // }, {} as Record<string, IPTVChannel[]>);
 
   return (
     <div className="relative w-full h-full bg-black rounded-lg overflow-hidden">

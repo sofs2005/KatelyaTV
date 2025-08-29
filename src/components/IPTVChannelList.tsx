@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Search, Play, Star, StarOff, Tv, Globe, Heart } from 'lucide-react';
+import { useState } from 'react';
+import { Globe, Heart, Play, Search, Star, StarOff, Tv } from 'lucide-react';
 import Image from 'next/image';
 
 interface IPTVChannel {

@@ -43,6 +43,8 @@
 - [技术栈](#技术栈)
 - [快速部署](#快速部署)
 - [Cloudflare Pages 部署](#cloudflare-pages-部署)
+- [Docker 部署](#docker-部署)
+- [Vercel 部署](#vercel-部署)
 - [环境变量](#环境变量)
 - [配置说明](#配置说明)
 - [IPTV功能](#iptv功能)
@@ -62,15 +64,23 @@
 | 语言      | TypeScript 4                                                                                          |
 | 播放器    | [ArtPlayer](https://github.com/zhw2590582/ArtPlayer) · [HLS.js](https://github.com/video-dev/hls.js/) |
 | 代码质量  | ESLint · Prettier · Jest                                                                              |
-| 部署      | Cloudflare Pages · Vercel                                                                    |
+| 部署      | Cloudflare Pages · Docker · Vercel                                                                    |
 
 ## 快速部署
 
-本项目专为 **Cloudflare Pages** 优化，推荐使用Cloudflare部署以获得最佳性能。
+KatelyaTV 支持多种部署方式，你可以根据需求选择最适合的方案：
 
-### 一键部署到Cloudflare Pages
+### 🚀 推荐部署方案
+
+1. **Cloudflare Pages** - 免费、全球CDN、无服务器
+2. **Docker** - 自托管、完全控制、支持Redis
+3. **Vercel** - 快速部署、适合开发测试
+
+### 一键部署
 
 [![Deploy to Cloudflare Pages](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/katelya77/KatelyaTV)
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/katelya77/KatelyaTV)
 
 ## Cloudflare Pages 部署
 
@@ -166,6 +176,97 @@ CREATE INDEX IF NOT EXISTS idx_play_records_updated ON play_records(updatedAt);
    - `USERNAME`: 管理员用户名
    - `PASSWORD`: 管理员密码
 4. **重新部署**
+
+## Docker 部署
+
+Docker部署适合需要完全控制和自托管的用户，支持本地存储和Redis两种模式。
+
+### 快速开始 (本地存储)
+
+```bash
+# 下载项目
+git clone https://github.com/katelya77/KatelyaTV.git
+cd KatelyaTV
+
+# 使用基础配置启动
+docker-compose --profile basic up -d
+
+# 或者直接运行
+docker run -d \
+  --name katelyatv \
+  -p 3000:3000 \
+  -e PASSWORD=your_password \
+  ghcr.io/katelya77/katelyatv:latest
+```
+
+访问 `http://localhost:3000` 即可使用。
+
+### 生产环境 (Redis)
+
+```bash
+# 使用Redis配置启动
+docker-compose --profile redis up -d
+```
+
+这将启动：
+- KatelyaTV 主服务 (端口3000)
+- Redis 数据库 (数据持久化)
+- 自动网络配置
+
+### 自定义配置
+
+```yaml
+# docker-compose.override.yml
+version: '3.8'
+services:
+  katelyatv:
+    environment:
+      - NEXT_PUBLIC_SITE_NAME=我的影视站
+      - USERNAME=admin
+      - PASSWORD=secure_password
+    volumes:
+      - ./custom-config.json:/app/config.json:ro
+```
+
+### Docker环境变量
+
+| 变量名 | 说明 | 默认值 |
+|--------|------|--------|
+| USERNAME | 管理员用户名 | admin |
+| PASSWORD | 管理员密码 | 必填 |
+| NEXT_PUBLIC_STORAGE_TYPE | 存储类型 | localstorage |
+| REDIS_URL | Redis连接URL | 空 |
+| NEXT_PUBLIC_SITE_NAME | 站点名称 | KatelyaTV |
+
+### 更新镜像
+
+```bash
+# 拉取最新镜像
+docker-compose pull
+
+# 重启服务
+docker-compose --profile redis up -d
+```
+
+## Vercel 部署
+
+### 基础部署
+
+1. Fork 本仓库到你的 GitHub 账户
+2. 在 [Vercel](https://vercel.com) 导入项目
+3. 设置环境变量 `PASSWORD`
+4. 部署完成
+
+### Upstash Redis 支持
+
+1. 在 [Upstash](https://upstash.com) 创建Redis实例
+2. 在Vercel设置环境变量：
+   - `NEXT_PUBLIC_STORAGE_TYPE`: `upstash`
+   - `UPSTASH_URL`: Redis端点
+   - `UPSTASH_TOKEN`: Redis令牌
+   - `USERNAME`: 管理员用户名
+   - `PASSWORD`: 管理员密码
+3. 重新部署
 
 ## 环境变量
 

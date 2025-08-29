@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Upload, Download, RefreshCw, Settings, Tv } from 'lucide-react';
+import { Suspense, useEffect, useState } from 'react';
+import { ArrowLeft, Download, RefreshCw, Tv, Upload } from 'lucide-react';
 import Link from 'next/link';
 
-import IPTVPlayer from '@/components/IPTVPlayer';
 import IPTVChannelList from '@/components/IPTVChannelList';
+import IPTVPlayer from '@/components/IPTVPlayer';
 import PageLayout from '@/components/PageLayout';
 
 interface IPTVChannel {
@@ -19,66 +19,68 @@ interface IPTVChannel {
   isFavorite?: boolean;
 }
 
-export default function IPTVPage() {
+function IPTVPageContent() {
   const [channels, setChannels] = useState<IPTVChannel[]>([]);
   const [currentChannel, setCurrentChannel] = useState<IPTVChannel | undefined>();
   const [isLoading, setIsLoading] = useState(false);
   const [showChannelList, setShowChannelList] = useState(true);
   const [m3uUrl, setM3uUrl] = useState('');
 
-  // 示例频道数据 (可以从M3U文件加载)
-  const sampleChannels: IPTVChannel[] = [
-    {
-      id: '1',
-      name: 'CGTN',
-      url: 'https://live.cgtn.com/1000/prog_index.m3u8',
-      group: '新闻',
-      country: '中国',
-      logo: 'https://upload.wikimedia.org/wikipedia/commons/8/81/CGTN.svg'
-    },
-    {
-      id: '2', 
-      name: 'CCTV1',
-      url: 'http://[2409:8087:1a01:df::7005]:80/ottrrs.hl.chinamobile.com/PLTV/88888888/224/3221226559/index.m3u8',
-      group: '央视',
-      country: '中国'
-    },
-    {
-      id: '3',
-      name: 'CCTV新闻',
-      url: 'http://[2409:8087:1a01:df::7005]:80/ottrrs.hl.chinamobile.com/PLTV/88888888/224/3221226537/index.m3u8',
-      group: '央视',
-      country: '中国'
-    },
-    {
-      id: '4',
-      name: '湖南卫视',
-      url: 'http://[2409:8087:1a01:df::7005]:80/ottrrs.hl.chinamobile.com/PLTV/88888888/224/3221226307/index.m3u8',
-      group: '卫视',
-      country: '中国'
-    },
-    {
-      id: '5',
-      name: '浙江卫视',
-      url: 'http://[2409:8087:1a01:df::7005]:80/ottrrs.hl.chinamobile.com/PLTV/88888888/224/3221226339/index.m3u8',
-      group: '卫视',
-      country: '中国'
-    }
-  ];
+
 
   useEffect(() => {
+    // 示例频道数据
+    const defaultChannels: IPTVChannel[] = [
+      {
+        id: '1',
+        name: 'CGTN',
+        url: 'https://live.cgtn.com/1000/prog_index.m3u8',
+        group: '新闻',
+        country: '中国',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/8/81/CGTN.svg'
+      },
+      {
+        id: '2', 
+        name: 'CCTV1',
+        url: 'http://[2409:8087:1a01:df::7005]:80/ottrrs.hl.chinamobile.com/PLTV/88888888/224/3221226559/index.m3u8',
+        group: '央视',
+        country: '中国'
+      },
+      {
+        id: '3',
+        name: 'CCTV新闻',
+        url: 'http://[2409:8087:1a01:df::7005]:80/ottrrs.hl.chinamobile.com/PLTV/88888888/224/3221226537/index.m3u8',
+        group: '央视',
+        country: '中国'
+      },
+      {
+        id: '4',
+        name: '湖南卫视',
+        url: 'http://[2409:8087:1a01:df::7005]:80/ottrrs.hl.chinamobile.com/PLTV/88888888/224/3221226307/index.m3u8',
+        group: '卫视',
+        country: '中国'
+      },
+      {
+        id: '5',
+        name: '浙江卫视',
+        url: 'http://[2409:8087:1a01:df::7005]:80/ottrrs.hl.chinamobile.com/PLTV/88888888/224/3221226339/index.m3u8',
+        group: '卫视',
+        country: '中国'
+      }
+    ];
+
     // 从本地存储加载频道列表
     const savedChannels = localStorage.getItem('iptv-channels');
     if (savedChannels) {
       try {
         const parsed = JSON.parse(savedChannels);
         setChannels(parsed);
-      } catch (error) {
-        console.error('加载频道列表失败:', error);
-        setChannels(sampleChannels);
+      } catch {
+        // 加载失败时使用示例频道
+        setChannels(defaultChannels);
       }
     } else {
-      setChannels(sampleChannels);
+      setChannels(defaultChannels);
     }
 
     // 加载上次选择的频道
@@ -87,8 +89,8 @@ export default function IPTVPage() {
       try {
         const parsed = JSON.parse(savedCurrentChannel);
         setCurrentChannel(parsed);
-      } catch (error) {
-        console.error('加载当前频道失败:', error);
+      } catch {
+        // 加载当前频道失败时忽略
       }
     }
   }, []);
@@ -168,8 +170,8 @@ export default function IPTVPage() {
       } else {
         alert('M3U文件解析失败，请检查文件格式');
       }
-    } catch (error) {
-      console.error('加载M3U失败:', error);
+    } catch {
+      // 加载M3U失败
       alert('加载M3U文件失败，请检查URL是否正确');
     } finally {
       setIsLoading(false);
@@ -372,5 +374,24 @@ export default function IPTVPage() {
         </div>
       </div>
     </PageLayout>
+  );
+}
+
+export default function IPTVPage() {
+  return (
+    <Suspense fallback={
+      <PageLayout>
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-400">加载IPTV播放器...</p>
+            </div>
+          </div>
+        </div>
+      </PageLayout>
+    }>
+      <IPTVPageContent />
+    </Suspense>
   );
 }

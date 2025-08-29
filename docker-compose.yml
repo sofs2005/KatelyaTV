@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # 基础版本 - 使用本地存储
+  katelyatv-basic:
+    build: .
+    container_name: katelyatv-basic
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      - PASSWORD=your_password
+      - NEXT_PUBLIC_SITE_NAME=KatelyaTV
+    # 如需自定义配置，可挂载文件
+    # volumes:
+    #   - ./config.json:/app/config.json:ro
+    profiles:
+      - basic
+
+  # Redis版本 - 推荐用于生产环境
+  katelyatv:
+    build: .
+    container_name: katelyatv
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      - USERNAME=admin
+      - PASSWORD=admin_password
+      - NEXT_PUBLIC_STORAGE_TYPE=redis
+      - REDIS_URL=redis://katelyatv-redis:6379
+      - NEXT_PUBLIC_ENABLE_REGISTER=true
+      - NEXT_PUBLIC_SITE_NAME=KatelyaTV
+    networks:
+      - katelyatv-network
+    depends_on:
+      - katelyatv-redis
+    # 如需自定义配置，可挂载文件
+    # volumes:
+    #   - ./config.json:/app/config.json:ro
+    profiles:
+      - redis
+
+  katelyatv-redis:
+    image: redis:7-alpine
+    container_name: katelyatv-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    networks:
+      - katelyatv-network
+    volumes:
+      - redis-data:/data
+    profiles:
+      - redis
+
+networks:
+  katelyatv-network:
+    driver: bridge
+
+volumes:
+  redis-data:

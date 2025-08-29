@@ -13,7 +13,7 @@
 - **移动端优化**：完美适配手机和平板设备
 
 ### 🛠️ 技术架构升级
-- **专注Cloudflare部署**：移除Docker配置，专为Cloudflare Pages优化
+- **多平台部署支持**：Cloudflare Pages、Docker、Vercel三种部署方式
 - **iOS Safari完美兼容**：修复iOS设备登录界面显示问题
 - **性能大幅提升**：优化资源加载和渲染性能
 - **代码质量改进**：TypeScript严格模式，更好的错误处理
@@ -33,10 +33,10 @@
 
 ## 🚀 部署和配置优化
 
-### Cloudflare Pages专属优化
-- **一键部署**：简化的Cloudflare Pages部署流程
-- **环境变量优化**：更清晰的配置说明和最佳实践
-- **D1数据库集成**：完整的SQL初始化脚本
+### 多平台部署优化
+- **Cloudflare Pages**：一键部署，全球CDN，D1数据库集成
+- **Docker支持**：完整的Docker配置，支持Redis数据库
+- **Vercel部署**：快速部署，Upstash Redis集成
 - **性能监控**：内置性能优化和错误追踪
 
 ### 配置管理改进
@@ -66,8 +66,8 @@
 - **性能优化**：减少bundle大小，提升加载速度
 
 ### 构建优化
-- **移除Docker依赖**：简化部署流程
-- **Cloudflare工作流**：专属的CI/CD流程
+- **多平台CI/CD**：支持Cloudflare和Docker构建
+- **GitHub Actions优化**：并行构建，多架构支持
 - **缓存策略优化**：更好的静态资源管理
 - **错误处理增强**：更友好的错误提示
 
@@ -101,10 +101,13 @@
 # 新增环境变量
 NEXT_PUBLIC_SITE_NAME=KatelyaTV
 
-# 移除的环境变量（不再需要）
-DOCKER_ENV
-HOSTNAME
-PORT
+# Docker环境变量（新增）
+DOCKER_ENV=true
+HOSTNAME=0.0.0.0
+PORT=3000
+
+# 支持的存储类型
+NEXT_PUBLIC_STORAGE_TYPE=localstorage|d1|upstash|redis
 ```
 
 ## 🙏 致谢
