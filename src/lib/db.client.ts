@@ -55,12 +55,17 @@ interface UserCacheStore {
 }
 
 // ---- 常量 ----
-const PLAY_RECORDS_KEY = 'moontv_play_records';
-const FAVORITES_KEY = 'moontv_favorites';
-const SEARCH_HISTORY_KEY = 'moontv_search_history';
+// 新的键名（KatelyaTV）与旧键名（MoonTV）保持向后兼容
+const PLAY_RECORDS_KEY = 'katelyatv_play_records';
+const FAVORITES_KEY = 'katelyatv_favorites';
+const SEARCH_HISTORY_KEY = 'katelyatv_search_history';
+const LEGACY_PLAY_RECORDS_KEY = 'moontv_play_records';
+const LEGACY_FAVORITES_KEY = 'moontv_favorites';
+const LEGACY_SEARCH_HISTORY_KEY = 'moontv_search_history';
 
 // 缓存相关常量
-const CACHE_PREFIX = 'moontv_cache_';
+const CACHE_PREFIX = 'katelyatv_cache_';
+const LEGACY_CACHE_PREFIX = 'moontv_cache_';
 const CACHE_VERSION = '1.0.0';
 const CACHE_EXPIRE_TIME = 60 * 60 * 1000; // 一小时缓存过期
 
@@ -426,7 +431,9 @@ export async function getAllPlayRecords(): Promise<Record<string, PlayRecord>> {
 
   // localstorage 模式
   try {
-    const raw = localStorage.getItem(PLAY_RECORDS_KEY);
+    const primary = localStorage.getItem(PLAY_RECORDS_KEY);
+    const fallback = localStorage.getItem(LEGACY_PLAY_RECORDS_KEY);
+    const raw = primary ?? fallback;
     if (!raw) return {};
     return JSON.parse(raw) as Record<string, PlayRecord>;
   } catch (err) {
@@ -614,7 +621,9 @@ export async function getSearchHistory(): Promise<string[]> {
 
   // localStorage 模式
   try {
-    const raw = localStorage.getItem(SEARCH_HISTORY_KEY);
+    const primary = localStorage.getItem(SEARCH_HISTORY_KEY);
+    const fallback = localStorage.getItem(LEGACY_SEARCH_HISTORY_KEY);
+    const raw = primary ?? fallback;
     if (!raw) return [];
     const arr = JSON.parse(raw) as string[];
     // 仅返回字符串数组
@@ -835,7 +844,9 @@ export async function getAllFavorites(): Promise<Record<string, Favorite>> {
 
   // localStorage 模式
   try {
-    const raw = localStorage.getItem(FAVORITES_KEY);
+    const primary = localStorage.getItem(FAVORITES_KEY);
+    const fallback = localStorage.getItem(LEGACY_FAVORITES_KEY);
+    const raw = primary ?? fallback;
     if (!raw) return {};
     return JSON.parse(raw) as Record<string, Favorite>;
   } catch (err) {
@@ -1053,6 +1064,7 @@ export async function clearAllPlayRecords(): Promise<void> {
   // localStorage 模式
   if (typeof window === 'undefined') return;
   localStorage.removeItem(PLAY_RECORDS_KEY);
+  localStorage.removeItem(LEGACY_PLAY_RECORDS_KEY);
   window.dispatchEvent(
     new CustomEvent('playRecordsUpdated', {
       detail: {},
@@ -1094,6 +1106,7 @@ export async function clearAllFavorites(): Promise<void> {
   // localStorage 模式
   if (typeof window === 'undefined') return;
   localStorage.removeItem(FAVORITES_KEY);
+  localStorage.removeItem(LEGACY_FAVORITES_KEY);
   window.dispatchEvent(
     new CustomEvent('favoritesUpdated', {
       detail: {},
