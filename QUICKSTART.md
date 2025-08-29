@@ -1,6 +1,6 @@
-# 🚀 MoonTV 快速开始指南
+# 🚀 KatelyaTV 快速开始指南
 
-欢迎使用 MoonTV！本指南将帮助您在几分钟内完成部署和配置。
+欢迎使用 KatelyaTV！本指南将帮助您在几分钟内完成部署和配置。
 
 ## 📋 前置要求
 
@@ -13,12 +13,12 @@
 ### 1. 快速启动
 
 ```bash
-# 拉取最新镜像
+# 拉取最新镜像（当前镜像沿用上游命名空间）
 docker pull ghcr.io/senshinya/moontv:latest
 
 # 启动容器
 docker run -d \
-  --name moontv \
+  --name katelyatv \
   -p 3000:3000 \
   --env PASSWORD=your_password \
   --restart unless-stopped \
@@ -33,10 +33,10 @@ docker run -d \
 
 ```bash
 # 停止容器
-docker stop moontv
+docker stop katelyatv
 
 # 删除容器
-docker rm moontv
+docker rm katelyatv
 ```
 
 ## 🌐 云平台部署
@@ -224,13 +224,13 @@ NEXT_PUBLIC_STORAGE_TYPE=d1
 ## 📞 获取帮助
 
 - 📖 [完整文档](README.md)
-- 🐛 [问题反馈](https://github.com/senshinya/moontv/issues)
-- 💬 [功能讨论](https://github.com/senshinya/moontv/discussions)
+- 🐛 问题反馈：在仓库 Issues 页面提交
+- 💬 功能讨论：在 Discussions 页面参与
 - 📝 [更新日志](CHANGELOG.md)
 
 ## 🎉 开始使用
 
-现在您已经完成了基础配置，可以开始享受 MoonTV 带来的影视体验了！
+现在您已经完成了基础配置，可以开始享受 KatelyaTV 带来的影视体验了！
 
 **重要提醒：**
 - 本项目仅供学习和个人使用
