@@ -1,6 +1,6 @@
 # 贡献指南
 
-感谢您对 MoonTV 项目的关注！我们欢迎所有形式的贡献，包括但不限于：
+感谢您对 KatelyaTV 项目的关注！我们欢迎所有形式的贡献，包括但不限于：
 
 - 🐛 报告 Bug
 - 💡 提出新功能建议
@@ -23,8 +23,8 @@
    ```bash
    # 在 GitHub 上 Fork 本仓库
    # 然后克隆到本地
-   git clone https://github.com/YOUR_USERNAME/moontv.git
-   cd moontv
+   git clone https://github.com/YOUR_USERNAME/katelyatv.git
+   cd katelyatv
    ```
 
 2. **安装依赖**
@@ -114,7 +114,7 @@ git commit -m "test: 添加播放记录 API 测试用例"
 
 在提交 Bug 报告之前，请：
 
-1. 搜索现有的 [Issues](https://github.com/senshinya/moontv/issues)
+1. 搜索现有的 Issues（仓库 Issues 页面）
 2. 检查是否已有相关报告
 3. 使用 Bug 报告模板
 
@@ -153,7 +153,7 @@ git commit -m "test: 添加播放记录 API 测试用例"
 
 在提出功能建议之前，请：
 
-1. 搜索现有的 [Discussions](https://github.com/senshinya/moontw/discussions)
+1. 搜索现有的 Discussions（仓库 Discussions 页面）
 2. 检查是否已有相关讨论
 3. 使用功能建议模板
 
@@ -349,11 +349,11 @@ pnpm start
 ### Docker 测试
 
 ```bash
-# 构建 Docker 镜像
-docker build -t moontv:test .
+# 构建 Docker 镜像（镜像名示例）
+docker build -t katelyatv:test .
 
 # 运行容器
-docker run -d --name moontv-test -p 3000:3000 --env PASSWORD=test123 moontv:test
+docker run -d --name katelyatv-test -p 3000:3000 --env PASSWORD=test123 katelyatv:test
 ```
 
 ## 📞 获取帮助
@@ -367,7 +367,7 @@ docker run -d --name moontv-test -p 3000:3000 --env PASSWORD=test123 moontv:test
 
 ## 🎉 致谢
 
-感谢所有为 MoonTV 项目做出贡献的开发者！
+感谢所有为 KatelyaTV 项目做出贡献的开发者！
 
 您的贡献让这个项目变得更好。无论是代码、文档、测试还是反馈，我们都非常感激。
 
