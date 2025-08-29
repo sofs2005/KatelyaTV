@@ -20,15 +20,11 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
   const navItems = [
     { icon: Home, label: '首页', href: '/' },
     { icon: Search, label: '搜索', href: '/search' },
+    { icon: Tv, label: 'IPTV', href: '/iptv' },
     {
       icon: Film,
       label: '电影',
       href: '/douban?type=movie',
-    },
-    {
-      icon: Tv,
-      label: '剧集',
-      href: '/douban?type=tv',
     },
     {
       icon: Clover,
