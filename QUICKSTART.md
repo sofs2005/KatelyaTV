@@ -13,8 +13,8 @@
 ### 1. 快速启动
 
 ```bash
-# 拉取最新镜像（当前镜像沿用上游命名空间）
-docker pull ghcr.io/senshinya/moontv:latest
+# 拉取最新镜像
+docker pull ghcr.io/katelya77/katelyatv:latest
 
 # 启动容器
 docker run -d \
@@ -22,7 +22,7 @@ docker run -d \
   -p 3000:3000 \
   --env PASSWORD=your_password \
   --restart unless-stopped \
-  ghcr.io/senshinya/moontv:latest
+  ghcr.io/katelya77/katelyatv:latest
 ```
 
 ### 2. 访问应用

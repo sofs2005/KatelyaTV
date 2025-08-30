@@ -20,15 +20,15 @@
 ## 安装与升级
 - 首次安装（Docker 推荐）
 ```bash
-# 拉取镜像（当前仍沿用上游命名空间）
-docker pull ghcr.io/senshinya/moontv:latest
+# 拉取镜像
+docker pull ghcr.io/katelya77/katelyatv:latest
 
 # 启动示例
 docker run -d --name katelyatv \
   -p 3000:3000 \
   --env PASSWORD=your_password \
   --restart unless-stopped \
-  ghcr.io/senshinya/moontv:latest
+  ghcr.io/katelya77/katelyatv:latest
 ```
 - 或使用 README 中的 Docker Compose 示例
 
