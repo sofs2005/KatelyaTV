@@ -91,11 +91,13 @@ nano .env.local
 ```
 
 **必需配置：**
+
 ```bash
 PASSWORD=your_secure_password
 ```
 
 **推荐配置：**
+
 ```bash
 SITE_NAME=我的影视站
 NEXT_PUBLIC_STORAGE_TYPE=localstorage
@@ -197,15 +199,19 @@ NEXT_PUBLIC_STORAGE_TYPE=d1
 ## 🚨 常见问题
 
 ### Q: 无法访问应用
+
 **A:** 检查端口是否被占用，防火墙设置，或尝试其他端口。
 
 ### Q: 搜索无结果
+
 **A:** 检查网络连接，资源站点是否可用，或尝试其他关键词。
 
 ### Q: 视频无法播放
+
 **A:** 检查视频源是否有效，浏览器是否支持相关格式。
 
 ### Q: 数据丢失
+
 **A:** 如果使用 localStorage，数据存储在浏览器中，清除缓存会丢失数据。
 
 ## 📱 移动端使用
@@ -233,6 +239,7 @@ NEXT_PUBLIC_STORAGE_TYPE=d1
 现在您已经完成了基础配置，可以开始享受 KatelyaTV 带来的影视体验了！
 
 **重要提醒：**
+
 - 本项目仅供学习和个人使用
 - 请遵守当地法律法规
 - 不要用于商业用途或公开服务
