@@ -176,11 +176,11 @@
 
 ```bash
 # 拉取预构建镜像
-docker pull ghcr.io/senshinya/moontv:latest
+docker pull ghcr.io/katelya77/katelyatv:latest
 
 # 运行容器
 # -d: 后台运行  -p: 映射端口 3000 -> 3000
-docker run -d --name katelyatv -p 3000:3000 --env PASSWORD=your_password ghcr.io/senshinya/moontv:latest
+docker run -d --name katelyatv -p 3000:3000 --env PASSWORD=your_password ghcr.io/katelya77/katelyatv:latest
 ```
 
 访问 `http://服务器 IP:3000` 即可。（需自行到服务器控制台放通 `3000` 端口）
@@ -194,7 +194,7 @@ docker run -d --name katelyatv -p 3000:3000 --env PASSWORD=your_password ghcr.io
 ```yaml
 services:
   katelyatv:
-    image: ghcr.io/senshinya/moontv:latest
+    image: ghcr.io/katelya77/katelyatv:latest
     container_name: katelyatv
     restart: unless-stopped
     ports:
@@ -211,7 +211,7 @@ services:
 ```yaml
 services:
   katelyatv-core:
-    image: ghcr.io/senshinya/moontv:latest
+    image: ghcr.io/katelya77/katelyatv:latest
     container_name: katelyatv
     restart: unless-stopped
     ports:
