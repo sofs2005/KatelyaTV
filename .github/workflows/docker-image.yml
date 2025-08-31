@@ -138,7 +138,7 @@ jobs:
       - name: Get multi-arch digest
         id: get_digest
         run: |
-          digest=$(docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }} --format '{{.Manifest.Digest}}')
+          digest=$(docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }} --format '{{.Digest}}')
           echo "digest=$digest" >> $GITHUB_OUTPUT
       - name: Inspect image
         run: |
