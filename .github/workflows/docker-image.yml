@@ -84,10 +84,8 @@ jobs:
         if: github.event_name != 'pull_request'
         run: |
           mkdir -p /tmp/digests
-          list_digest="${{ steps.build.outputs.digest }}"
-          # 使用 Go template 条件提取 digest：如果有 Manifests，取第一个的 Digest；否则取顶层 Digest
-          manifest_digest=$(docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${list_digest} --format '{{ if .Manifests }}{{ (index .Manifests 0).Digest }}{{ else }}{{ .Digest }}{{ end }}')
-          touch "/tmp/digests/${manifest_digest#sha256:}"
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
       - name: Upload digest
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
