@@ -47,6 +47,7 @@
 - [核心功能](#核心功能)
 - [项目来源与声明](#项目来源与声明)
 - [部署](#部署)
+- [Docker 部署详解](#Docker-部署详解)
 - [Docker Compose 最佳实践](#Docker-Compose-最佳实践)
 - [环境变量](#环境变量)
 - [配置说明](#配置说明)
@@ -170,28 +171,114 @@
 4. 设置环境变量 NEXT_PUBLIC_STORAGE_TYPE，值为 **d1**；设置 USERNAME 和 PASSWORD 作为站长账号
 5. 重试部署
 
-### Docker 部署
+## 🐳 Docker 部署详解
 
-#### 1. 直接运行（最简单）
+Docker 是推荐的部署方式，提供完整的环境隔离和便捷的管理体验。我们的镜像支持多架构（`linux/amd64`、`linux/arm64`），确保在各种硬件平台上都能稳定运行。
+
+### 🚀 快速开始
+
+#### 1. 基础部署（最简单）
 
 ```bash
-# 拉取预构建镜像
+# 拉取最新镜像（支持 amd64/arm64 多架构）
 docker pull ghcr.io/katelya77/katelyatv:latest
 
-# 运行容器
-# -d: 后台运行  -p: 映射端口 3000 -> 3000
-docker run -d --name katelyatv -p 3000:3000 --env PASSWORD=your_password ghcr.io/katelya77/katelyatv:latest
+# 快速启动（LocalStorage 存储）
+docker run -d \
+  --name katelyatv \
+  -p 3000:3000 \
+  --env PASSWORD=your_secure_password \
+  --restart unless-stopped \
+  ghcr.io/katelya77/katelyatv:latest
 ```
 
-访问 `http://服务器 IP:3000` 即可。（需自行到服务器控制台放通 `3000` 端口）
+访问 `http://服务器IP:3000` 即可使用。（需要在服务器控制台开放 3000 端口）
+
+#### 2. 带自定义配置的部署
+
+```bash
+# 创建配置文件目录
+mkdir -p ./katelyatv-config
+
+# 将你的 config.json 放入该目录，然后运行：
+docker run -d \
+  --name katelyatv \
+  -p 3000:3000 \
+  --env PASSWORD=your_secure_password \
+  -v ./katelyatv-config/config.json:/app/config.json:ro \
+  --restart unless-stopped \
+  ghcr.io/katelya77/katelyatv:latest
+```
+
+#### 3. 查看运行状态
+
+```bash
+# 查看容器状态
+docker ps
+
+# 查看日志
+docker logs katelyatv
+
+# 查看实时日志
+docker logs -f katelyatv
+```
+
+#### 4. 升级到最新版本
+
+```bash
+# 停止并删除旧容器
+docker stop katelyatv && docker rm katelyatv
+
+# 拉取最新镜像
+docker pull ghcr.io/katelya77/katelyatv:latest
+
+# 重新创建容器（使用相同的配置）
+docker run -d \
+  --name katelyatv \
+  -p 3000:3000 \
+  --env PASSWORD=your_secure_password \
+  --restart unless-stopped \
+  ghcr.io/katelya77/katelyatv:latest
+```
+
+### 📦 镜像特性
+
+- **🏗️ 多架构支持**：同时支持 `linux/amd64` 和 `linux/arm64` 架构
+- **⚡ 优化构建**：基于 Alpine Linux，镜像体积小，启动速度快
+- **🔒 安全可靠**：定期更新底层依赖，修复安全漏洞
+- **🚀 开箱即用**：内置所有必要依赖，无需额外配置
+
+### 🔧 常用操作
+
+```bash
+# 进入容器终端（调试用）
+docker exec -it katelyatv /bin/sh
+
+# 重启容器
+docker restart katelyatv
+
+# 停止容器
+docker stop katelyatv
+
+# 查看容器资源使用情况
+docker stats katelyatv
+
+# 备份容器（如果有挂载卷）
+docker run --rm -v katelyatv_data:/data -v $(pwd):/backup alpine tar czf /backup/katelyatv-backup.tar.gz /data
+```
 
 ## 🐳 Docker Compose 最佳实践
 
-若你使用 docker compose 部署，以下是一些 compose 示例
+Docker Compose 是管理多容器应用的最佳方式，特别适合需要数据库支持的部署场景。
 
-### local storage 版本
+### 📝 LocalStorage 版本（基础）
+
+适合个人使用，数据存储在浏览器本地：
 
 ```yaml
+# docker-compose.yml
+version: '3.8'
+
 services:
   katelyatv:
     image: ghcr.io/katelya77/katelyatv:latest
@@ -200,48 +287,168 @@ services:
     ports:
       - '3000:3000'
     environment:
-      - PASSWORD=your_password
-    # 如需自定义配置，可挂载文件
+      - PASSWORD=your_secure_password
+      - SITE_NAME=我的影视站
+      - ANNOUNCEMENT=欢迎使用 KatelyaTV！请遵守相关法律法规。
+    # 可选：挂载自定义配置
     # volumes:
     #   - ./config.json:/app/config.json:ro
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 ```
 
-### Redis 版本（推荐，多账户数据隔离，跨设备同步）
+**启动命令：**
+```bash
+# 创建并启动服务
+docker compose up -d
+
+# 查看服务状态
+docker compose ps
+
+# 查看日志
+docker compose logs -f katelyatv
+```
+
+### 🔐 Redis 版本（推荐）
+
+支持多用户、跨设备数据同步、完整的用户权限管理：
 
 ```yaml
+# docker-compose.yml
+version: '3.8'
+
 services:
-  katelyatv-core:
+  katelyatv:
     image: ghcr.io/katelya77/katelyatv:latest
     container_name: katelyatv
     restart: unless-stopped
     ports:
       - '3000:3000'
     environment:
+      # 基础配置
+      - SITE_NAME=KatelyaTV 影视站
+      - ANNOUNCEMENT=支持多用户注册，请合理使用！
+      
+      # 管理员账号（重要！）
       - USERNAME=admin
-      - PASSWORD=admin_password
+      - PASSWORD=admin_super_secure_password
+      
+      # Redis 存储配置
       - NEXT_PUBLIC_STORAGE_TYPE=redis
       - REDIS_URL=redis://katelyatv-redis:6379
+      
+      # 用户功能
       - NEXT_PUBLIC_ENABLE_REGISTER=true
+      
+      # 可选：搜索配置
+      - NEXT_PUBLIC_SEARCH_MAX_PAGE=8
     networks:
       - katelyatv-network
     depends_on:
-      - katelyatv-redis
-    # 如需自定义配置，可挂载文件
+      katelyatv-redis:
+        condition: service_healthy
+    # 可选：挂载自定义配置和持久化数据
     # volumes:
     #   - ./config.json:/app/config.json:ro
+    #   - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
   katelyatv-redis:
-    image: redis
+    image: redis:7-alpine
     container_name: katelyatv-redis
     restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     networks:
       - katelyatv-network
-    # 如需持久化
-    # volumes:
-    #   - ./data:/data
+    volumes:
+      # Redis 数据持久化
+      - katelyatv-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    # 可选：端口映射（用于外部访问 Redis）
+    # ports:
+    #   - '6379:6379'
+
 networks:
   katelyatv-network:
     driver: bridge
+    name: katelyatv-network
+
+volumes:
+  katelyatv-redis-data:
+    driver: local
+    name: katelyatv-redis-data
 ```
+
+**完整部署流程：**
+
+```bash
+# 1. 创建项目目录
+mkdir katelyatv && cd katelyatv
+
+# 2. 创建 docker-compose.yml 文件（复制上面的内容）
+nano docker-compose.yml
+
+# 3. 启动所有服务
+docker compose up -d
+
+# 4. 查看服务状态
+docker compose ps
+
+# 5. 查看启动日志
+docker compose logs -f
+
+# 6. 首次访问 http://your-server:3000
+# 使用管理员账号 admin / admin_super_secure_password 登录
+# 然后访问 /admin 进行管理员配置
+```
+
+### 🔄 管理与维护
+
+```bash
+# 更新到最新版本
+docker compose pull && docker compose up -d
+
+# 备份 Redis 数据
+docker compose exec katelyatv-redis redis-cli BGSAVE
+docker run --rm -v katelyatv-redis-data:/data -v $(pwd):/backup alpine tar czf /backup/redis-backup-$(date +%Y%m%d).tar.gz /data
+
+# 查看资源使用情况
+docker compose stats
+
+# 重启特定服务
+docker compose restart katelyatv
+
+# 查看特定服务日志
+docker compose logs -f katelyatv-redis
+
+# 进入容器调试
+docker compose exec katelyatv /bin/sh
+
+# 完全清理（注意：会删除所有数据！）
+docker compose down -v --remove-orphans
+```
+
+### 🚨 重要注意事项
+
+1. **修改默认密码**：部署后请立即修改 `admin` 账号的默认密码
+2. **数据备份**：定期备份 Redis 数据卷，避免数据丢失
+3. **端口安全**：确保服务器防火墙正确配置，只开放必要端口
+4. **资源监控**：定期检查容器资源使用情况，必要时调整配置
+5. **日志管理**：配置日志轮转，避免日志文件过大
 
 ## 🔄 自动同步最近更改
 
