@@ -25,12 +25,28 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
+          # 修改这里：改为 pnpm 或者移除 cache 配置
+          # cache: 'npm'  # 删除这行，因为使用的是 pnpm
       
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
           version: 8
+          # 添加 pnpm 缓存配置
+          run_install: false
+      
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+      
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
       
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
