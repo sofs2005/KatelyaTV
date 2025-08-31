@@ -21,6 +21,25 @@
 
 ---
 
+## 📸 Screenshot
+
+<div align="center">
+
+<table>
+  <tr>
+    <td><img src="public/screenshot1.png" alt="KatelyaTV 截图1" width="400"></td>
+    <td><img src="public/screenshot2.png" alt="KatelyaTV 截图2" width="400"></td>
+  </tr>
+  <tr>
+    <td><img src="public/screenshot3.png" alt="KatelyaTV 截图3" width="400"></td>
+    <td><img src="public/screenshot4.png" alt="KatelyaTV 截图4" width="400"></td>
+  </tr>
+</table>
+
+</div>
+
+---
+
 ## ✨ 功能特性
 
 - 🔍 **多源聚合搜索**：内置20+个免费资源站点，一次搜索立刻返回全源结果，支持电影、电视剧、综艺等多种类型。
