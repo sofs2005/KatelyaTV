@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps, no-console */
+/* eslint-disable react-hooks/exhaustive-deps */
 
 'use client';
 
@@ -8,6 +8,7 @@ import { Suspense, useEffect, useState } from 'react';
 
 // 客户端收藏 API
 import {
+  type Favorite,
   clearAllFavorites,
   getAllFavorites,
   getAllPlayRecords,
@@ -19,7 +20,6 @@ import { DoubanItem } from '@/lib/types';
 import CapsuleSwitch from '@/components/CapsuleSwitch';
 import ContinueWatching from '@/components/ContinueWatching';
 import PageLayout from '@/components/PageLayout';
-import ScrollableRow from '@/components/ScrollableRow';
 import { useSite } from '@/components/SiteProvider';
 import VideoCard from '@/components/VideoCard';
 
@@ -137,7 +137,8 @@ function HomeClient() {
           setHotVarietyShows(varietyShowsData.list);
         }
       } catch (error) {
-        console.error('获取豆瓣数据失败:', error);
+        // 静默处理错误，避免控制台警告
+        // console.error('获取豆瓣数据失败:', error);
       } finally {
         setLoading(false);
       }
@@ -147,7 +148,7 @@ function HomeClient() {
   }, []);
 
   // 处理收藏数据更新的函数
-  const updateFavoriteItems = async (allFavorites: Record<string, any>) => {
+  const updateFavoriteItems = async (allFavorites: Record<string, Favorite>) => {
     const allPlayRecords = await getAllPlayRecords();
 
     // 根据保存时间排序（从近到远）
@@ -191,7 +192,7 @@ function HomeClient() {
     // 监听收藏更新事件
     const unsubscribe = subscribeToDataUpdates(
       'favoritesUpdated',
-      (newFavorites: Record<string, any>) => {
+      (newFavorites: Record<string, Favorite>) => {
         updateFavoriteItems(newFavorites);
       }
     );
@@ -290,13 +291,13 @@ function HomeClient() {
                     <ChevronRight className='w-4 h-4 ml-1' />
                   </Link>
                 </div>
-                <ScrollableRow>
+                <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4'>
                   {loading
-                    ? // 加载状态显示灰色占位数据
-                      Array.from({ length: 8 }).map((_, index) => (
+                    ? // 加载状态显示灰色占位数据 (显示10个，2行x5列)
+                      Array.from({ length: 10 }).map((_, index) => (
                         <div
                           key={index}
-                          className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                          className='w-full'
                         >
                           <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-purple-200 animate-pulse dark:bg-purple-800'>
                             <div className='absolute inset-0 bg-purple-300 dark:bg-purple-700'></div>
@@ -304,11 +305,11 @@ function HomeClient() {
                           <div className='mt-2 h-4 bg-purple-200 rounded animate-pulse dark:bg-purple-800'></div>
                         </div>
                       ))
-                    : // 显示真实数据
-                      hotMovies.map((movie, index) => (
+                    : // 显示真实数据，只显示前10个实现2行布局
+                      hotMovies.slice(0, 10).map((movie, index) => (
                         <div
                           key={index}
-                          className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                          className='w-full'
                         >
                           <VideoCard
                             from='douban'
@@ -321,7 +322,7 @@ function HomeClient() {
                           />
                         </div>
                       ))}
-                </ScrollableRow>
+                </div>
               </section>
 
               {/* 热门剧集 */}
@@ -338,13 +339,13 @@ function HomeClient() {
                     <ChevronRight className='w-4 h-4 ml-1' />
                   </Link>
                 </div>
-                <ScrollableRow>
+                <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4'>
                   {loading
-                    ? // 加载状态显示灰色占位数据
-                      Array.from({ length: 8 }).map((_, index) => (
+                    ? // 加载状态显示灰色占位数据 (显示10个，2行x5列)
+                      Array.from({ length: 10 }).map((_, index) => (
                         <div
                           key={index}
-                          className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                          className='w-full'
                         >
                           <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-purple-200 animate-pulse dark:bg-purple-800'>
                             <div className='absolute inset-0 bg-purple-300 dark:bg-purple-700'></div>
@@ -352,11 +353,11 @@ function HomeClient() {
                           <div className='mt-2 h-4 bg-purple-200 rounded animate-pulse dark:bg-purple-800'></div>
                         </div>
                       ))
-                    : // 显示真实数据
-                      hotTvShows.map((show, index) => (
+                    : // 显示真实数据，只显示前10个实现2行布局
+                      hotTvShows.slice(0, 10).map((show, index) => (
                         <div
                           key={index}
-                          className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                          className='w-full'
                         >
                           <VideoCard
                             from='douban'
@@ -368,7 +369,7 @@ function HomeClient() {
                           />
                         </div>
                       ))}
-                </ScrollableRow>
+                </div>
               </section>
 
               {/* 热门综艺 */}
@@ -385,13 +386,13 @@ function HomeClient() {
                     <ChevronRight className='w-4 h-4 ml-1' />
                   </Link>
                 </div>
-                <ScrollableRow>
+                <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4'>
                   {loading
-                    ? // 加载状态显示灰色占位数据
-                      Array.from({ length: 8 }).map((_, index) => (
+                    ? // 加载状态显示灰色占位数据 (显示10个，2行x5列)
+                      Array.from({ length: 10 }).map((_, index) => (
                         <div
                           key={index}
-                          className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                          className='w-full'
                         >
                           <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-purple-200 animate-pulse dark:bg-purple-800'>
                             <div className='absolute inset-0 bg-purple-300 dark:bg-purple-700'></div>
@@ -399,11 +400,11 @@ function HomeClient() {
                           <div className='mt-2 h-4 bg-purple-200 rounded animate-pulse dark:bg-purple-800'></div>
                         </div>
                       ))
-                    : // 显示真实数据
-                      hotVarietyShows.map((show, index) => (
+                    : // 显示真实数据，只显示前10个实现2行布局
+                      hotVarietyShows.slice(0, 10).map((show, index) => (
                         <div
                           key={index}
-                          className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                          className='w-full'
                         >
                           <VideoCard
                             from='douban'
@@ -415,7 +416,7 @@ function HomeClient() {
                           />
                         </div>
                       ))}
-                </ScrollableRow>
+                </div>
               </section>
 
               {/* 首页底部 Logo */}

@@ -65,7 +65,7 @@ const LEGACY_SEARCH_HISTORY_KEY = 'moontv_search_history';
 
 // 缓存相关常量
 const CACHE_PREFIX = 'katelyatv_cache_';
-const LEGACY_CACHE_PREFIX = 'moontv_cache_';
+const _LEGACY_CACHE_PREFIX = 'moontv_cache_'; // 保留用于将来的迁移功能
 const CACHE_VERSION = '1.0.0';
 const CACHE_EXPIRE_TIME = 60 * 60 * 1000; // 一小时缓存过期
 

@@ -590,7 +590,44 @@ KatelyaTV 支持标准的苹果 CMS V10 API 格式。
 
 [MIT](LICENSE) © 2025 KatelyaTV & Contributors
 
-## 🙏 致谢
+## � Star History
+
+<div align="center">
+
+[![Star History Chart](https://api.star-history.com/svg?repos=katelya77/KatelyaTV&type=Date)](https://star-history.com/#katelya77/KatelyaTV&Date)
+
+</div>
+
+## 💖 支持项目
+
+如果这个项目对您有帮助，欢迎给个 ⭐️ Star 支持一下！
+
+您也可以通过以下方式支持项目的持续开发：
+
+<div align="center">
+
+### 请开发者喝杯咖啡 ☕
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="https://via.placeholder.com/200x200/00D8FF/FFFFFF?text=WeChat+Pay" alt="微信支付" width="200">
+      <br>
+      <strong>微信支付</strong>
+    </td>
+    <td align="center">
+      <img src="https://via.placeholder.com/200x200/1677FF/FFFFFF?text=Alipay" alt="支付宝" width="200">
+      <br>
+      <strong>支付宝</strong>
+    </td>
+  </tr>
+</table>
+
+> 💝 感谢您的支持！您的捐赠将用于项目的持续维护和功能改进。
+
+</div>
+
+## �🙏 致谢
 
 - [ts-nextjs-tailwind-starter](https://github.com/theodorusclarence/ts-nextjs-tailwind-starter) — 项目最初基于该脚手架。
 - [LibreTV](https://github.com/LibreSpark/LibreTV) — 由此启发，站在巨人的肩膀上。

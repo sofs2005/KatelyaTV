@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+/* eslint-disable @typescript-eslint/no-var-requires, no-console */
+
 /**
  * 智能包管理器检测和推荐脚本
  * 帮助用户选择最适合的包管理器
@@ -7,7 +9,6 @@
 
 const { execSync } = require('child_process');
 const fs = require('fs');
-const path = require('path');
 
 console.log('🔍 检测包管理器环境...\n');
 

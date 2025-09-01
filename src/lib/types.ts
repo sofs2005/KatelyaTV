@@ -95,3 +95,18 @@ export interface DoubanResult {
   message: string;
   list: DoubanItem[];
 }
+
+// Runtime配置类型
+export interface RuntimeConfig {
+  STORAGE_TYPE?: string;
+  ENABLE_REGISTER?: boolean;
+  IMAGE_PROXY?: string;
+  DOUBAN_PROXY?: string;
+}
+
+// 全局Window类型扩展
+declare global {
+  interface Window {
+    RUNTIME_CONFIG?: RuntimeConfig;
+  }
+}

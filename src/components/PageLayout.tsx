@@ -183,20 +183,24 @@ const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
             </div>
           )}
 
-          {/* 主内容容器 - 修改布局实现完全居中：左右各留白1/6，主内容区占2/3 */}
+          {/* 主内容容器 - 为播放页面使用特殊布局（83.33%宽度），其他页面使用默认布局（66.67%宽度） */}
           <main className='flex-1 md:min-h-0 mb-14 md:mb-0 md:p-6 lg:p-8'>
-            {/* 使用flex布局实现三等分 */}
+            {/* 使用flex布局实现宽度控制 */}
             <div className='flex w-full min-h-screen md:min-h-[calc(100vh-10rem)]'>
-              {/* 左侧留白区域 - 占1/6 */}
+              {/* 左侧留白区域 - 播放页面占8.33%，其他页面占16.67% */}
               <div
                 className='hidden md:block flex-shrink-0'
-                style={{ width: '16.67%' }}
+                style={{ 
+                  width: ['/play'].includes(activePath) ? '8.33%' : '16.67%' 
+                }}
               ></div>
 
-              {/* 主内容区 - 占2/3 */}
+              {/* 主内容区 - 播放页面占83.33%，其他页面占66.67% */}
               <div
                 className='flex-1 md:flex-none rounded-container w-full'
-                style={{ width: '66.67%' }}
+                style={{ 
+                  width: ['/play'].includes(activePath) ? '83.33%' : '66.67%' 
+                }}
               >
                 <div
                   className='p-4 md:p-8 lg:p-10'
@@ -208,10 +212,12 @@ const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
                 </div>
               </div>
 
-              {/* 右侧留白区域 - 占1/6 */}
+              {/* 右侧留白区域 - 播放页面占8.33%，其他页面占16.67% */}
               <div
                 className='hidden md:block flex-shrink-0'
-                style={{ width: '16.67%' }}
+                style={{ 
+                  width: ['/play'].includes(activePath) ? '8.33%' : '16.67%' 
+                }}
               ></div>
             </div>
           </main>
