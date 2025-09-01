@@ -71,8 +71,10 @@ const TopNavbar = ({ activePath = '/' }: { activePath?: string }) => {
     },
   ];
 
+  // 桌面端：顶部固定导航（fixed）
+  // 移动端：不显示此组件，改由底部导航 + 轻量顶部条（非固定）
   return (
-    <nav className='w-full bg-white/40 backdrop-blur-xl border-b border-purple-200/50 shadow-lg dark:bg-gray-900/70 dark:border-purple-700/50 sticky top-0 z-50'>
+    <nav className='w-full bg-white/40 backdrop-blur-xl border-b border-purple-200/50 shadow-lg dark:bg-gray-900/70 dark:border-purple-700/50 fixed top-0 left-0 right-0 z-40 hidden md:block'>
       <div className='w-full px-8 lg:px-12 xl:px-16'>
         <div className='flex items-center justify-between h-16'>
           {/* Logo区域 - 调整为更靠左 */}
@@ -164,16 +166,14 @@ const TopNavbar = ({ activePath = '/' }: { activePath?: string }) => {
 const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
   return (
     <div className='w-full min-h-screen'>
-      {/* 移动端头部 */}
+      {/* 移动端头部 (fixed) */}
       <MobileHeader showBackButton={['/play'].includes(activePath)} />
 
-      {/* 桌面端顶部导航栏 - 直接放在最外层，确保 sticky 生效 */}
-      <div className='hidden md:block'>
-        <TopNavbar activePath={activePath} />
-      </div>
+      {/* 桌面端顶部导航栏 (fixed) */}
+      <TopNavbar activePath={activePath} />
 
-      {/* 主内容区域 - 移除 overflow-auto，让整个页面可滚动 */}
-      <div className='relative min-w-0 transition-all duration-300'>
+  {/* 主内容区域 - 预留桌面端顶部导航高度 64px */}
+  <div className='relative min-w-0 transition-all duration-300 md:pt-16'>
         {/* 桌面端左上角返回按钮 */}
         {['/play'].includes(activePath) && (
           <div className='absolute top-3 left-1 z-20 hidden md:flex'>
