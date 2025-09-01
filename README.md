@@ -25,135 +25,369 @@
 
 本项目自「MoonTV」演进而来，为其二创/继承版本，持续维护与改进功能与体验。保留并致谢原作者与社区贡献者；如有授权或版权问题请联系以处理。目标：在原作基础上提供更易部署、更友好、更稳定的体验。
 
-## 🚀 部署（概览 + 实操）
+## 🚀 部署教程
 
-支持 3 大路径：**Docker（推荐生产） / Vercel（免服务器） / Cloudflare Pages + Workers（适合 D1）**。
+> **💡 推荐方案**：新手优先选择 **Docker 单容器**（最简单），需要多用户再升级到 **Docker + Redis**
 
-### 1. 选型快速指引
-| 你的需求 | 推荐方案 | 存储模式 | 说明 |
-| -------- | -------- | -------- | ---- |
-| 个人本机 / NAS / VPS 一条命令跑起来 | Docker 单容器 | localstorage | 无账号体系，仅本设备浏览器保存记录 |
-| 多用户 / 同步观看记录 / 简单可维护 | Docker + Redis (Compose) | redis | 稳定高性能，可控数据 |
-| 免费托管 + 轻度使用 | Vercel | localstorage / upstash | localstorage 无多用户；Upstash 提供云 Redis |
-| 需要使用 Cloudflare D1 | Cloudflare Pages + D1 | d1 | 使用 Cloudflare 边缘与 D1 数据库 |
-| 不方便自建 Redis 又要同步 | Vercel + Upstash / Docker + Upstash | upstash | Upstash 提供 HTTP API |
+<div align="center">
 
-### 2. 存储支持矩阵
-|               | Docker | Vercel | Cloudflare |
-| :-----------: | :----: | :----: | :--------: |
-| localstorage  |   ✅   |   ✅   |     ✅     |
-| 原生 redis    |   ✅   |        |            |
-| Cloudflare D1 |        |        |     ✅     |
-| Upstash Redis |   ✅   |   ✅   |     ☑️     |
+### 📋 部署方式对比
 
-说明：非 localstorage 模式才有多账户、云同步、管理后台 `/admin`。
+| 方式 | 难度 | 成本 | 多用户 | 推荐场景 |
+|------|------|------|--------|----------|
+| 🐳 **Docker 单容器** | ⭐ | 需服务器 | ❌ | 个人使用，最简单 |
+| 🐳 **Docker + Redis** | ⭐⭐ | 需服务器 | ✅ | 家庭/团队，功能完整 |
+| ☁️ **Vercel** | ⭐ | 免费 | ❌ | 临时体验，无服务器 |
+| 🌐 **Cloudflare** | ⭐⭐⭐ | 免费 | ✅ | 技术爱好者 |
+
+</div>
 
 ---
-### 3. Docker 最小启动
+
+## 🎯 方案一：Docker 单容器（推荐新手）
+
+> **适合场景**：个人使用，有服务器/NAS/电脑，想要最简单的部署方式
+
+### 🔧 前置要求
+- 一台能联网的设备（服务器/NAS/Windows/Mac/Linux 都行）
+- 已安装 Docker（[Docker 官网下载](https://www.docker.com/get-started/)）
+
+### 📝 详细步骤
+
+#### 第一步：拉取镜像
 ```bash
+# 下载最新版本镜像（支持 ARM 和 x86 架构）
+docker pull ghcr.io/katelya77/katelyatv:latest
+```
+
+#### 第二步：启动容器
+```bash
+# 一键启动（请把 your_password 改成你的密码）
 docker run -d \
   --name katelyatv \
   -p 3000:3000 \
-  --env PASSWORD=替换为你的访问密码 \
+  --env PASSWORD=your_password \
   --restart unless-stopped \
   ghcr.io/katelya77/katelyatv:latest
 ```
-访问：http://服务器IP:3000 （首次输入 PASSWORD）
 
-挂载自定义源：
+> **Windows 用户注意**：在 PowerShell 中运行上述命令
+
+#### 第三步：访问应用
+1. 打开浏览器，访问：`http://你的服务器IP:3000`
+2. 如果是本机安装，访问：`http://localhost:3000`
+3. 输入你在第二步设置的密码即可进入
+
+#### 第四步：自定义资源站（可选）
+如果你有自己的资源站配置，可以挂载 `config.json` 文件：
+
 ```bash
-docker run -d --name katelyatv -p 3000:3000 \
-  -v $(pwd)/config.json:/app/config.json:ro \
-  --env PASSWORD=你的密码 \
+# 先停止并删除旧容器
+docker stop katelyatv && docker rm katelyatv
+
+# 重新运行并挂载配置文件
+docker run -d \
+  --name katelyatv \
+  -p 3000:3000 \
+  --env PASSWORD=your_password \
+  -v /path/to/your/config.json:/app/config.json:ro \
+  --restart unless-stopped \
   ghcr.io/katelya77/katelyatv:latest
 ```
-PowerShell 可用：`-v C:/data/katelya/config.json:/app/config.json:ro`
 
-需要多用户：请看下文 Docker Compose Redis。
+> **路径说明**：把 `/path/to/your/config.json` 替换成你的配置文件完整路径  
+> **Windows 示例**：`-v C:/Users/你的用户名/Desktop/config.json:/app/config.json:ro`
 
----
-### 4. Vercel 部署
-#### 4.1 localstorage
-1. Fork 仓库 → Import 到 Vercel
-2. 添加环境变量：`PASSWORD=你的访问密码`
-3. Deploy
-4. （可选）修改 `config.json` 后 Push 自动重建
-
-#### 4.2 Upstash 模式
-1. 完成 4.1
-2. Upstash 创建 Redis 获取 HTTPS Endpoint & REST Token
-3. 添加变量：`UPSTASH_URL` / `UPSTASH_TOKEN` / `NEXT_PUBLIC_STORAGE_TYPE=upstash` / `USERNAME` / `PASSWORD`
-4. Redeploy → 登录 admin → `/admin`
-
----
-### 5. Cloudflare Pages
-输出目录：`.vercel/output/static`；启用：`nodejs_compat`。
-
-构建命令三选一：
+### 🛠️ 常用管理命令
 ```bash
-npm install && npm run pages:build
-corepack enable && pnpm install --frozen-lockfile && pnpm run pages:build
-npm i -g pnpm@8 && pnpm install --frozen-lockfile && pnpm run pages:build
+# 查看运行状态
+docker ps
+
+# 查看日志
+docker logs katelyatv
+
+# 重启应用
+docker restart katelyatv
+
+# 停止应用
+docker stop katelyatv
+
+# 删除容器
+docker rm katelyatv
 ```
-#### 5.1 localstorage
-1. Fork → Pages 导入
-2. 设置构建命令 & 输出目录
-3. 首次构建后添加 `PASSWORD`
-4. 重新部署
-
-#### 5.2 D1
-1. 完成 5.1 可访问
-2. 创建 D1 数据库并执行 `D1初始化.md` 里的 SQL
-3. Pages 绑定 D1 变量名 `DB`
-4. 添加：`NEXT_PUBLIC_STORAGE_TYPE=d1`、`USERNAME`、`PASSWORD`
-5. 重新部署 → admin 登录配置
-
-#### 5.3 常见问题
-| 问题 | 现象 | 解决 |
-| ---- | ---- | ---- |
-| 未找到静态输出 | 404 | 确认构建命令正确执行 & 日志无报错 |
-| 访问被拒 | 403 | 检查是否设置 PASSWORD |
-| D1 失败 | 500/绑定错误 | 确认绑定名 `DB` 且 SQL 初始化完成 |
 
 ---
-### 6. Redis（Docker Compose）快速示例
-```yaml
+
+## 🎯 方案二：Docker + Redis（推荐进阶）
+
+> **适合场景**：多人使用，需要账号系统、观看记录同步、收藏功能
+
+### 🔧 前置要求
+- 已完成方案一，确认单容器版本能正常运行
+- 了解基本的 Docker Compose 概念
+
+### 📝 详细步骤
+
+#### 第一步：创建配置文件
+在你的服务器上创建一个文件夹，比如 `/opt/katelyatv`：
+
+```bash
+# 创建目录
+mkdir -p /opt/katelyatv
+cd /opt/katelyatv
+
+# 创建 docker-compose.yml 文件
+cat > docker-compose.yml << 'EOF'
+version: '3.8'
+
 services:
+  # KatelyaTV 主应用
   katelyatv:
     image: ghcr.io/katelya77/katelyatv:latest
+    container_name: katelyatv
+    ports:
+      - "3000:3000"
     environment:
+      # 管理员账号（请修改）
       - USERNAME=admin
-      - PASSWORD=强密码
+      - PASSWORD=your_strong_password
+      # 启用 Redis 存储
       - NEXT_PUBLIC_STORAGE_TYPE=redis
       - REDIS_URL=redis://katelyatv-redis:6379
+      # 允许用户注册（可选）
       - NEXT_PUBLIC_ENABLE_REGISTER=true
     depends_on:
       katelyatv-redis:
         condition: service_healthy
+    restart: unless-stopped
+    # 可选：挂载自定义配置
+    # volumes:
+    #   - ./config.json:/app/config.json:ro
+
+  # Redis 数据库
   katelyatv-redis:
     image: redis:7-alpine
+    container_name: katelyatv-redis
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - katelyatv-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  katelyatv-redis-data:
+EOF
 ```
-启动：`docker compose up -d`
+
+#### 第二步：修改配置
+编辑 `docker-compose.yml` 文件，**必须修改**以下内容：
+- `PASSWORD=your_strong_password` 改成你的强密码
+- `USERNAME=admin` 可以改成你喜欢的管理员用户名
+
+#### 第三步：启动服务
+```bash
+# 启动所有服务
+docker compose up -d
+
+# 查看启动状态
+docker compose ps
+```
+
+#### 第四步：验证部署
+1. 访问 `http://你的服务器IP:3000`
+2. 使用你设置的用户名和密码登录
+3. 登录后访问 `http://你的服务器IP:3000/admin` 进入管理后台
+4. 在管理后台可以配置资源站、管理用户等
+
+### 🛠️ 管理命令
+```bash
+# 查看所有服务状态
+docker compose ps
+
+# 查看日志
+docker compose logs -f
+
+# 重启所有服务
+docker compose restart
+
+# 停止所有服务
+docker compose down
+
+# 更新到最新版本
+docker compose pull
+docker compose up -d
+```
+
+### 💾 备份数据
+```bash
+# 备份 Redis 数据
+docker run --rm -v katelyatv-redis-data:/data -v $(pwd):/backup alpine tar czf /backup/redis-backup-$(date +%Y%m%d).tar.gz /data
+
+# 恢复数据（如果需要）
+docker run --rm -v katelyatv-redis-data:/data -v $(pwd):/backup alpine tar xzf /backup/redis-backup-20241201.tar.gz -C /
+```
 
 ---
-### 7. 环境变量最小清单
-| 场景 | 必填 | 说明 |
-| ---- | ---- | ---- |
-| localstorage | PASSWORD | 全站访问密码 |
-| redis | USERNAME / PASSWORD / NEXT_PUBLIC_STORAGE_TYPE=redis / REDIS_URL | 多用户 + 同步 |
-| upstash | USERNAME / PASSWORD / NEXT_PUBLIC_STORAGE_TYPE=upstash / UPSTASH_URL / UPSTASH_TOKEN | 云 Redis |
-| d1 | USERNAME / PASSWORD / NEXT_PUBLIC_STORAGE_TYPE=d1 / DB | 需预初始化 |
+
+## 🎯 方案三：Vercel 部署（免服务器）
+
+> **适合场景**：没有服务器，想要快速体验，个人使用
+
+### 🔧 前置要求
+- GitHub 账号
+- Vercel 账号（可用 GitHub 登录）
+
+### 📝 详细步骤
+
+#### 第一步：Fork 仓库
+1. 打开 [KatelyaTV GitHub 页面](https://github.com/katelya77/KatelyaTV)
+2. 点击右上角 **Fork** 按钮
+3. 等待 Fork 完成
+
+#### 第二步：部署到 Vercel
+1. 访问 [Vercel](https://vercel.com/)，用 GitHub 账号登录
+2. 点击 **Add New... → Project**
+3. 找到你刚才 Fork 的 `KatelyaTV` 仓库，点击 **Import**
+4. 在 **Environment Variables** 部分添加：
+   - Key: `PASSWORD`
+   - Value: `你的访问密码`（这是进入网站的密码）
+5. 点击 **Deploy** 开始部署
+
+#### 第三步：等待部署完成
+- 通常需要 2-3 分钟
+- 部署成功后会显示域名，比如 `https://your-project.vercel.app`
+
+#### 第四步：访问和使用
+1. 点击 Vercel 提供的域名链接
+2. 输入你在第二步设置的密码
+3. 开始使用！
+
+### 🔧 自定义资源站
+如果你想添加自己的资源站：
+1. 在你 Fork 的仓库中找到 `config.json` 文件
+2. 点击编辑按钮（铅笔图标）
+3. 修改配置内容
+4. 点击 **Commit changes**
+5. Vercel 会自动重新部署
+
+### ⚠️ 注意事项
+- Vercel 版本不支持用户注册和账号系统
+- 观看记录保存在浏览器本地，换设备会丢失
+- 如果需要多用户功能，请考虑 Docker + Redis 方案
 
 ---
-### 8. 升级 / 备份
-| 操作 | Docker | Compose |
-| ---- | ------ | ------- |
-| 升级 | 拉新镜像重建容器 | pull + up -d |
-| 备份 | 复制 config.json | 备份 Redis 卷 |
-| 日志 | docker logs -f | docker compose logs -f |
 
-到这里你已经可以完成部署；继续阅读下方获取更全面的 Docker / Compose 说明。
+## 🎯 方案四：Cloudflare Pages（进阶用户）
+
+> **适合场景**：技术爱好者，想要全球 CDN 加速，免费但配置复杂
+
+### 🔧 前置要求
+- GitHub 账号
+- Cloudflare 账号
+- 对前端构建有基本了解
+
+### 📝 详细步骤
+
+#### 第一步：Fork 仓库并连接
+1. Fork [KatelyaTV 仓库](https://github.com/katelya77/KatelyaTV)
+2. 登录 [Cloudflare](https://cloudflare.com)
+3. 进入 **Workers 和 Pages** → 点击 **创建应用程序**
+4. 选择 **Pages** → **连接到 Git**
+5. 选择你 Fork 的仓库
+
+#### 第二步：配置构建设置
+在构建设置页面填写：
+- **构建命令**: `npm install && npm run pages:build`
+- **构建输出目录**: `.vercel/output/static`
+- **Root directory**: `./`（默认）
+
+#### 第三步：设置兼容性
+1. 点击 **保存并部署**
+2. 等待首次构建完成（可能会失败，没关系）
+3. 进入项目 **设置** → **兼容性标志**
+4. 添加标志: `nodejs_compat`
+
+#### 第四步：添加环境变量
+在 **设置** → **环境变量** 中添加：
+- `PASSWORD`: 你的访问密码
+
+#### 第五步：重新部署
+1. 进入 **部署** 页面
+2. 点击最新部署旁的 **...** → **重试部署**
+3. 等待部署成功
+
+### 🗄️ 启用 D1 数据库（可选，支持多用户）
+
+如果你想要用户系统和数据同步：
+
+#### 第一步：创建 D1 数据库
+1. 在 Cloudflare Dashboard 进入 **存储和数据库** → **D1 SQL 数据库**
+2. 点击 **创建数据库**，名称随意（比如 `katelyatv-db`）
+
+#### 第二步：初始化数据库
+1. 进入刚创建的数据库
+2. 点击 **Explore Data**
+3. 打开项目中的 `D1初始化.md` 文件，复制所有 SQL 语句
+4. 粘贴到查询窗口，点击 **Run All**
+
+#### 第三步：绑定数据库
+1. 回到 Pages 项目设置
+2. 进入 **绑定** → **添加绑定**
+3. 选择 **D1 数据库**
+4. 变量名: `DB`
+5. 选择你刚创建的数据库
+
+#### 第四步：添加环境变量
+在环境变量中追加：
+- `NEXT_PUBLIC_STORAGE_TYPE`: `d1`
+- `USERNAME`: 管理员用户名
+- `PASSWORD`: 管理员密码
+
+#### 第五步：重新部署
+重新部署后，你就可以：
+- 使用管理员账号登录
+- 访问 `/admin` 管理后台
+- 支持用户注册和数据同步
+
+---
+
+## 🆙 升级和维护
+
+### Docker 升级
+```bash
+# 单容器版本
+docker stop katelyatv
+docker rm katelyatv
+docker pull ghcr.io/katelya77/katelyatv:latest
+# 然后重新运行启动命令
+
+# Compose 版本
+docker compose pull
+docker compose up -d
+```
+
+### Vercel 升级
+- 自动升级：当原仓库更新时，你的 Fork 仓库会收到更新提示
+- 手动升级：在你的 Fork 仓库点击 **Sync fork** 按钮
+
+### Cloudflare 升级
+- 同 Vercel，通过 Git 同步自动触发重新构建
+
+### 🚨 常见问题排查
+
+| 问题 | 现象 | 解决方法 |
+|------|------|----------|
+| 无法访问 | 浏览器显示无法连接 | 检查端口 3000 是否开放，防火墙设置 |
+| 403 Forbidden | 显示访问被拒绝 | 检查 PASSWORD 环境变量是否设置正确 |
+| Docker 启动失败 | 容器无法启动 | 查看日志 `docker logs katelyatv` |
+| Redis 连接失败 | 无法登录或保存数据 | 检查 Redis 容器是否正常运行 |
+| 构建失败 | Vercel/Cloudflare 部署失败 | 查看构建日志，检查环境变量设置 |
+
+需要帮助？可以在 [GitHub Issues](https://github.com/katelya77/KatelyaTV/issues) 提问。
 ## 🐳 Docker
 
 推荐方式。镜像多架构 (`linux/amd64`,`linux/arm64`)，基于 Alpine，体积小启动快。
