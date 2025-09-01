@@ -1,94 +1,83 @@
-# KatelyaTV
-
 <div align="center">
-  <img src="public/logo.png" alt="KatelyaTV Logo" width="120">
-</div>
-
-> 🎬 **KatelyaTV** 是一个开箱即用的、跨平台的影视聚合播放器。它基于 **Next.js 14** + **Tailwind&nbsp;CSS** + **TypeScript** 构建，支持多资源搜索、在线播放、收藏同步、播放记录、本地/云端存储，让你可以随时随地畅享海量免费影视内容。
->
-> 本项目是在原始项目「MoonTV」基础上的二创与继承版本，由 Katelya 持续开发与维护。在致敬原作的前提下，继续修复问题、优化体验并扩展功能。
-
-<div align="center">
-
-![Next.js](https://img.shields.io/badge/Next.js-14-000?logo=nextdotjs)
-![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3-38bdf8?logo=tailwindcss)
-![TypeScript](https://img.shields.io/badge/TypeScript-4.x-3178c6?logo=typescript)
-![License](https://img.shields.io/badge/License-MIT-green)
-![Docker Ready](https://img.shields.io/badge/Docker-ready-blue?logo=docker)
-![PWA Ready](https://img.shields.io/badge/PWA-ready-orange?logo=pwa)
-
+  <img src="public/logo.png" alt="KatelyaTV Logo" width="128" />
+  <h1>KatelyaTV</h1>
+  <p><strong>跨平台 · 聚合搜索 · 即开即用 · 自托管影视聚合播放器</strong></p>
+  <p>基于 <code>Next.js 14</code> · <code>TypeScript</code> · <code>Tailwind CSS</code> · 多源聚合 / 播放记录 / 收藏同步 / PWA</p>
+  <p>MoonTV 二创延续版 · 持续维护与增强</p>
+  <p>
+    <a href="#部署">🚀 部署</a> ·
+    <a href="#功能特性">✨ 功能</a> ·
+    <a href="#docker">🐳 Docker</a> ·
+    <a href="#环境变量">⚙️ 配置</a>
+  </p>
+  <p>
+    <img src="https://img.shields.io/badge/Next.js-14-000?logo=nextdotjs" />
+    <img src="https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript" />
+    <img src="https://img.shields.io/badge/TailwindCSS-3-38bdf8?logo=tailwindcss" />
+    <img src="https://img.shields.io/badge/Docker-ready-blue?logo=docker" />
+    <img src="https://img.shields.io/badge/PWA-ready-orange" />
+    <img src="https://img.shields.io/badge/License-MIT-green" />
+  </p>
 </div>
 
 ---
 
 ## 📋 重要声明
-
-> ⚠️ **视频源说明**
-> 
-> 应用户建议，为避免潜在的版权争议，本项目已移除内置的视频源配置。如需使用完整功能，请：
-> - 📥 [下载官方提供的视频源配置文件](https://www.mediafire.com/file/xl3yo7la2ci378w/config.json/file)
-> - 🔍 自行寻找符合当地法律法规的合规视频源
-> - 🛠️ 根据需要自定义配置文件
-> 
-> 项目本身仅提供技术框架，内容源由用户自主选择和配置。请确保您的使用行为符合相关法律法规。
+> ⚠️ **视频源说明**  
+> 出于合规与版权风险考虑，仓库默认不再内置视频源。请自行准备 `config.json`：  
+> - 可下载官方示例配置（见 Releases 或外部链接）或自建  
+> - 仅添加符合当地法律法规的站点  
+> - 作者不对第三方内容合法性负责，请自负责任  
+>
+> 项目仅提供聚合播放器技术框架，不提供/存储任何视频文件。
 
 ---
-
-## 📸 Screenshot
-
-<div align="center">
-
-<table>
-  <tr>
-    <td><img src="public/screenshot1.png" alt="KatelyaTV 截图1" width="400"></td>
-    <td><img src="public/screenshot2.png" alt="KatelyaTV 截图2" width="400"></td>
-  </tr>
-  <tr>
-    <td><img src="public/screenshot3.png" alt="KatelyaTV 截图3" width="400"></td>
-    <td><img src="public/screenshot4.png" alt="KatelyaTV 截图4" width="400"></td>
-  </tr>
-</table>
-
-</div>
-
----
-
-## ✨ 功能特性
-
-- 🔍 **多源聚合搜索**：内置20+个免费资源站点，一次搜索立刻返回全源结果，支持电影、电视剧、综艺等多种类型。
-- 📄 **丰富详情页**：支持剧集列表、演员、年份、简介等完整信息展示，集成豆瓣评分和热门推荐。
-- ▶️ **流畅在线播放**：集成 HLS.js & ArtPlayer，支持多种视频格式，自动跳过广告切片。
-- 📺 **观看历史记录**：智能记录播放进度，支持断点续播，多设备同步观看状态。
-- ❤️ **收藏 + 继续观看**：支持 Redis/D1/Upstash 存储，多端同步进度，个性化推荐。
-- 📱 **PWA 支持**：离线缓存、安装到桌面/主屏，移动端原生体验，支持推送通知。
-- 🌗 **响应式布局**：桌面侧边栏 + 移动底部导航，自适应各种屏幕尺寸，支持深色模式。
-- 👥 **多用户系统**：支持用户注册、登录、权限管理，数据隔离和同步。
-- 🚀 **极简部署**：一条 Docker 命令即可将完整服务跑起来，或免费部署到 Vercel 和 Cloudflare。
-- 🎨 **现代化UI**：基于 Tailwind CSS 构建，支持主题切换，流畅的动画效果。
-
-<details>
-  <summary>点击查看项目截图</summary>
-  <img src="public/screenshot1.png" alt="项目截图" style="max-width:600px">
-  <img src="public/screenshot2.png" alt="项目截图" style="max-width:600px">
-  <img src="public/screenshot3.png" alt="项目截图" style="max-width:600px">
-</details>
 
 ## 🗺 目录
 
-- [技术栈](#技术栈)
-- [核心功能](#核心功能)
-- [项目来源与声明](#项目来源与声明)
-- [部署](#部署)
-- [Docker 部署详解](#Docker-部署详解)
-- [Docker Compose 最佳实践](#Docker-Compose-最佳实践)
-- [环境变量](#环境变量)
-- [配置说明](#配置说明)
-- [管理员配置](#管理员配置)
-- [AndroidTV 使用](#AndroidTV-使用)
-- [Roadmap](#roadmap)
-- [安全与隐私提醒](#安全与隐私提醒)
-- [License](#license)
-- [致谢](#致谢)
+1. [✨ 功能特性](#功能特性)
+2. [📸 截图](#截图)
+3. [🛠 技术栈](#技术栈)
+4. [🚀 部署](#部署)
+5. [🐳 Docker](#docker)
+6. [🐙 Docker Compose](#docker-compose-最佳实践)
+7. [⚙️ 环境变量](#环境变量)
+8. [📁 配置说明 config.json](#配置说明)
+9. [👨‍💼 管理员配置](#管理员配置)
+10. [📱 AndroidTV](#androidtv-使用)
+11. [🗓️ Roadmap](#roadmap)
+12. [⚠️ 安全与隐私](#安全与隐私提醒)
+13. [💖 支持项目](#支持项目)
+14. [🙏 致谢](#致谢)
+15. [📄 License](#license)
+
+## ✨ 功能特性
+
+| 模块 | 功能 | 说明 |
+| ---- | ---- | ---- |
+| 多源搜索 | 20+ 资源站聚合 | 一次请求并自动去重 |
+| 播放器 | HLS.js + ArtPlayer | 进度记忆 / 倍速 / 全屏 / 弹性布局 |
+| 数据同步 | 收藏 / 观看记录 | 支持 Redis / Upstash / Cloudflare D1 / LocalStorage |
+| 用户体系 | 站长 / 管理员 / 普通用户 | 可控制注册开关，权限隔离 |
+| PWA | 安装 / 离线支持 | manifest + service worker |
+| UI | 响应式 / 主题切换 | 桌面顶部固定导航 + 移动底部导航 + 暗色模式 |
+| 豆瓣整合 | 评分 / 推荐 | 详情页聚合展示 |
+| 部署 | Docker / Vercel / Cloudflare | 一条命令即用，多架构镜像 |
+
+## 📸 截图
+
+<div align="center">
+  <table>
+    <tr>
+      <td><img src="public/screenshot1.png" width="380" /></td>
+      <td><img src="public/screenshot2.png" width="380" /></td>
+    </tr>
+    <tr>
+      <td><img src="public/screenshot3.png" width="380" /></td>
+      <td><img src="public/screenshot4.png" width="380" /></td>
+    </tr>
+  </table>
+</div>
 
 ## 🛠 技术栈
 
@@ -96,52 +85,19 @@
 | --------- | ----------------------------------------------------------------------------------------------------- |
 | 前端框架  | [Next.js 14](https://nextjs.org/) · App Router                                                        |
 | UI & 样式 | [Tailwind&nbsp;CSS 3](https://tailwindcss.com/) · [Framer Motion](https://www.framer.com/motion/)     |
-| 语言      | TypeScript 4                                                                                          |
+| 语言      | TypeScript 5                                                                                          |
 | 播放器    | [ArtPlayer](https://github.com/zhw2590582/ArtPlayer) · [HLS.js](https://github.com/video-dev/hls.js/) |
 | 状态管理  | React Hooks · Context API                                                                             |
 | 代码质量  | ESLint · Prettier · Jest · Husky                                                                      |
 | 部署      | Docker · Vercel · CloudFlare pages                                                                    |
 
-## 🎯 核心功能
-
-### 观看历史记录
-
-- **智能进度记录**：自动记录每个视频的播放进度、观看时长、当前集数
-- **断点续播**：支持从上次观看位置继续播放，无需手动寻找
-- **多设备同步**：通过 Redis/D1/Upstash 存储，实现跨设备观看记录同步
-- **历史管理**：支持查看、删除单条记录或清空全部历史
-- **进度条显示**：在视频卡片上显示观看进度百分比
-
-### 多源聚合搜索
-
-- **20+ 资源站点**：集成电影天堂、黑木耳、如意资源等热门站点
-- **统一搜索接口**：一次搜索返回多个源的结果，提高资源获取成功率
-- **智能去重**：自动识别重复内容，优化搜索结果展示
-- **分类筛选**：支持按电影、电视剧、综艺等类型筛选
-
-### 收藏与同步
-
-- **个性化收藏**：支持收藏喜欢的影视作品，创建个人片单
-- **多端同步**：收藏数据云端存储，多设备访问保持一致
-- **观看状态**：收藏夹中显示观看进度和当前集数
-- **批量管理**：支持批量删除和清空收藏
-
-### PWA 特性
-
-- **离线缓存**：支持离线访问已缓存的内容
-- **桌面安装**：可安装到桌面，提供原生应用体验
-- **推送通知**：支持新内容推送和更新提醒
-- **响应式设计**：完美适配各种屏幕尺寸
-
 ## 📢 项目来源与声明
 
-- 本项目自「MoonTV」演进而来，为其二创/继承版本，持续维护与改进功能与体验。
-- 代码中保留并致谢原有作者与社区贡献者；如有授权或版权问题，请与我们联系以尽快处理。
-- KatelyaTV 致力于在原作优秀基础上，提供更易部署、更友好、更稳定的使用体验。
+本项目自「MoonTV」演进而来，为其二创/继承版本，持续维护与改进功能与体验。保留并致谢原作者与社区贡献者；如有授权或版权问题请联系以处理。目标：在原作基础上提供更易部署、更友好、更稳定的体验。
 
 ## 🚀 部署
 
-本项目**支持 Vercel、Docker 和 Cloudflare** 部署。
+支持 **Docker / Vercel / Cloudflare Pages (Workers 模式)**。推荐优先使用 Docker 生产部署。
 
 ### 存储支持矩阵
 
@@ -157,7 +113,9 @@
 
 除 localstorage 方式外，其他方式都支持多账户、记录同步和管理页面
 
-### Vercel 部署
+> ✅ 表示已测试；☑️ 理论支持暂未全面验证。非 localstorage 模式支持多账户与同步。
+
+### Vercel 部署（最快）
 
 #### 普通部署（localstorage）
 
@@ -179,9 +137,9 @@
 4. 设置环境变量 NEXT_PUBLIC_STORAGE_TYPE，值为 **upstash**；设置 USERNAME 和 PASSWORD 作为站长账号
 5. 重试部署
 
-### Cloudflare 部署
+### Cloudflare Pages 部署
 
-**Cloudflare Pages 的环境变量尽量设置为密钥而非文本**
+> 提示：构建命令统一为：`npm install && npm run pages:build` 输出目录：`.vercel/output/static` ；确保启用 **nodejs_compat**。
 
 #### 普通部署（localstorage）
 
@@ -194,10 +152,10 @@
 7. 如需自定义 `config.json`，请直接修改 Fork 后仓库中该文件。
 8. 每次 Push 到 `main` 分支将自动触发重新构建。
 
-**⚠️ 重要提示：**
-- 确保您的仓库中有 `pnpm-lock.yaml` 文件
-- 如果构建失败，可以尝试使用 **pnpm install --frozen-lockfile && pnpm run pages:build**
-- Cloudflare Pages 环境变量建议设置为"加密"类型以提高安全性
+**注意**：
+1. `pnpm-lock.yaml` 保留即可（无需删除）
+2. 构建失败时可尝试 `pnpm install --frozen-lockfile && pnpm run pages:build`
+3. 环境变量用“机密变量”存储（加密）
 
 #### D1 支持
 
@@ -208,13 +166,13 @@
 4. 设置环境变量 NEXT_PUBLIC_STORAGE_TYPE，值为 **d1**；设置 USERNAME 和 PASSWORD 作为站长账号
 5. 重试部署
 
-## 🐳 Docker 部署详解
+## 🐳 Docker
 
-Docker 是推荐的部署方式，提供完整的环境隔离和便捷的管理体验。我们的镜像支持多架构（`linux/amd64`、`linux/arm64`），确保在各种硬件平台上都能稳定运行。
+推荐方式。镜像多架构 (`linux/amd64`,`linux/arm64`)，基于 Alpine，体积小启动快。
 
 ### 🚀 快速开始
 
-#### 1. 基础部署（最简单）
+#### 1. 基础部署（LocalStorage，最快验证）
 
 ```bash
 # 拉取最新镜像（支持 amd64/arm64 多架构）
@@ -231,21 +189,9 @@ docker run -d \
 
 访问 `http://服务器IP:3000` 即可使用。（需要在服务器控制台开放 3000 端口）
 
-**⚠️ Windows 用户注意事项：**
-```bash
-# 如果在 Windows 上使用 Docker Desktop，建议先创建配置目录
-mkdir katelyatv-config
+> Windows 本地构建如遇 Node Standalone `EPERM symlink`：优先使用 **Docker 镜像** 或在 **WSL2** 环境构建；无需修改源码。
 
-# 然后使用绝对路径挂载（避免路径问题）
-docker run -d \
-  --name katelyatv \
-  -p 3000:3000 \
-  --env PASSWORD=your_secure_password \
-  --restart unless-stopped \
-  ghcr.io/katelya77/katelyatv:latest
-```
-
-#### 2. 带自定义配置的部署
+#### 2. 自定义配置（挂载 config.json）
 
 ```bash
 # 创建配置文件目录
@@ -261,7 +207,7 @@ docker run -d \
   ghcr.io/katelya77/katelyatv:latest
 ```
 
-#### 3. 查看运行状态
+#### 3. 常用运维命令
 
 ```bash
 # 查看容器状态
@@ -274,7 +220,7 @@ docker logs katelyatv
 docker logs -f katelyatv
 ```
 
-#### 4. 升级到最新版本
+#### 4. 升级镜像
 
 ```bash
 # 停止并删除旧容器
@@ -318,11 +264,11 @@ docker stats katelyatv
 docker run --rm -v katelyatv_data:/data -v $(pwd):/backup alpine tar czf /backup/katelyatv-backup.tar.gz /data
 ```
 
-## 🐳 Docker Compose 最佳实践
-
+## � Docker Compose 最佳实践
+## 🐙 Docker Compose 最佳实践
 Docker Compose 是管理多容器应用的最佳方式，特别适合需要数据库支持的部署场景。
-
-### 📝 LocalStorage 版本（基础）
+## 📁 配置说明
+### 📝 LocalStorage（基础单机）
 
 适合个人使用，数据存储在浏览器本地：
 
@@ -364,7 +310,7 @@ docker compose ps
 docker compose logs -f katelyatv
 ```
 
-### 🔐 Redis 版本（推荐）
+### 🔐 Redis 版本（推荐：多用户 + 同步）
 
 支持多用户、跨设备数据同步、完整的用户权限管理：
 
@@ -608,7 +554,7 @@ echo $UPSTASH_TOKEN  # 应该是长字符串令牌
    docker compose logs katelyatv
    ```
 
-## 📋 配置说明
+## � 配置说明
 
 所有可自定义项集中在根目录的 `config.json` 中：
 
@@ -693,7 +639,7 @@ KatelyaTV 支持标准的苹果 CMS V10 API 格式。
 
 [MIT](LICENSE) © 2025 KatelyaTV & Contributors
 
-## � Star History
+## ⭐ Star History
 
 <div align="center">
 
