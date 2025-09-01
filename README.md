@@ -611,14 +611,9 @@ KatelyaTV 支持标准的苹果 CMS V10 API 格式。
 <table>
   <tr>
     <td align="center">
-      <img src="https://via.placeholder.com/200x200/00D8FF/FFFFFF?text=WeChat+Pay" alt="微信支付" width="200">
+      <img src="public/wechat.jpg" alt="微信支付" width="200">
       <br>
       <strong>微信支付</strong>
-    </td>
-    <td align="center">
-      <img src="https://via.placeholder.com/200x200/1677FF/FFFFFF?text=Alipay" alt="支付宝" width="200">
-      <br>
-      <strong>支付宝</strong>
     </td>
   </tr>
 </table>
