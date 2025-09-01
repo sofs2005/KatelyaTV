@@ -331,7 +331,7 @@ docker run --rm -v katelyatv-redis-data:/data -v $(pwd):/backup alpine tar xzf /
 #### 第二步：初始化数据库
 1. 进入刚创建的数据库
 2. 点击 **Explore Data**
-3. 打开项目中的 `D1初始化.md` 文件，复制所有 SQL 语句
+3. 打开项目中的 [D1初始化.md](https://github.com/katelya77/KatelyaTV/blob/main/D1%E5%88%9D%E5%A7%8B%E5%8C%96.md) 文件，复制所有 SQL 语句
 4. 粘贴到查询窗口，点击 **Run All**
 
 #### 第三步：绑定数据库
