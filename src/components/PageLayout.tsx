@@ -163,19 +163,19 @@ const TopNavbar = ({ activePath = '/' }: { activePath?: string }) => {
 
 const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
   return (
-    <div className='w-full min-h-screen'>
+    <div className='w-full min-h-screen flex flex-col'>
       {/* 移动端头部 */}
       <MobileHeader showBackButton={['/play'].includes(activePath)} />
 
-      {/* 桌面端顶部导航栏 */}
+      {/* 桌面端顶部导航栏 - 保持固定在顶部 */}
       <div className='hidden md:block'>
         <TopNavbar activePath={activePath} />
       </div>
 
-      {/* 主要布局容器 */}
-      <div className='w-full min-h-screen md:min-h-auto'>
+      {/* 主要布局容器 - 确保可滚动 */}
+      <div className='flex-1 w-full overflow-auto'>
         {/* 主内容区域 */}
-        <div className='relative min-w-0 flex-1 transition-all duration-300'>
+        <div className='relative min-w-0 transition-all duration-300'>
           {/* 桌面端左上角返回按钮 */}
           {['/play'].includes(activePath) && (
             <div className='absolute top-3 left-1 z-20 hidden md:flex'>
@@ -184,9 +184,9 @@ const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
           )}
 
           {/* 主内容容器 - 为播放页面使用特殊布局（83.33%宽度），其他页面使用默认布局（66.67%宽度） */}
-          <main className='flex-1 md:min-h-0 mb-14 md:mb-0 md:p-6 lg:p-8'>
+          <main className='mb-14 md:mb-0 md:p-6 lg:p-8'>
             {/* 使用flex布局实现宽度控制 */}
-            <div className='flex w-full min-h-screen md:min-h-[calc(100vh-10rem)]'>
+            <div className='flex w-full min-h-[calc(100vh-4rem)]'>
               {/* 左侧留白区域 - 播放页面占8.33%，其他页面占16.67% */}
               <div
                 className='hidden md:block flex-shrink-0'
