@@ -10,76 +10,6 @@
     <a href="#docker">🐳 Docker</a> ·
     <a href="#环境变量">⚙️ 配置</a>
   </p>
-  <p>
-    <img src="https://img.shields.io/badge/Next.js-14-000?logo=nextdotjs" />
-    <img src="https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript" />
-    <img src="https://img.shields.io/badge/TailwindCSS-3-38bdf8?logo=tailwindcss" />
-    <img src="https://img.shields.io/badge/Docker-ready-blue?logo=docker" />
-    <img src="https://img.shields.io/badge/PWA-ready-orange" />
-    <img src="https://img.shields.io/badge/License-MIT-green" />
-  </p>
-</div>
-
----
-
-## 📋 重要声明
-> ⚠️ **视频源说明**  
-> 出于合规与版权风险考虑，仓库默认不再内置视频源。请自行准备 `config.json`：  
-> - 可下载官方示例配置（见 Releases 或外部链接）或自建  
-> - 仅添加符合当地法律法规的站点  
-> - 作者不对第三方内容合法性负责，请自负责任  
->
-> 项目仅提供聚合播放器技术框架，不提供/存储任何视频文件。
-
----
-
-## 🗺 目录
-
-1. [✨ 功能特性](#功能特性)
-2. [📸 截图](#截图)
-3. [🛠 技术栈](#技术栈)
-4. [🚀 部署](#部署)
-5. [🐳 Docker](#docker)
-6. [🐙 Docker Compose](#docker-compose-最佳实践)
-7. [⚙️ 环境变量](#环境变量)
-8. [📁 配置说明 config.json](#配置说明)
-9. [👨‍💼 管理员配置](#管理员配置)
-10. [📱 AndroidTV](#androidtv-使用)
-11. [🗓️ Roadmap](#roadmap)
-12. [⚠️ 安全与隐私](#安全与隐私提醒)
-13. [💖 支持项目](#支持项目)
-14. [🙏 致谢](#致谢)
-15. [📄 License](#license)
-
-## ✨ 功能特性
-
-| 模块 | 功能 | 说明 |
-| ---- | ---- | ---- |
-| 多源搜索 | 20+ 资源站聚合 | 一次请求并自动去重 |
-| 播放器 | HLS.js + ArtPlayer | 进度记忆 / 倍速 / 全屏 / 弹性布局 |
-| 数据同步 | 收藏 / 观看记录 | 支持 Redis / Upstash / Cloudflare D1 / LocalStorage |
-| 用户体系 | 站长 / 管理员 / 普通用户 | 可控制注册开关，权限隔离 |
-| PWA | 安装 / 离线支持 | manifest + service worker |
-| UI | 响应式 / 主题切换 | 桌面顶部固定导航 + 移动底部导航 + 暗色模式 |
-| 豆瓣整合 | 评分 / 推荐 | 详情页聚合展示 |
-| 部署 | Docker / Vercel / Cloudflare | 一条命令即用，多架构镜像 |
-
-## 📸 截图
-
-<div align="center">
-  <table>
-    <tr>
-      <td><img src="public/screenshot1.png" width="380" /></td>
-      <td><img src="public/screenshot2.png" width="380" /></td>
-    </tr>
-    <tr>
-      <td><img src="public/screenshot3.png" width="380" /></td>
-      <td><img src="public/screenshot4.png" width="380" /></td>
-    </tr>
-  </table>
-</div>
-
-## 🛠 技术栈
 
 | 分类      | 主要依赖                                                                                              |
 | --------- | ----------------------------------------------------------------------------------------------------- |
@@ -91,81 +21,139 @@
 | 代码质量  | ESLint · Prettier · Jest · Husky                                                                      |
 | 部署      | Docker · Vercel · CloudFlare pages                                                                    |
 
-## 📢 项目来源与声明
+## � 项目来源与声明
 
 本项目自「MoonTV」演进而来，为其二创/继承版本，持续维护与改进功能与体验。保留并致谢原作者与社区贡献者；如有授权或版权问题请联系以处理。目标：在原作基础上提供更易部署、更友好、更稳定的体验。
 
-## 🚀 部署
+## 🚀 部署（概览 + 实操）
 
-支持 **Docker / Vercel / Cloudflare Pages (Workers 模式)**。推荐优先使用 Docker 生产部署。
+支持 3 大路径：**Docker（推荐生产） / Vercel（免服务器） / Cloudflare Pages + Workers（适合 D1）**。
 
-### 存储支持矩阵
+### 1. 选型快速指引
+| 你的需求 | 推荐方案 | 存储模式 | 说明 |
+| -------- | -------- | -------- | ---- |
+| 个人本机 / NAS / VPS 一条命令跑起来 | Docker 单容器 | localstorage | 无账号体系，仅本设备浏览器保存记录 |
+| 多用户 / 同步观看记录 / 简单可维护 | Docker + Redis (Compose) | redis | 稳定高性能，可控数据 |
+| 免费托管 + 轻度使用 | Vercel | localstorage / upstash | localstorage 无多用户；Upstash 提供云 Redis |
+| 需要使用 Cloudflare D1 | Cloudflare Pages + D1 | d1 | 使用 Cloudflare 边缘与 D1 数据库 |
+| 不方便自建 Redis 又要同步 | Vercel + Upstash / Docker + Upstash | upstash | Upstash 提供 HTTP API |
 
+### 2. 存储支持矩阵
 |               | Docker | Vercel | Cloudflare |
 | :-----------: | :----: | :----: | :--------: |
 | localstorage  |   ✅   |   ✅   |     ✅     |
-|  原生 redis   |   ✅   |        |            |
+| 原生 redis    |   ✅   |        |            |
 | Cloudflare D1 |        |        |     ✅     |
-| Upstash Redis |   ☑️   |   ✅   |     ☑️     |
+| Upstash Redis |   ✅   |   ✅   |     ☑️     |
 
-✅：经测试支持  
-☑️：理论上支持，未测试
+说明：非 localstorage 模式才有多账户、云同步、管理后台 `/admin`。
 
-除 localstorage 方式外，其他方式都支持多账户、记录同步和管理页面
+---
+### 3. Docker 最小启动
+```bash
+docker run -d \
+  --name katelyatv \
+  -p 3000:3000 \
+  --env PASSWORD=替换为你的访问密码 \
+  --restart unless-stopped \
+  ghcr.io/katelya77/katelyatv:latest
+```
+访问：http://服务器IP:3000 （首次输入 PASSWORD）
 
-> ✅ 表示已测试；☑️ 理论支持暂未全面验证。非 localstorage 模式支持多账户与同步。
+挂载自定义源：
+```bash
+docker run -d --name katelyatv -p 3000:3000 \
+  -v $(pwd)/config.json:/app/config.json:ro \
+  --env PASSWORD=你的密码 \
+  ghcr.io/katelya77/katelyatv:latest
+```
+PowerShell 可用：`-v C:/data/katelya/config.json:/app/config.json:ro`
 
-### Vercel 部署（最快）
+需要多用户：请看下文 Docker Compose Redis。
 
-#### 普通部署（localstorage）
+---
+### 4. Vercel 部署
+#### 4.1 localstorage
+1. Fork 仓库 → Import 到 Vercel
+2. 添加环境变量：`PASSWORD=你的访问密码`
+3. Deploy
+4. （可选）修改 `config.json` 后 Push 自动重建
 
-1. **Fork** 本仓库到你的 GitHub 账户。
-2. 登陆 [Vercel](https://vercel.com/)，点击 **Add New → Project**，选择 Fork 后的仓库。
-3. 设置 PASSWORD 环境变量。
-4. 保持默认设置完成首次部署。
-5. 如需自定义 `config.json`，请直接修改 Fork 后仓库中该文件。
-6. 每次 Push 到 `main` 分支将自动触发重新构建。
+#### 4.2 Upstash 模式
+1. 完成 4.1
+2. Upstash 创建 Redis 获取 HTTPS Endpoint & REST Token
+3. 添加变量：`UPSTASH_URL` / `UPSTASH_TOKEN` / `NEXT_PUBLIC_STORAGE_TYPE=upstash` / `USERNAME` / `PASSWORD`
+4. Redeploy → 登录 admin → `/admin`
 
-部署完成后即可通过分配的域名访问，也可以绑定自定义域名。
+---
+### 5. Cloudflare Pages
+输出目录：`.vercel/output/static`；启用：`nodejs_compat`。
 
-#### Upstash Redis 支持
+构建命令三选一：
+```bash
+npm install && npm run pages:build
+corepack enable && pnpm install --frozen-lockfile && pnpm run pages:build
+npm i -g pnpm@8 && pnpm install --frozen-lockfile && pnpm run pages:build
+```
+#### 5.1 localstorage
+1. Fork → Pages 导入
+2. 设置构建命令 & 输出目录
+3. 首次构建后添加 `PASSWORD`
+4. 重新部署
 
-0. 完成普通部署并成功访问。
-1. 在 [upstash](https://upstash.com/) 注册账号并新建一个 Redis 实例，名称任意。
-2. 复制新数据库的 **HTTPS ENDPOINT 和 TOKEN**
-3. 返回你的 Vercel 项目，新增环境变量 **UPSTASH_URL 和 UPSTASH_TOKEN**，值为第二步复制的 endpoint 和 token
-4. 设置环境变量 NEXT_PUBLIC_STORAGE_TYPE，值为 **upstash**；设置 USERNAME 和 PASSWORD 作为站长账号
-5. 重试部署
+#### 5.2 D1
+1. 完成 5.1 可访问
+2. 创建 D1 数据库并执行 `D1初始化.md` 里的 SQL
+3. Pages 绑定 D1 变量名 `DB`
+4. 添加：`NEXT_PUBLIC_STORAGE_TYPE=d1`、`USERNAME`、`PASSWORD`
+5. 重新部署 → admin 登录配置
 
-### Cloudflare Pages 部署
+#### 5.3 常见问题
+| 问题 | 现象 | 解决 |
+| ---- | ---- | ---- |
+| 未找到静态输出 | 404 | 确认构建命令正确执行 & 日志无报错 |
+| 访问被拒 | 403 | 检查是否设置 PASSWORD |
+| D1 失败 | 500/绑定错误 | 确认绑定名 `DB` 且 SQL 初始化完成 |
 
-> 提示：构建命令统一为：`npm install && npm run pages:build` 输出目录：`.vercel/output/static` ；确保启用 **nodejs_compat**。
+---
+### 6. Redis（Docker Compose）快速示例
+```yaml
+services:
+  katelyatv:
+    image: ghcr.io/katelya77/katelyatv:latest
+    environment:
+      - USERNAME=admin
+      - PASSWORD=强密码
+      - NEXT_PUBLIC_STORAGE_TYPE=redis
+      - REDIS_URL=redis://katelyatv-redis:6379
+      - NEXT_PUBLIC_ENABLE_REGISTER=true
+    depends_on:
+      katelyatv-redis:
+        condition: service_healthy
+  katelyatv-redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+```
+启动：`docker compose up -d`
 
-#### 普通部署（localstorage）
+---
+### 7. 环境变量最小清单
+| 场景 | 必填 | 说明 |
+| ---- | ---- | ---- |
+| localstorage | PASSWORD | 全站访问密码 |
+| redis | USERNAME / PASSWORD / NEXT_PUBLIC_STORAGE_TYPE=redis / REDIS_URL | 多用户 + 同步 |
+| upstash | USERNAME / PASSWORD / NEXT_PUBLIC_STORAGE_TYPE=upstash / UPSTASH_URL / UPSTASH_TOKEN | 云 Redis |
+| d1 | USERNAME / PASSWORD / NEXT_PUBLIC_STORAGE_TYPE=d1 / DB | 需预初始化 |
 
-1. **Fork** 本仓库到你的 GitHub 账户。
-2. 登陆 [Cloudflare](https://cloudflare.com)，点击 **计算（Workers）-> Workers 和 Pages**，点击创建
-3. 选择 Pages，导入现有的 Git 存储库，选择 Fork 后的仓库
-4. 构建命令填写 **npm install && npm run pages:build**，预设框架为无，构建输出目录为 `.vercel/output/static`
-5. 保持默认设置完成首次部署。进入设置，将兼容性标志设置为 `nodejs_compat`
-6. 首次部署完成后进入设置，新增 PASSWORD 密钥（变量和机密下），而后重试部署。
-7. 如需自定义 `config.json`，请直接修改 Fork 后仓库中该文件。
-8. 每次 Push 到 `main` 分支将自动触发重新构建。
+---
+### 8. 升级 / 备份
+| 操作 | Docker | Compose |
+| ---- | ------ | ------- |
+| 升级 | 拉新镜像重建容器 | pull + up -d |
+| 备份 | 复制 config.json | 备份 Redis 卷 |
+| 日志 | docker logs -f | docker compose logs -f |
 
-**注意**：
-1. `pnpm-lock.yaml` 保留即可（无需删除）
-2. 构建失败时可尝试 `pnpm install --frozen-lockfile && pnpm run pages:build`
-3. 环境变量用“机密变量”存储（加密）
-
-#### D1 支持
-
-0. 完成普通部署并成功访问
-1. 点击 **存储和数据库 -> D1 SQL 数据库**，创建一个新的数据库，名称随意
-2. 进入刚创建的数据库，点击左上角的 Explore Data，将[D1 初始化](D1初始化.md) 中的内容粘贴到 Query 窗口后点击 **Run All**，等待运行完成
-3. 返回你的 pages 项目，进入 **设置 -> 绑定**，添加绑定 D1 数据库，选择你刚创建的数据库，变量名称填 **DB**
-4. 设置环境变量 NEXT_PUBLIC_STORAGE_TYPE，值为 **d1**；设置 USERNAME 和 PASSWORD 作为站长账号
-5. 重试部署
-
+到这里你已经可以完成部署；继续阅读下方获取更全面的 Docker / Compose 说明。
 ## 🐳 Docker
 
 推荐方式。镜像多架构 (`linux/amd64`,`linux/arm64`)，基于 Alpine，体积小启动快。
