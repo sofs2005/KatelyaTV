@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+/* eslint-disable @typescript-eslint/no-var-requires, no-console, unused-imports/no-unused-vars */
+
 /**
  * MoonTV 版本管理脚本
  * 用于自动化版本号更新、CHANGELOG 生成和发布管理
@@ -13,7 +15,7 @@ const { execSync } = require('child_process');
 const PACKAGE_JSON = path.join(__dirname, '../package.json');
 const VERSION_TXT = path.join(__dirname, '../VERSION.txt');
 const CHANGELOG_MD = path.join(__dirname, '../CHANGELOG.md');
-const README_MD = path.join(__dirname, '../README.md');
+const _README_MD = path.join(__dirname, '../README.md');
 
 // 版本类型
 const VERSION_TYPES = {

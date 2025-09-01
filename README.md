@@ -188,11 +188,16 @@
 1. **Fork** 本仓库到你的 GitHub 账户。
 2. 登陆 [Cloudflare](https://cloudflare.com)，点击 **计算（Workers）-> Workers 和 Pages**，点击创建
 3. 选择 Pages，导入现有的 Git 存储库，选择 Fork 后的仓库
-4. 构建命令填写 **pnpm install --frozen-lockfile && pnpm run pages:build**，预设框架为无，构建输出目录为 `.vercel/output/static`
+4. 构建命令填写 **npm install && npm run pages:build**，预设框架为无，构建输出目录为 `.vercel/output/static`
 5. 保持默认设置完成首次部署。进入设置，将兼容性标志设置为 `nodejs_compat`
 6. 首次部署完成后进入设置，新增 PASSWORD 密钥（变量和机密下），而后重试部署。
 7. 如需自定义 `config.json`，请直接修改 Fork 后仓库中该文件。
 8. 每次 Push 到 `main` 分支将自动触发重新构建。
+
+**⚠️ 重要提示：**
+- 确保您的仓库中有 `pnpm-lock.yaml` 文件
+- 如果构建失败，可以尝试使用 **pnpm install --frozen-lockfile && pnpm run pages:build**
+- Cloudflare Pages 环境变量建议设置为"加密"类型以提高安全性
 
 #### D1 支持
 
@@ -225,6 +230,20 @@ docker run -d \
 ```
 
 访问 `http://服务器IP:3000` 即可使用。（需要在服务器控制台开放 3000 端口）
+
+**⚠️ Windows 用户注意事项：**
+```bash
+# 如果在 Windows 上使用 Docker Desktop，建议先创建配置目录
+mkdir katelyatv-config
+
+# 然后使用绝对路径挂载（避免路径问题）
+docker run -d \
+  --name katelyatv \
+  -p 3000:3000 \
+  --env PASSWORD=your_secure_password \
+  --restart unless-stopped \
+  ghcr.io/katelya77/katelyatv:latest
+```
 
 #### 2. 带自定义配置的部署
 
@@ -434,18 +453,40 @@ mkdir katelyatv && cd katelyatv
 # 2. 创建 docker-compose.yml 文件（复制上面的内容）
 nano docker-compose.yml
 
-# 3. 启动所有服务
+# 3. 检查配置文件语法
+docker compose config
+
+# 4. 启动所有服务
 docker compose up -d
 
-# 4. 查看服务状态
+# 5. 查看服务状态
 docker compose ps
 
-# 5. 查看启动日志
+# 6. 查看启动日志
 docker compose logs -f
 
-# 6. 首次访问 http://your-server:3000
+# 7. 等待服务完全启动（通常需要 30-60 秒）
+# 检查健康状态
+docker compose ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
+
+# 8. 首次访问 http://your-server:3000
 # 使用管理员账号 admin / admin_super_secure_password 登录
 # 然后访问 /admin 进行管理员配置
+```
+
+**🔍 部署验证步骤：**
+
+```bash
+# 验证 Redis 连接
+docker compose exec katelyatv-redis redis-cli ping
+# 应该返回 "PONG"
+
+# 验证 KatelyaTV 服务
+curl -I http://localhost:3000
+# 应该返回 HTTP 200 状态码
+
+# 查看服务启动顺序
+docker compose logs --timestamps | grep "Ready in"
 ```
 
 ### 🔄 管理与维护
@@ -482,6 +523,51 @@ docker compose down -v --remove-orphans
 4. **资源监控**：定期检查容器资源使用情况，必要时调整配置
 5. **日志管理**：配置日志轮转，避免日志文件过大
 
+### 🛠️ 常见部署问题排查
+
+**问题 1：容器启动失败**
+```bash
+# 检查容器状态
+docker compose ps
+
+# 查看详细错误日志
+docker compose logs katelyatv
+
+# 常见原因：端口被占用、环境变量配置错误、镜像拉取失败
+```
+
+**问题 2：Redis 连接失败**
+```bash
+# 检查 Redis 容器状态
+docker compose exec katelyatv-redis redis-cli ping
+
+# 检查网络连通性
+docker compose exec katelyatv ping katelyatv-redis
+
+# 验证环境变量
+docker compose exec katelyatv env | grep REDIS
+```
+
+**问题 3：Upstash Redis 连接问题**
+```bash
+# 验证 Upstash 配置
+curl -H "Authorization: Bearer YOUR_TOKEN" YOUR_UPSTASH_URL/ping
+
+# 检查环境变量格式
+echo $UPSTASH_URL  # 应该是 https://xxx.upstash.io
+echo $UPSTASH_TOKEN  # 应该是长字符串令牌
+```
+
+**问题 4：Cloudflare D1 初始化失败**
+- 确保在 D1 控制台中正确执行了所有 SQL 语句
+- 检查数据库绑定名称是否为 `DB`
+- 验证环境变量 `NEXT_PUBLIC_STORAGE_TYPE=d1`
+
+**问题 5：Vercel 部署问题**
+- 检查环境变量是否正确设置
+- 确保 `config.json` 文件格式正确
+- 查看 Vercel 部署日志中的错误信息
+
 ## 🔄 自动同步最近更改
 
 建议在 fork 的仓库中启用本仓库自带的 GitHub Actions 自动同步功能（见 `.github/workflows/sync.yml`）。
@@ -489,6 +575,8 @@ docker compose down -v --remove-orphans
 如需手动同步主仓库更新，也可以使用 GitHub 官方的 [Sync fork](https://docs.github.com/cn/github/collaborating-with-issues-and-pull-requests/syncing-a-fork) 功能。
 
 ## ⚙️ 环境变量
+
+### 📋 变量说明表
 
 | 变量                        | 说明                                                        | 可选值                           | 默认值                                                                                                                     |
 | --------------------------- | ----------------------------------------------------------- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
@@ -504,6 +592,21 @@ docker compose down -v --remove-orphans
 | NEXT_PUBLIC_SEARCH_MAX_PAGE | 搜索接口可拉取的最大页数                                    | 1-50                             | 5                                                                                                                          |
 | NEXT_PUBLIC_IMAGE_PROXY     | 默认的浏览器端图片代理                                      | url prefix                       | (空)                                                                                                                       |
 | NEXT_PUBLIC_DOUBAN_PROXY    | 默认的浏览器端豆瓣数据代理                                  | url prefix                       | (空)                                                                                                                       |
+
+### 🔧 配置验证
+
+**部署后可通过以下方式验证环境变量是否生效：**
+
+1. **访问服务状态页**：`http://your-domain/api/server-config`
+2. **检查管理员面板**：使用管理员账号登录后访问 `/admin`
+3. **查看容器日志**：
+   ```bash
+   # Docker 单容器
+   docker logs katelyatv
+   
+   # Docker Compose
+   docker compose logs katelyatv
+   ```
 
 ## 📋 配置说明
 

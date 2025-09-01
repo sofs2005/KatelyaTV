@@ -163,65 +163,62 @@ const TopNavbar = ({ activePath = '/' }: { activePath?: string }) => {
 
 const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
   return (
-    <div className='w-full min-h-screen flex flex-col'>
+    <div className='w-full min-h-screen'>
       {/* 移动端头部 */}
       <MobileHeader showBackButton={['/play'].includes(activePath)} />
 
-      {/* 桌面端顶部导航栏 - 保持固定在顶部 */}
+      {/* 桌面端顶部导航栏 - 直接放在最外层，确保 sticky 生效 */}
       <div className='hidden md:block'>
         <TopNavbar activePath={activePath} />
       </div>
 
-      {/* 主要布局容器 - 确保可滚动 */}
-      <div className='flex-1 w-full overflow-auto'>
-        {/* 主内容区域 */}
-        <div className='relative min-w-0 transition-all duration-300'>
-          {/* 桌面端左上角返回按钮 */}
-          {['/play'].includes(activePath) && (
-            <div className='absolute top-3 left-1 z-20 hidden md:flex'>
-              <BackButton />
-            </div>
-          )}
+      {/* 主内容区域 - 移除 overflow-auto，让整个页面可滚动 */}
+      <div className='relative min-w-0 transition-all duration-300'>
+        {/* 桌面端左上角返回按钮 */}
+        {['/play'].includes(activePath) && (
+          <div className='absolute top-3 left-1 z-20 hidden md:flex'>
+            <BackButton />
+          </div>
+        )}
 
-          {/* 主内容容器 - 为播放页面使用特殊布局（83.33%宽度），其他页面使用默认布局（66.67%宽度） */}
-          <main className='mb-14 md:mb-0 md:p-6 lg:p-8'>
-            {/* 使用flex布局实现宽度控制 */}
-            <div className='flex w-full min-h-[calc(100vh-4rem)]'>
-              {/* 左侧留白区域 - 播放页面占8.33%，其他页面占16.67% */}
-              <div
-                className='hidden md:block flex-shrink-0'
-                style={{ 
-                  width: ['/play'].includes(activePath) ? '8.33%' : '16.67%' 
-                }}
-              ></div>
+        {/* 主内容容器 - 为播放页面使用特殊布局（83.33%宽度），其他页面使用默认布局（66.67%宽度） */}
+        <main className='mb-14 md:mb-0 md:p-6 lg:p-8'>
+          {/* 使用flex布局实现宽度控制 */}
+          <div className='flex w-full min-h-[calc(100vh-4rem)]'>
+            {/* 左侧留白区域 - 播放页面占8.33%，其他页面占16.67% */}
+            <div
+              className='hidden md:block flex-shrink-0'
+              style={{ 
+                width: ['/play'].includes(activePath) ? '8.33%' : '16.67%' 
+              }}
+            ></div>
 
-              {/* 主内容区 - 播放页面占83.33%，其他页面占66.67% */}
+            {/* 主内容区 - 播放页面占83.33%，其他页面占66.67% */}
+            <div
+              className='flex-1 md:flex-none rounded-container w-full'
+              style={{ 
+                width: ['/play'].includes(activePath) ? '83.33%' : '66.67%' 
+              }}
+            >
               <div
-                className='flex-1 md:flex-none rounded-container w-full'
-                style={{ 
-                  width: ['/play'].includes(activePath) ? '83.33%' : '66.67%' 
+                className='p-4 md:p-8 lg:p-10'
+                style={{
+                  paddingBottom: 'calc(3.5rem + env(safe-area-inset-bottom))',
                 }}
               >
-                <div
-                  className='p-4 md:p-8 lg:p-10'
-                  style={{
-                    paddingBottom: 'calc(3.5rem + env(safe-area-inset-bottom))',
-                  }}
-                >
-                  {children}
-                </div>
+                {children}
               </div>
-
-              {/* 右侧留白区域 - 播放页面占8.33%，其他页面占16.67% */}
-              <div
-                className='hidden md:block flex-shrink-0'
-                style={{ 
-                  width: ['/play'].includes(activePath) ? '8.33%' : '16.67%' 
-                }}
-              ></div>
             </div>
-          </main>
-        </div>
+
+            {/* 右侧留白区域 - 播放页面占8.33%，其他页面占16.67% */}
+            <div
+              className='hidden md:block flex-shrink-0'
+              style={{ 
+                width: ['/play'].includes(activePath) ? '8.33%' : '16.67%' 
+              }}
+            ></div>
+          </div>
+        </main>
       </div>
 
       {/* 移动端底部导航 */}
