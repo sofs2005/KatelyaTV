@@ -486,7 +486,6 @@ docker stats katelyatv
 docker run --rm -v katelyatv_data:/data -v $(pwd):/backup alpine tar czf /backup/katelyatv-backup.tar.gz /data
 ```
 
-## � Docker Compose 最佳实践
 ## 🐙 Docker Compose 最佳实践
 Docker Compose 是管理多容器应用的最佳方式，特别适合需要数据库支持的部署场景。
 ## 📁 配置说明
