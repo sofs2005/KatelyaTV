@@ -435,7 +435,7 @@ export default function SkipController({
     <div className="skip-controller">
       {/* 倒计时显示 - 片尾自动跳转下一集 */}
       {showCountdown && (
-        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-blue-600/90 text-white px-6 py-3 rounded-lg backdrop-blur-sm border border-white/20 shadow-lg animate-fade-in">
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-[9999] bg-blue-600/90 text-white px-6 py-3 rounded-lg backdrop-blur-sm border border-white/20 shadow-lg animate-fade-in">
           <div className="flex items-center space-x-3">
             <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -460,7 +460,7 @@ export default function SkipController({
 
       {/* 跳过按钮 */}
       {showSkipButton && currentSkipSegment && (
-        <div className="fixed top-20 right-4 z-50 bg-black/80 text-white px-4 py-2 rounded-lg backdrop-blur-sm border border-white/20 shadow-lg animate-fade-in">
+        <div className="fixed top-20 right-4 z-[9999] bg-black/80 text-white px-4 py-2 rounded-lg backdrop-blur-sm border border-white/20 shadow-lg animate-fade-in">
           <div className="flex items-center space-x-3">
             <span className="text-sm">
               {currentSkipSegment.type === 'opening' ? '检测到片头' : '检测到片尾'}
@@ -477,7 +477,7 @@ export default function SkipController({
 
       {/* 设置模式面板 - 增强版批量设置 */}
       {isSettingMode && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
               智能跳过设置
@@ -691,7 +691,7 @@ export default function SkipController({
 
       {/* 管理已有片段 - 优化布局避免重叠 */}
       {skipConfig && skipConfig.segments && skipConfig.segments.length > 0 && !isSettingMode && (
-        <div className="fixed bottom-4 right-4 z-40 max-w-sm bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 animate-fade-in">
+        <div className="fixed bottom-4 right-4 z-[9998] max-w-sm bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 animate-fade-in">
           <div className="p-3">
             <h4 className="font-medium mb-2 text-gray-900 dark:text-gray-100 text-sm flex items-center">
               <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
