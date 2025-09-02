@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import React, {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -19,7 +18,7 @@ interface VideoInfo {
   quality: string;
   loadSpeed: string;
   pingTime: number;
-  hasError?: boolean; // 添加错误状态标识
+  hasError?: boolean;
 }
 
 interface EpisodeSelectorProps {
@@ -98,7 +97,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
   // 是否倒序显示
   const [descending, setDescending] = useState<boolean>(false);
 
-  // 获取视频信息的函数 - 移除 attemptedSources 依赖避免不必要的重新创建
+  // 获取视频信息的函数
   const getVideoInfo = useCallback(async (source: SearchResult) => {
     const sourceKey = `${source.source}-${source.id}`;
 
@@ -136,7 +135,6 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
   // 当有预计算结果时，先合并到videoInfoMap中
   useEffect(() => {
     if (precomputedVideoInfo && precomputedVideoInfo.size > 0) {
-      // 原子性地更新两个状态，避免时序问题
       setVideoInfoMap((prev) => {
         const newMap = new Map(prev);
         precomputedVideoInfo.forEach((value, key) => {
@@ -148,107 +146,61 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
       setAttemptedSources((prev) => {
         const newSet = new Set(prev);
         precomputedVideoInfo.forEach((info, key) => {
-          if (!info.hasError) {
-            newSet.add(key);
-          }
+          newSet.add(key);
         });
         return newSet;
-      });
-
-      // 同步更新 ref，确保 getVideoInfo 能立即看到更新
-      precomputedVideoInfo.forEach((info, key) => {
-        if (!info.hasError) {
-          attemptedSourcesRef.current.add(key);
-        }
       });
     }
   }, [precomputedVideoInfo]);
 
-  // 读取本地“优选和测速”开关，默认开启
-  const [optimizationEnabled] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('enableOptimization');
-      if (saved !== null) {
-        try {
-          return JSON.parse(saved);
-        } catch {
-          /* ignore */
-        }
-      }
-    }
-    return true;
-  });
-
-  // 当切换到换源tab并且有源数据时，异步获取视频信息 - 移除 attemptedSources 依赖避免循环触发
+  // 当换源Tab激活且没有测速过时，开始测速
   useEffect(() => {
-    const fetchVideoInfosInBatches = async () => {
-      if (
-        !optimizationEnabled || // 若关闭测速则直接退出
-        activeTab !== 'sources' ||
-        availableSources.length === 0
-      )
-        return;
-
-      // 筛选出尚未测速的播放源
-      const pendingSources = availableSources.filter((source) => {
+    if (activeTab === 'sources') {
+      availableSources.forEach((source) => {
         const sourceKey = `${source.source}-${source.id}`;
-        return !attemptedSourcesRef.current.has(sourceKey);
+        if (!attemptedSourcesRef.current.has(sourceKey)) {
+          getVideoInfo(source);
+        }
       });
+    }
+  }, [activeTab, availableSources, getVideoInfo]);
 
-      if (pendingSources.length === 0) return;
-
-      const batchSize = Math.ceil(pendingSources.length / 2);
-
-      for (let start = 0; start < pendingSources.length; start += batchSize) {
-        const batch = pendingSources.slice(start, start + batchSize);
-        await Promise.all(batch.map(getVideoInfo));
-      }
-    };
-
-    fetchVideoInfosInBatches();
-    // 依赖项保持与之前一致
-  }, [activeTab, availableSources, getVideoInfo, optimizationEnabled]);
-
-  // 升序分页标签
-  const categoriesAsc = useMemo(() => {
-    return Array.from({ length: pageCount }, (_, i) => {
-      const start = i * episodesPerPage + 1;
-      const end = Math.min(start + episodesPerPage - 1, totalEpisodes);
-      return `${start}-${end}`;
-    });
-  }, [pageCount, episodesPerPage, totalEpisodes]);
-
-  // 分页标签始终保持升序
-  const categories = categoriesAsc;
-
+  // 分类标签容器和按钮的引用
   const categoryContainerRef = useRef<HTMLDivElement>(null);
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
-  // 当分页切换时，将激活的分页标签滚动到视口中间
+  // 自动滚动到当前分页标签
   useEffect(() => {
-    const btn = buttonRefs.current[currentPage];
-    const container = categoryContainerRef.current;
-    if (btn && container) {
-      // 手动计算滚动位置，只滚动分页标签容器
-      const containerRect = container.getBoundingClientRect();
-      const btnRect = btn.getBoundingClientRect();
-      const scrollLeft = container.scrollLeft;
+    if (categoryContainerRef.current && buttonRefs.current[currentPage]) {
+      const container = categoryContainerRef.current;
+      const button = buttonRefs.current[currentPage];
+      
+      if (button) {
+        const containerRect = container.getBoundingClientRect();
+        const buttonRect = button.getBoundingClientRect();
+        const scrollLeft = container.scrollLeft;
 
-      // 计算按钮相对于容器的位置
-      const btnLeft = btnRect.left - containerRect.left + scrollLeft;
-      const btnWidth = btnRect.width;
-      const containerWidth = containerRect.width;
-
-      // 计算目标滚动位置，使按钮居中
-      const targetScrollLeft = btnLeft - (containerWidth - btnWidth) / 2;
-
-      // 平滑滚动到目标位置
-      container.scrollTo({
-        left: targetScrollLeft,
-        behavior: 'smooth',
-      });
+        if (buttonRect.left < containerRect.left) {
+          container.scrollTo({
+            left: scrollLeft - (containerRect.left - buttonRect.left) - 20,
+            behavior: 'smooth',
+          });
+        } else if (buttonRect.right > containerRect.right) {
+          container.scrollTo({
+            left: scrollLeft + (buttonRect.right - containerRect.right) + 20,
+            behavior: 'smooth',
+          });
+        }
+      }
     }
-  }, [currentPage, pageCount]);
+  }, [currentPage]);
+
+  // 生成分页标签
+  const categories = Array.from({ length: pageCount }, (_, i) => {
+    const start = i * episodesPerPage + 1;
+    const end = Math.min(start + episodesPerPage - 1, totalEpisodes);
+    return start === end ? `${start}` : `${start}-${end}`;
+  });
 
   // 处理换源tab点击，只在点击时才搜索
   const handleSourceTabClick = () => {
@@ -287,11 +239,11 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
           <div
             onClick={() => setActiveTab('episodes')}
             className={`flex-1 py-3 px-6 text-center cursor-pointer transition-all duration-200 font-medium
-              ${
-                activeTab === 'episodes'
-                  ? 'text-green-600 dark:text-green-400'
-                  : 'text-gray-700 hover:text-green-600 bg-black/5 dark:bg-white/5 dark:text-gray-300 dark:hover:text-green-400 hover:bg-black/3 dark:hover:bg-white/3'
-              }
+                ${
+                  activeTab === 'episodes'
+                    ? 'text-green-600 dark:text-green-400'
+                    : 'text-gray-700 hover:text-green-600 bg-black/5 dark:bg-white/5 dark:text-gray-300 dark:hover:text-green-400 hover:bg-black/3 dark:hover:bg-white/3'
+                }
             `.trim()}
           >
             选集
@@ -300,12 +252,12 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
         <div
           onClick={handleSourceTabClick}
           className={`flex-1 py-3 px-6 text-center cursor-pointer transition-all duration-200 font-medium
-            ${
-              activeTab === 'sources'
-                ? 'text-green-600 dark:text-green-400'
-                : 'text-gray-700 hover:text-green-600 bg-black/5 dark:bg-white/5 dark:text-gray-300 dark:hover:text-green-400 hover:bg-black/3 dark:hover:bg-white/3'
-            }
-          `.trim()}
+                ${
+                  activeTab === 'sources'
+                    ? 'text-green-600 dark:text-green-400'
+                    : 'text-gray-700 hover:text-green-600 bg-black/5 dark:bg-white/5 dark:text-gray-300 dark:hover:text-green-400 hover:bg-black/3 dark:hover:bg-white/3'
+                }
+            `.trim()}
         >
           换源
         </div>
@@ -316,22 +268,6 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
         <>
           {/* 分类标签 */}
           <div className='flex items-center gap-4 mb-4 border-b border-gray-300 dark:border-gray-700 -mx-6 px-6 flex-shrink-0'>
-            {/* 左导航按钮 - 强制显示用于测试 */}
-            <button
-              onClick={() => currentPage > 0 && handleCategoryClick(currentPage - 1)}
-              disabled={currentPage <= 0}
-              className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 active:scale-95 ${
-                currentPage > 0 
-                  ? 'bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 cursor-pointer' 
-                  : 'bg-gray-400 cursor-not-allowed opacity-50'
-              }`}
-              title={currentPage > 0 ? '上一批' : '已是第一批'}
-            >
-              <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M15 19l-7-7 7-7' />
-              </svg>
-            </button>
-            
             <div className='flex-1 overflow-x-auto' ref={categoryContainerRef}>
               <div className='flex gap-2 min-w-max'>
                 {categories.map((label, idx) => {
@@ -343,7 +279,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                         buttonRefs.current[idx] = el;
                       }}
                       onClick={() => handleCategoryClick(idx)}
-                      className={`w-20 relative py-2 text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 text-center 
+                      className={`w-20 relative py-2 text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 text-center
                         ${
                           isActive
                             ? 'text-green-500 dark:text-green-400'
@@ -360,23 +296,6 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                 })}
               </div>
             </div>
-            
-            {/* 右导航按钮 - 强制显示用于测试 */}
-            <button
-              onClick={() => currentPage < pageCount - 1 && handleCategoryClick(currentPage + 1)}
-              disabled={currentPage >= pageCount - 1}
-              className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 active:scale-95 ${
-                currentPage < pageCount - 1
-                  ? 'bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 cursor-pointer'
-                  : 'bg-gray-400 cursor-not-allowed opacity-50'
-              }`}
-              title={currentPage < pageCount - 1 ? '下一批' : '已是最后一批'}
-            >
-              <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M9 5l7 7-7 7' />
-              </svg>
-            </button>
-            
             {/* 向上/向下按钮 */}
             <button
               className='flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center text-gray-700 hover:text-green-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-green-400 dark:hover:bg-white/20 transition-colors transform translate-y-[-4px]'
@@ -401,86 +320,31 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
             </button>
           </div>
 
-          {/* 测试区域 - 验证响应式是否工作 */}
-          <div className='mb-4 p-3 bg-red-100 dark:bg-red-900 border-2 border-red-500 rounded-lg'>
-            <p className='text-red-800 dark:text-red-200 font-bold mb-2'>🔧 响应式测试区域</p>
-            <div className='grid gap-1 grid-cols-[repeat(auto-fit,minmax(20px,1fr))] xs:grid-cols-[repeat(auto-fit,minmax(25px,1fr))] sm:grid-cols-[repeat(auto-fit,minmax(30px,1fr))] md:grid-cols-[repeat(auto-fit,minmax(35px,1fr))]'>
-              {[1,2,3,4,5,6,7,8,9,10].map(n => (
-                <div key={n} className='aspect-square bg-blue-500 text-white text-xs flex items-center justify-center rounded font-bold'>
-                  {n}
-                </div>
-              ))}
-            </div>
-            <p className='text-xs text-red-600 dark:text-red-400 mt-1'>如果这个网格随着浏览器缩放改变，说明响应式正常工作</p>
-          </div>
-
-          {/* 集数网格 - 超响应式布局 */}
-          <div className='overflow-y-auto h-full pb-4 px-2'>
-            {/* 调试信息 */}
-            <div className='text-xs text-center bg-gradient-to-r from-yellow-200 to-orange-200 dark:from-yellow-800 dark:to-orange-800 text-yellow-800 dark:text-yellow-200 mb-3 p-2 rounded-lg border border-yellow-300 dark:border-yellow-600 font-mono'>
-              📊 总共 <strong>{totalEpisodes}</strong> 集 | 每页 <strong>{episodesPerPage}</strong> 集 | 当前第 <strong className="text-red-600 dark:text-red-400">{currentPage + 1}</strong> 页 | 共 <strong>{pageCount}</strong> 页
-            </div>
-            
-            {/* 响应式网格 - 简化但有效的方案 */}
-            <div className='
-              grid gap-3
-              grid-cols-4 
-              sm:grid-cols-6 
-              md:grid-cols-8 
-              lg:grid-cols-10 
-              xl:grid-cols-12 
-              2xl:grid-cols-14
-            '>
-              {(() => {
-                const len = currentEnd - currentStart + 1;
-                const episodes = Array.from({ length: len }, (_, i) =>
-                  descending ? currentEnd - i : currentStart + i
-                );
-                return episodes;
-              })().map((episodeNumber) => {
-                const isActive = episodeNumber === value;
-                return (
-                  <button
-                    key={episodeNumber}
-                    onClick={() => handleEpisodeClick(episodeNumber - 1)}
-                    className={`
-                      aspect-square relative group overflow-hidden
-                      min-h-[28px] min-w-[28px]
-                      xs:min-h-[32px] xs:min-w-[32px]
-                      sm:min-h-[36px] sm:min-w-[36px] 
-                      md:min-h-[42px] md:min-w-[42px]
-                      lg:min-h-[48px] lg:min-w-[48px]
-                      xl:min-h-[54px] xl:min-w-[54px]
-                      2xl:min-h-[60px] 2xl:min-w-[60px]
-                      flex items-center justify-center 
-                      text-xs xs:text-sm sm:text-base lg:text-lg font-black
-                      rounded-xl border-3 
-                      transition-all duration-300 ease-out 
-                      transform hover:scale-110 hover:rotate-3 active:scale-95 active:rotate-0
-                      ${
-                        isActive
-                          ? 'bg-gradient-to-br from-red-500 via-pink-500 to-purple-600 text-white border-red-300 shadow-2xl shadow-red-500/60 scale-110 rotate-6 z-10'
-                          : 'bg-gradient-to-br from-yellow-200 via-orange-200 to-red-200 text-black border-orange-400 hover:from-green-100 hover:via-blue-100 hover:to-purple-100 hover:border-blue-500 hover:text-blue-800 hover:shadow-xl hover:shadow-blue-300/50'
-                      }
-                    `.trim()}
-                  >
-                    <span className="relative z-20 font-black tracking-tight select-none">
-                      {episodeNumber}
-                    </span>
-                    
-                    {/* 流光效果 */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-0 group-hover:opacity-100 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out" />
-                    
-                    {/* 光晕效果 */}
-                    <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
-                      isActive 
-                        ? 'bg-gradient-to-br from-white/30 via-transparent to-emerald-300/20' 
-                        : 'bg-gradient-to-br from-blue-200/30 via-indigo-200/20 to-purple-200/30 dark:from-blue-800/30 dark:via-indigo-800/20 dark:to-purple-800/30'
-                    }`} />
-                  </button>
-                );
-              })}
-            </div>
+          {/* 集数网格 */}
+          <div className='grid grid-cols-[repeat(auto-fill,minmax(40px,1fr))] auto-rows-[40px] gap-x-3 gap-y-3 overflow-y-auto h-full pb-4'>
+            {(() => {
+              const len = currentEnd - currentStart + 1;
+              const episodes = Array.from({ length: len }, (_, i) =>
+                descending ? currentEnd - i : currentStart + i
+              );
+              return episodes;
+            })().map((episodeNumber) => {
+              const isActive = episodeNumber === value;
+              return (
+                <button
+                  key={episodeNumber}
+                  onClick={() => handleEpisodeClick(episodeNumber)}
+                  className={`h-10 flex items-center justify-center text-sm font-medium rounded-md transition-all duration-200
+                    ${
+                      isActive
+                        ? 'bg-green-500 text-white shadow-lg shadow-green-500/25 dark:bg-green-600'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:scale-105 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20'
+                    }`.trim()}
+                >
+                  {episodeNumber}
+                </button>
+              );
+            })}
           </div>
         </>
       )}
@@ -548,11 +412,11 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                           !isCurrentSource && handleSourceClick(source)
                         }
                         className={`flex items-start gap-3 px-2 py-3 rounded-lg transition-all select-none duration-200 relative
-                      ${
-                        isCurrentSource
-                          ? 'bg-green-500/10 dark:bg-green-500/20 border-green-500/30 border'
-                          : 'hover:bg-gray-200/50 dark:hover:bg-white/10 hover:scale-[1.02] cursor-pointer'
-                      }`.trim()}
+                          ${
+                            isCurrentSource
+                              ? 'bg-green-500/10 dark:bg-green-500/20 border-green-500/30 border'
+                              : 'hover:bg-gray-200/50 dark:hover:bg-white/10 hover:scale-[1.02] cursor-pointer'
+                          }`.trim()}
                       >
                         {/* 封面 */}
                         <div className='flex-shrink-0 w-12 h-20 bg-gray-300 dark:bg-gray-600 rounded overflow-hidden'>
@@ -588,7 +452,6 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                             {(() => {
                               const sourceKey = `${source.source}-${source.id}`;
                               const videoInfo = videoInfoMap.get(sourceKey);
-
                               if (videoInfo && videoInfo.quality !== '未知') {
                                 if (videoInfo.hasError) {
                                   return (
@@ -658,7 +521,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                                     <div className='text-red-500/90 dark:text-red-400 font-medium text-xs'>
                                       无测速数据
                                     </div>
-                                  ); // 占位div
+                                  );
                                 }
                               }
                             })()}
