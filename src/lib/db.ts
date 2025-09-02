@@ -2,6 +2,7 @@
 
 import { AdminConfig } from './admin.types';
 import { D1Storage } from './d1.db';
+import { LocalStorage } from './localstorage.db';
 import { RedisStorage } from './redis.db';
 import { Favorite, IStorage, PlayRecord } from './types';
 import { UpstashRedisStorage } from './upstash.db';
@@ -26,8 +27,8 @@ function createStorage(): IStorage {
       return new D1Storage();
     case 'localstorage':
     default:
-      // 默认返回内存实现，保证本地开发可用
-      return null as unknown as IStorage;
+      // 使用 LocalStorage 实现，适用于本地开发和简单部署
+      return new LocalStorage();
   }
 }
 
@@ -179,6 +180,45 @@ export class DbManager {
   async saveAdminConfig(config: AdminConfig): Promise<void> {
     if (typeof (this.storage as any).setAdminConfig === 'function') {
       await (this.storage as any).setAdminConfig(config);
+    }
+  }
+
+  // ---------- 跳过配置 ----------
+  async getSkipConfig(
+    userName: string,
+    key: string
+  ): Promise<any> {
+    if (typeof (this.storage as any).getSkipConfig === 'function') {
+      return (this.storage as any).getSkipConfig(userName, key);
+    }
+    return null;
+  }
+
+  async saveSkipConfig(
+    userName: string,
+    key: string,
+    config: any
+  ): Promise<void> {
+    if (typeof (this.storage as any).setSkipConfig === 'function') {
+      await (this.storage as any).setSkipConfig(userName, key, config);
+    }
+  }
+
+  async getAllSkipConfigs(
+    userName: string
+  ): Promise<{ [key: string]: any }> {
+    if (typeof (this.storage as any).getAllSkipConfigs === 'function') {
+      return (this.storage as any).getAllSkipConfigs(userName);
+    }
+    return {};
+  }
+
+  async deleteSkipConfig(
+    userName: string,
+    key: string
+  ): Promise<void> {
+    if (typeof (this.storage as any).deleteSkipConfig === 'function') {
+      await (this.storage as any).deleteSkipConfig(userName, key);
     }
   }
 }
