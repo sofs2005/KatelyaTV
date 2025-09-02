@@ -47,6 +47,8 @@ export interface SkipSegment {
   end: number; // 结束时间（秒）
   type: 'opening' | 'ending'; // 片头或片尾
   title?: string; // 可选的描述
+  autoSkip?: boolean; // 是否自动跳过（默认true）
+  autoNextEpisode?: boolean; // 片尾是否自动跳转下一集（默认true，仅对ending类型有效）
 }
 
 export interface EpisodeSkipConfig {

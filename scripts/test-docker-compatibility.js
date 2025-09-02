@@ -5,6 +5,9 @@
  * 模拟 Docker 构建过程中的 Edge Runtime 转换
  */
 
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable no-console */
+
 const fs = require('fs');
 const path = require('path');
 

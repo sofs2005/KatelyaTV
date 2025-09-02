@@ -1567,9 +1567,10 @@ function PlayPageClient() {
                     title={videoTitle}
                     artPlayerRef={artPlayerRef}
                     currentTime={currentPlayTime}
-                    _duration={videoDuration}
+                    duration={videoDuration}
                     isSettingMode={isSkipSettingMode}
                     onSettingModeChange={setIsSkipSettingMode}
+                    onNextEpisode={handleNextEpisode}
                   />
                 )}
 
