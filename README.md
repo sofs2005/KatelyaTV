@@ -1,5 +1,20 @@
 <div align="center">
- ## 📰 项目来源与声明
+  <img src="public/logo.png" alt="KatelyaTV Logo" width="128" />
+
+  <h1>KatelyaTV</h1>
+  <p><strong>跨平台 · 聚合搜索 · 即开即用 · 自托管影视聚合播放器</strong></p>
+  <p>基于 <code>Next.js 14</code> · <code>TypeScript</code> · <code>Tailwind CSS</code> · 多源聚合 / 播放记录 / 收藏同步 / 跳过片头片尾 / PWA</p>
+  <p>MoonTV 二创延续版 · 持续维护与增强</p>
+  
+  <p>
+    <a href="#部署">🚀 部署</a> ·
+    <a href="#功能特性">✨ 功能</a> ·
+    <a href="#docker">🐳 Docker</a> ·
+    <a href="#环境变量">⚙️ 配置</a>
+  </p>
+</div>
+
+## 📰 项目来源与声明
 
 本项目自「MoonTV」演进而来，为其二创/继承版本，持续维护与改进功能与体验。保留并致谢原作者与社区贡献者；如有授权或版权问题请联系以处理。目标：在原作基础上提供更易部署、更友好、更稳定的体验。
 
@@ -34,18 +49,11 @@
 - **🔐 隐私保护**：本地部署，数据完全掌控
 - **🌍 国际化**：多语言支持（规划中）
 
-## 🚀 部署教程 src="public/logo.png" alt="KatelyaTV Logo" width="128" />
+## � 技术栈
 
-  <h1>KatelyaTV</h1>
-  <p><strong>跨平台 · 聚合搜索 · 即开即用 · 自托管影视聚合播放器</strong></p>
-  <p>基于 <code>Next.js 14</code> · <code>TypeScript</code> · <code>Tailwind CSS</code> · 多源聚合 / 播放记录 / 收藏同步 / 跳过片头片尾 / PWA</p>
-  <p>MoonTV 二创延续版 · 持续维护与增强</p>
-  <p>
-    <a href="#部署">🚀 部署</a> ·
-    <a href="#功能特性">✨ 功能</a> ·
-    <a href="#docker">🐳 Docker</a> ·
-    <a href="#环境变量">⚙️ 配置</a>
-  </p>
+## � 技术栈
+
+## 📋 技术栈
 
 | 分类      | 主要依赖                                                                                              |
 | --------- | ----------------------------------------------------------------------------------------------------- |
@@ -57,15 +65,9 @@
 | 代码质量  | ESLint · Prettier · Jest · Husky                                                                      |
 | 部署      | Docker · Vercel · CloudFlare pages                                                                    |
 
-## � 项目来源与声明
-
-本项目自「MoonTV」演进而来，为其二创/继承版本，持续维护与改进功能与体验。保留并致谢原作者与社区贡献者；如有授权或版权问题请联系以处理。目标：在原作基础上提供更易部署、更友好、更稳定的体验。
-
 ## 🚀 部署教程
 
 > **💡 推荐方案**：新手优先选择 **Docker 单容器**（最简单），需要多用户再升级到 **Docker + Redis**
-
-<div align="center">
 
 ### 📋 部署方式对比
 
@@ -75,8 +77,6 @@
 | 🐳 **Docker + Redis** | ⭐⭐   | 需服务器 | ✅     | 家庭/团队，功能完整 |
 | ☁️ **Vercel**         | ⭐     | 免费     | ❌     | 临时体验，无服务器  |
 | 🌐 **Cloudflare**     | ⭐⭐⭐ | 免费     | ✅     | 技术爱好者          |
-
-</div>
 
 ---
 
