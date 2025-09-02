@@ -23,7 +23,7 @@ import { getVideoResolutionFromM3u8, processImageUrl } from '@/lib/utils';
 
 import EpisodeSelector from '@/components/EpisodeSelector';
 import PageLayout from '@/components/PageLayout';
-import SkipController from '@/components/SkipController';
+import SkipController, { SkipSettingsButton } from '@/components/SkipController';
 
 // 扩展 HTMLVideoElement 类型以支持 hls 属性
 declare global {
@@ -167,6 +167,9 @@ function PlayPageClient() {
   // 播放器时间状态（用于跳过功能）
   const [currentPlayTime, setCurrentPlayTime] = useState<number>(0);
   const [videoDuration, setVideoDuration] = useState<number>(0);
+
+  // 跳过设置状态
+  const [isSkipSettingMode, setIsSkipSettingMode] = useState<boolean>(false);
 
   const artPlayerRef = useRef<any>(null);
   const artRef = useRef<HTMLDivElement | null>(null);
@@ -1478,8 +1481,8 @@ function PlayPageClient() {
   return (
     <PageLayout activePath='/play'>
       <div className='flex flex-col gap-3 py-4 px-5 lg:px-[3rem] 2xl:px-20'>
-        {/* 第一行：影片标题 */}
-        <div className='py-1'>
+        {/* 第一行：影片标题和操作按钮 */}
+        <div className='py-1 flex items-center justify-between'>
           <h1 className='text-xl font-semibold text-gray-900 dark:text-gray-100'>
             {videoTitle || '影片标题'}
             {totalEpisodes > 1 && (
@@ -1488,6 +1491,11 @@ function PlayPageClient() {
               </span>
             )}
           </h1>
+          
+          {/* 跳过设置按钮 */}
+          {currentSource && currentId && (
+            <SkipSettingsButton onClick={() => setIsSkipSettingMode(true)} />
+          )}
         </div>
         {/* 第二行：播放器和选集 */}
         <div className='space-y-2'>
@@ -1560,6 +1568,8 @@ function PlayPageClient() {
                     artPlayerRef={artPlayerRef}
                     currentTime={currentPlayTime}
                     _duration={videoDuration}
+                    isSettingMode={isSkipSettingMode}
+                    onSettingModeChange={setIsSkipSettingMode}
                   />
                 )}
 

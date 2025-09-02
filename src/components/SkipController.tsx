@@ -18,6 +18,8 @@ interface SkipControllerProps {
   artPlayerRef: React.MutableRefObject<any>;
   currentTime?: number;
   _duration?: number; // 使用下划线前缀标识未使用的参数
+  isSettingMode?: boolean;
+  onSettingModeChange?: (isOpen: boolean) => void;
 }
 
 export default function SkipController({
@@ -27,11 +29,12 @@ export default function SkipController({
   artPlayerRef,
   currentTime = 0,
   _duration = 0,
+  isSettingMode = false,
+  onSettingModeChange,
 }: SkipControllerProps) {
   const [skipConfig, setSkipConfig] = useState<EpisodeSkipConfig | null>(null);
   const [showSkipButton, setShowSkipButton] = useState(false);
   const [currentSkipSegment, setCurrentSkipSegment] = useState<SkipSegment | null>(null);
-  const [isSettingMode, setIsSettingMode] = useState(false);
   const [newSegment, setNewSegment] = useState<Partial<SkipSegment>>({});
 
   const lastSkipTimeRef = useRef<number>(0);
@@ -131,7 +134,7 @@ export default function SkipController({
 
       await saveSkipConfig(source, id, updatedConfig);
       setSkipConfig(updatedConfig);
-      setIsSettingMode(false);
+      onSettingModeChange?.(false);
       setNewSegment({});
 
       alert('跳过片段已保存');
@@ -139,7 +142,7 @@ export default function SkipController({
       console.error('保存跳过片段失败:', err);
       alert('保存失败，请重试');
     }
-  }, [newSegment, skipConfig, source, id, title]);
+  }, [newSegment, skipConfig, source, id, title, onSettingModeChange]);
 
   // 删除跳过片段
   const handleDeleteSegment = useCallback(
@@ -297,7 +300,7 @@ export default function SkipController({
               </button>
               <button
                 onClick={() => {
-                  setIsSettingMode(false);
+                  onSettingModeChange?.(false);
                   setNewSegment({});
                 }}
                 className="flex-1 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded font-medium transition-colors"
