@@ -721,6 +721,154 @@ const VideoSourceConfig = ({
       });
   };
 
+  // 导出配置
+  const handleExportConfig = () => {
+    try {
+      // 构建符合要求的配置格式
+      const exportConfig = {
+        cache_time: config?.SiteConfig?.SiteInterfaceCacheTime || 7200,
+        api_site: {} as Record<string, any>
+      };
+
+      // 将视频源转换为config.json格式
+      sources.forEach(source => {
+        if (!source.disabled) {
+          exportConfig.api_site[source.key] = {
+            api: source.api,
+            name: source.name,
+            ...(source.detail && { detail: source.detail })
+          };
+        }
+      });
+
+      // 生成JSON文件并下载
+      const dataStr = JSON.stringify(exportConfig, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `config_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      showSuccess('配置文件已导出到下载文件夹');
+    } catch (error) {
+      showError('导出失败: ' + (error instanceof Error ? error.message : '未知错误'));
+    }
+  };
+
+  // 导入配置
+  const handleImportConfig = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // 检查文件类型
+    if (!file.name.toLowerCase().endsWith('.json')) {
+      showError('请选择JSON文件');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const content = e.target?.result as string;
+        const importConfig = JSON.parse(content);
+
+        // 验证配置格式
+        if (!importConfig.api_site || typeof importConfig.api_site !== 'object') {
+          showError('配置文件格式错误：缺少 api_site 字段');
+          return;
+        }
+
+        // 确认导入
+        const result = await Swal.fire({
+          title: '确认导入',
+          text: `检测到 ${Object.keys(importConfig.api_site).length} 个视频源，是否继续导入？`,
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonText: '确认导入',
+          cancelButtonText: '取消',
+          confirmButtonColor: '#059669',
+          cancelButtonColor: '#6b7280'
+        });
+
+        if (!result.isConfirmed) return;
+
+        // 批量导入视频源
+        let successCount = 0;
+        let errorCount = 0;
+        const errors: string[] = [];
+
+        for (const [key, source] of Object.entries(importConfig.api_site)) {
+          try {
+            // 类型检查和验证
+            if (!source || typeof source !== 'object' || Array.isArray(source)) {
+              throw new Error(`${key}: 无效的配置对象`);
+            }
+            
+            const sourceObj = source as { api?: string; name?: string; detail?: string };
+            
+            if (!sourceObj.api || !sourceObj.name) {
+              throw new Error(`${key}: 缺少必要字段 api 或 name`);
+            }
+
+            await callSourceApi({
+              action: 'add',
+              key: key,
+              name: sourceObj.name,
+              api: sourceObj.api,
+              detail: sourceObj.detail || ''
+            });
+            successCount++;
+          } catch (error) {
+            errorCount++;
+            errors.push(`${key}: ${error instanceof Error ? error.message : '未知错误'}`);
+          }
+        }
+
+        // 显示导入结果
+        if (errorCount === 0) {
+          showSuccess(`成功导入 ${successCount} 个视频源`);
+        } else {
+          await Swal.fire({
+            title: '导入完成',
+            html: `
+              <div class="text-left">
+                <p class="text-green-600 mb-2">✅ 成功导入: ${successCount} 个</p>
+                <p class="text-red-600 mb-2">❌ 导入失败: ${errorCount} 个</p>
+                ${errors.length > 0 ? `
+                  <details class="mt-3">
+                    <summary class="cursor-pointer text-gray-600">查看错误详情</summary>
+                    <div class="mt-2 text-sm text-gray-500 max-h-32 overflow-y-auto">
+                      ${errors.map(err => `<div class="py-1">${err}</div>`).join('')}
+                    </div>
+                  </details>
+                ` : ''}
+              </div>
+            `,
+            icon: successCount > 0 ? 'warning' : 'error',
+            confirmButtonText: '确定'
+          });
+        }
+
+      } catch (error) {
+        showError('配置文件解析失败: ' + (error instanceof Error ? error.message : '文件格式错误'));
+      }
+    };
+
+    reader.onerror = () => {
+      showError('文件读取失败');
+    };
+
+    reader.readAsText(file);
+    
+    // 清空input，允许重复选择同一文件
+    event.target.value = '';
+  };
+
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -829,16 +977,40 @@ const VideoSourceConfig = ({
   return (
     <div className='space-y-6'>
       {/* 添加视频源表单 */}
-      <div className='flex items-center justify-between'>
+      <div className='flex items-center justify-between flex-wrap gap-2'>
         <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
           视频源列表
         </h4>
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className='px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors'
-        >
-          {showAddForm ? '取消' : '添加视频源'}
-        </button>
+        <div className='flex items-center gap-2 flex-wrap'>
+          {/* 导入按钮 */}
+          <label className='relative'>
+            <input
+              type='file'
+              accept='.json'
+              onChange={handleImportConfig}
+              className='absolute inset-0 w-full h-full opacity-0 cursor-pointer'
+            />
+            <span className='inline-flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors cursor-pointer'>
+              📂 导入配置
+            </span>
+          </label>
+          
+          {/* 导出按钮 */}
+          <button
+            onClick={handleExportConfig}
+            className='inline-flex items-center px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors'
+          >
+            📤 导出配置
+          </button>
+          
+          {/* 添加视频源按钮 */}
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            className='px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white text-sm rounded-lg transition-colors'
+          >
+            {showAddForm ? '取消' : '➕ 添加视频源'}
+          </button>
+        </div>
       </div>
 
       {showAddForm && (
