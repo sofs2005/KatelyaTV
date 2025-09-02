@@ -168,8 +168,8 @@ function updateChangelog(newVersion, type) {
 
 #### Docker 部署
 \`\`\`bash
-docker pull ghcr.io/senshinya/moontv:v${newVersion}
-docker run -d --name moontv -p 3000:3000 --env PASSWORD=your_password ghcr.io/senshinya/moontv:v${newVersion}
+docker pull ghcr.io/katelya77/katelyatv:v${newVersion}
+docker run -d --name katelyatv -p 3000:3000 --env PASSWORD=your_password ghcr.io/katelya77/katelyatv:v${newVersion}
 \`\`\`
 
 #### 环境变量更新
@@ -179,10 +179,10 @@ docker run -d --name moontv -p 3000:3000 --env PASSWORD=your_password ghcr.io/se
 查看 [CHANGELOG.md](CHANGELOG.md) 了解详细的更新历史。
 
 ### 🔗 相关链接
-- [项目主页](https://github.com/senshinya/moontv)
-- [在线演示](https://moontv.vercel.app)
-- [问题反馈](https://github.com/senshinya/moontv/issues)
-- [功能建议](https://github.com/senshinya/moontv/discussions)
+- [项目主页](https://github.com/katelya77/KatelyaTV)
+- [在线演示](https://katelyatv.vercel.app)
+- [问题反馈](https://github.com/katelya77/KatelyaTV/issues)
+- [功能建议](https://github.com/katelya77/KatelyaTV/discussions)
 
 `;
 
