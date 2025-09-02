@@ -23,7 +23,7 @@ interface VideoInfo {
 interface EpisodeSelectorProps {
   /** 总集数 */
   totalEpisodes: number;
-  /** 每页显示多少集，默认 50 */
+  /** 每页显示多少集，默认 10 */
   episodesPerPage?: number;
   /** 当前选中的集数（1 开始） */
   value?: number;
@@ -47,7 +47,7 @@ interface EpisodeSelectorProps {
  */
 const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
   totalEpisodes,
-  episodesPerPage = 50,
+  episodesPerPage = 10,
   value = 1,
   onChange,
   onSourceChange,
@@ -314,18 +314,21 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
         <>
           {/* 分类标签 */}
           <div className='flex items-center gap-4 mb-4 border-b border-gray-300 dark:border-gray-700 -mx-6 px-6 flex-shrink-0'>
-            {/* 左导航按钮 */}
-            {currentPage > 0 && (
-              <button
-                onClick={() => handleCategoryClick(currentPage - 1)}
-                className='flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 active:scale-95'
-                title='上一批'
-              >
-                <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M15 19l-7-7 7-7' />
-                </svg>
-              </button>
-            )}
+            {/* 左导航按钮 - 强制显示用于测试 */}
+            <button
+              onClick={() => currentPage > 0 && handleCategoryClick(currentPage - 1)}
+              disabled={currentPage <= 0}
+              className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 active:scale-95 ${
+                currentPage > 0 
+                  ? 'bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 cursor-pointer' 
+                  : 'bg-gray-400 cursor-not-allowed opacity-50'
+              }`}
+              title={currentPage > 0 ? '上一批' : '已是第一批'}
+            >
+              <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M15 19l-7-7 7-7' />
+              </svg>
+            </button>
             
             <div className='flex-1 overflow-x-auto' ref={categoryContainerRef}>
               <div className='flex gap-2 min-w-max'>
@@ -356,18 +359,21 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
               </div>
             </div>
             
-            {/* 右导航按钮 */}
-            {currentPage < pageCount - 1 && (
-              <button
-                onClick={() => handleCategoryClick(currentPage + 1)}
-                className='flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 active:scale-95'
-                title='下一批'
-              >
-                <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M9 5l7 7-7 7' />
-                </svg>
-              </button>
-            )}
+            {/* 右导航按钮 - 强制显示用于测试 */}
+            <button
+              onClick={() => currentPage < pageCount - 1 && handleCategoryClick(currentPage + 1)}
+              disabled={currentPage >= pageCount - 1}
+              className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 active:scale-95 ${
+                currentPage < pageCount - 1
+                  ? 'bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 cursor-pointer'
+                  : 'bg-gray-400 cursor-not-allowed opacity-50'
+              }`}
+              title={currentPage < pageCount - 1 ? '下一批' : '已是最后一批'}
+            >
+              <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M9 5l7 7-7 7' />
+              </svg>
+            </button>
             
             {/* 向上/向下按钮 */}
             <button
@@ -393,9 +399,14 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
             </button>
           </div>
 
-          {/* 集数网格 - 智能响应式布局 */}
-          <div className='overflow-y-auto h-full pb-4 px-1'>
-            <div className='grid gap-2 sm:gap-3 md:gap-4 grid-cols-[repeat(auto-fill,minmax(36px,1fr))] xs:grid-cols-[repeat(auto-fill,minmax(40px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(44px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(48px,1fr))] lg:grid-cols-[repeat(auto-fill,minmax(52px,1fr))] xl:grid-cols-[repeat(auto-fill,minmax(56px,1fr))] 2xl:grid-cols-[repeat(auto-fill,minmax(60px,1fr))]'>
+          {/* 集数网格 - 超灵活响应式布局 */}
+          <div className='overflow-y-auto h-full pb-4 px-2'>
+            {/* 调试信息 */}
+            <div className='text-xs text-gray-500 mb-2 p-1 bg-yellow-100 dark:bg-yellow-900 rounded'>
+              总共{totalEpisodes}集 | 每页{episodesPerPage}集 | 当前第{currentPage + 1}页 | 共{pageCount}页
+            </div>
+            
+            <div className='episode-responsive-grid'>
               {(() => {
                 const len = currentEnd - currentStart + 1;
                 const episodes = Array.from({ length: len }, (_, i) =>
@@ -409,29 +420,150 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                     key={episodeNumber}
                     onClick={() => handleEpisodeClick(episodeNumber - 1)}
                     className={`
-                      aspect-square min-h-[36px] min-w-[36px] xs:min-h-[40px] xs:min-w-[40px] sm:min-h-[44px] sm:min-w-[44px] md:min-h-[48px] md:min-w-[48px] lg:min-h-[52px] lg:min-w-[52px] xl:min-h-[56px] xl:min-w-[56px] 2xl:min-h-[60px] 2xl:min-w-[60px]
-                      flex items-center justify-center text-xs sm:text-sm lg:text-base font-bold rounded-lg border-2 
-                      transition-all duration-300 ease-out transform hover:scale-110 active:scale-95 hover:rotate-2 active:rotate-0
-                      relative overflow-hidden group
+                      episode-btn relative overflow-hidden group
+                      flex items-center justify-center font-bold rounded-xl border-2 
+                      transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 hover:rotate-1
                       ${
                         isActive
-                          ? 'bg-gradient-to-br from-emerald-400 via-green-500 to-teal-600 text-white border-emerald-300 shadow-xl shadow-emerald-500/40 dark:from-emerald-500 dark:via-green-600 dark:to-teal-700 dark:border-emerald-400'
-                          : 'bg-gradient-to-br from-slate-100 via-gray-50 to-zinc-100 text-slate-700 border-slate-300 hover:from-blue-50 hover:via-indigo-50 hover:to-purple-50 hover:border-blue-400 hover:text-blue-700 hover:shadow-lg hover:shadow-blue-200/50 dark:from-slate-700 dark:via-gray-800 dark:to-zinc-800 dark:text-slate-200 dark:border-slate-600 dark:hover:from-blue-900/60 dark:hover:via-indigo-900/60 dark:hover:to-purple-900/60 dark:hover:border-blue-500 dark:hover:text-blue-300'
+                          ? 'bg-gradient-to-br from-emerald-400 via-green-500 to-teal-600 text-white border-emerald-300 shadow-2xl shadow-emerald-500/50 scale-105'
+                          : 'bg-gradient-to-br from-white via-gray-50 to-slate-100 text-gray-800 border-gray-300 hover:from-blue-50 hover:via-indigo-50 hover:to-purple-100 hover:border-blue-400 hover:text-blue-700 hover:shadow-xl hover:shadow-blue-200/30 dark:from-slate-700 dark:via-gray-800 dark:to-zinc-800 dark:text-slate-200 dark:border-slate-600 dark:hover:from-blue-900/70 dark:hover:to-purple-900/70 dark:hover:border-blue-500'
                       }
                     `.trim()}
                   >
-                    <span className="relative z-10 font-extrabold tracking-tight">
+                    <span className="relative z-10 font-black text-sm">
                       {episodeNumber}
                     </span>
-                    {/* 光晕效果 */}
-                    <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${isActive ? 'bg-gradient-to-br from-white/20 to-transparent' : 'bg-gradient-to-br from-blue-400/20 via-indigo-400/20 to-purple-400/20'}`} />
-                    {/* 闪光效果 */}
-                    <div className="absolute -inset-x-full top-0 h-full bg-gradient-to-r from-transparent via-white/30 to-transparent transform -skew-x-12 group-hover:translate-x-full transition-transform duration-700 ease-in-out" />
+                    {/* 动态光效 */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -skew-x-12 group-hover:translate-x-full transition-all duration-700" />
                   </button>
                 );
               })}
             </div>
           </div>
+
+          <style jsx>{`
+            .episode-responsive-grid {
+              display: grid;
+              gap: 0.5rem;
+              /* 基础网格 - 移动端 */
+              grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
+            }
+            
+            .episode-btn {
+              aspect-ratio: 1;
+              min-height: 32px;
+              min-width: 32px;
+            }
+            
+            /* 响应式断点 - 使用媒体查询确保兼容性 */
+            @media (min-width: 360px) {
+              .episode-responsive-grid {
+                grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+                gap: 0.6rem;
+              }
+              .episode-btn {
+                min-height: 36px;
+                min-width: 36px;
+              }
+            }
+            
+            @media (min-width: 480px) {
+              .episode-responsive-grid {
+                grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+                gap: 0.7rem;
+              }
+              .episode-btn {
+                min-height: 40px;
+                min-width: 40px;
+              }
+            }
+            
+            @media (min-width: 640px) {
+              .episode-responsive-grid {
+                grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+                gap: 0.8rem;
+              }
+              .episode-btn {
+                min-height: 44px;
+                min-width: 44px;
+              }
+            }
+            
+            @media (min-width: 768px) {
+              .episode-responsive-grid {
+                grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+                gap: 0.9rem;
+              }
+              .episode-btn {
+                min-height: 48px;
+                min-width: 48px;
+              }
+            }
+            
+            @media (min-width: 1024px) {
+              .episode-responsive-grid {
+                grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+                gap: 1rem;
+              }
+              .episode-btn {
+                min-height: 52px;
+                min-width: 52px;
+              }
+            }
+            
+            @media (min-width: 1280px) {
+              .episode-responsive-grid {
+                grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+                gap: 1.1rem;
+              }
+              .episode-btn {
+                min-height: 56px;
+                min-width: 56px;
+              }
+            }
+            
+            @media (min-width: 1536px) {
+              .episode-responsive-grid {
+                grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+                gap: 1.2rem;
+              }
+              .episode-btn {
+                min-height: 60px;
+                min-width: 60px;
+              }
+            }
+            
+            /* 超宽屏和高分辨率显示器 */
+            @media (min-width: 1800px) {
+              .episode-responsive-grid {
+                grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+                gap: 1.5rem;
+              }
+              .episode-btn {
+                min-height: 64px;
+                min-width: 64px;
+              }
+            }
+            
+            /* 缩放适配 - 针对浏览器缩放 */
+            @media (min-resolution: 120dpi) and (max-width: 1200px) {
+              .episode-responsive-grid {
+                grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
+              }
+            }
+            
+            @media (min-resolution: 144dpi) and (max-width: 1000px) {
+              .episode-responsive-grid {
+                grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+              }
+            }
+            
+            @media (min-resolution: 192dpi) and (max-width: 800px) {
+              .episode-responsive-grid {
+                grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+              }
+            }
+          `}</style>
         </>
       )}
 
