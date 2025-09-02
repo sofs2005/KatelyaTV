@@ -14,6 +14,23 @@ export interface PlayRecord {
   search_title: string; // 搜索时使用的标题
 }
 
+// 片头片尾数据结构
+export interface SkipSegment {
+  start: number; // 开始时间（秒）
+  end: number; // 结束时间（秒）
+  type: 'opening' | 'ending'; // 片头或片尾
+  title?: string; // 可选的描述
+}
+
+// 剧集跳过配置
+export interface EpisodeSkipConfig {
+  source: string; // 资源站标识
+  id: string; // 剧集ID
+  title: string; // 剧集标题
+  segments: SkipSegment[]; // 跳过片段列表
+  updated_time: number; // 最后更新时间
+}
+
 // 收藏数据结构
 export interface Favorite {
   source_name: string;
@@ -57,6 +74,12 @@ export interface IStorage {
   getSearchHistory(userName: string): Promise<string[]>;
   addSearchHistory(userName: string, keyword: string): Promise<void>;
   deleteSearchHistory(userName: string, keyword?: string): Promise<void>;
+
+  // 片头片尾跳过配置相关
+  getSkipConfig(userName: string, key: string): Promise<EpisodeSkipConfig | null>;
+  setSkipConfig(userName: string, key: string, config: EpisodeSkipConfig): Promise<void>;
+  getAllSkipConfigs(userName: string): Promise<{ [key: string]: EpisodeSkipConfig }>;
+  deleteSkipConfig(userName: string, key: string): Promise<void>;
 
   // 用户列表
   getAllUsers(): Promise<string[]>;

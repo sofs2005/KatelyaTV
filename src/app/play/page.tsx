@@ -23,6 +23,7 @@ import { getVideoResolutionFromM3u8, processImageUrl } from '@/lib/utils';
 
 import EpisodeSelector from '@/components/EpisodeSelector';
 import PageLayout from '@/components/PageLayout';
+import SkipController from '@/components/SkipController';
 
 // 扩展 HTMLVideoElement 类型以支持 hls 属性
 declare global {
@@ -162,6 +163,10 @@ function PlayPageClient() {
   // 播放进度保存相关
   const saveIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastSaveTimeRef = useRef<number>(0);
+
+  // 播放器时间状态（用于跳过功能）
+  const [currentPlayTime, setCurrentPlayTime] = useState<number>(0);
+  const [videoDuration, setVideoDuration] = useState<number>(0);
 
   const artPlayerRef = useRef<any>(null);
   const artRef = useRef<HTMLDivElement | null>(null);
@@ -1200,10 +1205,25 @@ function PlayPageClient() {
       // 监听播放器事件
       artPlayerRef.current.on('ready', () => {
         setError(null);
+        // 更新视频时长
+        const duration = artPlayerRef.current.duration || 0;
+        setVideoDuration(duration);
       });
 
       artPlayerRef.current.on('video:volumechange', () => {
         lastVolumeRef.current = artPlayerRef.current.volume;
+      });
+
+      // 监听播放时间更新（用于跳过功能）
+      artPlayerRef.current.on('video:timeupdate', () => {
+        const currentTime = artPlayerRef.current.currentTime || 0;
+        setCurrentPlayTime(currentTime);
+        
+        // 同时更新时长（防止ready事件中获取不到）
+        const duration = artPlayerRef.current.duration || 0;
+        if (duration > 0 && videoDuration !== duration) {
+          setVideoDuration(duration);
+        }
       });
 
       // 监听视频可播放事件，这时恢复播放进度更可靠
@@ -1530,6 +1550,18 @@ function PlayPageClient() {
                   ref={artRef}
                   className='bg-black w-full h-full rounded-xl overflow-hidden shadow-lg'
                 ></div>
+
+                {/* 跳过片头片尾控制器 */}
+                {currentSource && currentId && videoTitle && (
+                  <SkipController
+                    source={currentSource}
+                    id={currentId}
+                    title={videoTitle}
+                    artPlayerRef={artPlayerRef}
+                    currentTime={currentPlayTime}
+                    _duration={videoDuration}
+                  />
+                )}
 
                 {/* 换源加载蒙层 */}
                 {isVideoLoading && (

@@ -3,7 +3,7 @@
 import { createClient, RedisClientType } from 'redis';
 
 import { AdminConfig } from './admin.types';
-import { Favorite, IStorage, PlayRecord } from './types';
+import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord } from './types';
 
 // 搜索历史最大条数
 const SEARCH_HISTORY_LIMIT = 20;
@@ -282,6 +282,71 @@ export class RedisStorage implements IStorage {
     await withRetry(() =>
       this.client.set(this.adminConfigKey(), JSON.stringify(config))
     );
+  }
+
+  // 跳过配置相关
+  private skipConfigKey(userName: string, key: string): string {
+    return `katelyatv:skip_config:${userName}:${key}`;
+  }
+
+  private skipConfigsKey(userName: string): string {
+    return `katelyatv:skip_configs:${userName}`;
+  }
+
+  async getSkipConfig(
+    userName: string,
+    key: string
+  ): Promise<EpisodeSkipConfig | null> {
+    const data = await withRetry(() =>
+      this.client.get(this.skipConfigKey(userName, key))
+    );
+    return data ? JSON.parse(data) : null;
+  }
+
+  async setSkipConfig(
+    userName: string,
+    key: string,
+    config: EpisodeSkipConfig
+  ): Promise<void> {
+    await withRetry(async () => {
+      // 保存到独立的key
+      await this.client.set(
+        this.skipConfigKey(userName, key),
+        JSON.stringify(config)
+      );
+      // 同时加入到用户的跳过配置集合中
+      await this.client.sAdd(this.skipConfigsKey(userName), key);
+    });
+  }
+
+  async getAllSkipConfigs(
+    userName: string
+  ): Promise<{ [key: string]: EpisodeSkipConfig }> {
+    const keys = await withRetry(() =>
+      this.client.sMembers(this.skipConfigsKey(userName))
+    );
+
+    const configs: { [key: string]: EpisodeSkipConfig } = {};
+
+    for (const key of keys) {
+      const data = await withRetry(() =>
+        this.client.get(this.skipConfigKey(userName, key))
+      );
+      if (data) {
+        configs[key] = JSON.parse(data);
+      }
+    }
+
+    return configs;
+  }
+
+  async deleteSkipConfig(userName: string, key: string): Promise<void> {
+    await withRetry(async () => {
+      // 删除独立的key
+      await this.client.del(this.skipConfigKey(userName, key));
+      // 从用户的跳过配置集合中移除
+      await this.client.sRem(this.skipConfigsKey(userName), key);
+    });
   }
 }
 

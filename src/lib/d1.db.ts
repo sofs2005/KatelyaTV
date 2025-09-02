@@ -1,7 +1,7 @@
 /* eslint-disable no-console, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 
 import { AdminConfig } from './admin.types';
-import { Favorite, IStorage, PlayRecord } from './types';
+import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord } from './types';
 
 // 搜索历史最大条数
 const SEARCH_HISTORY_LIMIT = 20;
@@ -470,6 +470,106 @@ export class D1Storage implements IStorage {
         .run();
     } catch (err) {
       console.error('Failed to set admin config:', err);
+      throw err;
+    }
+  }
+
+  // 跳过配置相关
+  async getSkipConfig(
+    userName: string,
+    key: string
+  ): Promise<EpisodeSkipConfig | null> {
+    try {
+      const db = await this.getDatabase();
+      const result = await db
+        .prepare('SELECT * FROM skip_configs WHERE username = ? AND key = ?')
+        .bind(userName, key)
+        .first<any>();
+
+      if (!result) return null;
+
+      return {
+        source: result.source,
+        id: result.video_id,
+        title: result.title,
+        segments: JSON.parse(result.segments),
+        updated_time: result.updated_time,
+      };
+    } catch (err) {
+      console.error('Failed to get skip config:', err);
+      throw err;
+    }
+  }
+
+  async setSkipConfig(
+    userName: string,
+    key: string,
+    config: EpisodeSkipConfig
+  ): Promise<void> {
+    try {
+      const db = await this.getDatabase();
+      await db
+        .prepare(
+          `
+          INSERT OR REPLACE INTO skip_configs 
+          (username, key, source, video_id, title, segments, updated_time)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `
+        )
+        .bind(
+          userName,
+          key,
+          config.source,
+          config.id,
+          config.title,
+          JSON.stringify(config.segments),
+          config.updated_time
+        )
+        .run();
+    } catch (err) {
+      console.error('Failed to set skip config:', err);
+      throw err;
+    }
+  }
+
+  async getAllSkipConfigs(
+    userName: string
+  ): Promise<{ [key: string]: EpisodeSkipConfig }> {
+    try {
+      const db = await this.getDatabase();
+      const result = await db
+        .prepare('SELECT * FROM skip_configs WHERE username = ?')
+        .bind(userName)
+        .all<any>();
+
+      const configs: { [key: string]: EpisodeSkipConfig } = {};
+      
+      for (const row of result.results) {
+        configs[row.key] = {
+          source: row.source,
+          id: row.video_id,
+          title: row.title,
+          segments: JSON.parse(row.segments),
+          updated_time: row.updated_time,
+        };
+      }
+
+      return configs;
+    } catch (err) {
+      console.error('Failed to get all skip configs:', err);
+      throw err;
+    }
+  }
+
+  async deleteSkipConfig(userName: string, key: string): Promise<void> {
+    try {
+      const db = await this.getDatabase();
+      await db
+        .prepare('DELETE FROM skip_configs WHERE username = ? AND key = ?')
+        .bind(userName, key)
+        .run();
+    } catch (err) {
+      console.error('Failed to delete skip config:', err);
       throw err;
     }
   }
