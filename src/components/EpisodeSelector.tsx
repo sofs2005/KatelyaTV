@@ -314,6 +314,19 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
         <>
           {/* 分类标签 */}
           <div className='flex items-center gap-4 mb-4 border-b border-gray-300 dark:border-gray-700 -mx-6 px-6 flex-shrink-0'>
+            {/* 左导航按钮 */}
+            {currentPage > 0 && (
+              <button
+                onClick={() => handleCategoryClick(currentPage - 1)}
+                className='flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 active:scale-95'
+                title='上一批'
+              >
+                <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M15 19l-7-7 7-7' />
+                </svg>
+              </button>
+            )}
+            
             <div className='flex-1 overflow-x-auto' ref={categoryContainerRef}>
               <div className='flex gap-2 min-w-max'>
                 {categories.map((label, idx) => {
@@ -342,6 +355,20 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                 })}
               </div>
             </div>
+            
+            {/* 右导航按钮 */}
+            {currentPage < pageCount - 1 && (
+              <button
+                onClick={() => handleCategoryClick(currentPage + 1)}
+                className='flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 active:scale-95'
+                title='下一批'
+              >
+                <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M9 5l7 7-7 7' />
+                </svg>
+              </button>
+            )}
+            
             {/* 向上/向下按钮 */}
             <button
               className='flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center text-gray-700 hover:text-green-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-green-400 dark:hover:bg-white/20 transition-colors transform translate-y-[-4px]'
@@ -366,31 +393,44 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
             </button>
           </div>
 
-          {/* 集数网格 */}
-          <div className='grid grid-cols-[repeat(auto-fill,minmax(40px,1fr))] auto-rows-[40px] gap-x-3 gap-y-3 overflow-y-auto h-full pb-4'>
-            {(() => {
-              const len = currentEnd - currentStart + 1;
-              const episodes = Array.from({ length: len }, (_, i) =>
-                descending ? currentEnd - i : currentStart + i
-              );
-              return episodes;
-            })().map((episodeNumber) => {
-              const isActive = episodeNumber === value;
-              return (
-                <button
-                  key={episodeNumber}
-                  onClick={() => handleEpisodeClick(episodeNumber - 1)}
-                  className={`h-10 flex items-center justify-center text-sm font-medium rounded-md transition-all duration-200 
-                    ${
-                      isActive
-                        ? 'bg-green-500 text-white shadow-lg shadow-green-500/25 dark:bg-green-600'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:scale-105 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20'
-                    }`.trim()}
-                >
-                  {episodeNumber}
-                </button>
-              );
-            })}
+          {/* 集数网格 - 智能响应式布局 */}
+          <div className='overflow-y-auto h-full pb-4 px-1'>
+            <div className='grid gap-2 sm:gap-3 md:gap-4 grid-cols-[repeat(auto-fill,minmax(36px,1fr))] xs:grid-cols-[repeat(auto-fill,minmax(40px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(44px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(48px,1fr))] lg:grid-cols-[repeat(auto-fill,minmax(52px,1fr))] xl:grid-cols-[repeat(auto-fill,minmax(56px,1fr))] 2xl:grid-cols-[repeat(auto-fill,minmax(60px,1fr))]'>
+              {(() => {
+                const len = currentEnd - currentStart + 1;
+                const episodes = Array.from({ length: len }, (_, i) =>
+                  descending ? currentEnd - i : currentStart + i
+                );
+                return episodes;
+              })().map((episodeNumber) => {
+                const isActive = episodeNumber === value;
+                return (
+                  <button
+                    key={episodeNumber}
+                    onClick={() => handleEpisodeClick(episodeNumber - 1)}
+                    className={`
+                      aspect-square min-h-[36px] min-w-[36px] xs:min-h-[40px] xs:min-w-[40px] sm:min-h-[44px] sm:min-w-[44px] md:min-h-[48px] md:min-w-[48px] lg:min-h-[52px] lg:min-w-[52px] xl:min-h-[56px] xl:min-w-[56px] 2xl:min-h-[60px] 2xl:min-w-[60px]
+                      flex items-center justify-center text-xs sm:text-sm lg:text-base font-bold rounded-lg border-2 
+                      transition-all duration-300 ease-out transform hover:scale-110 active:scale-95 hover:rotate-2 active:rotate-0
+                      relative overflow-hidden group
+                      ${
+                        isActive
+                          ? 'bg-gradient-to-br from-emerald-400 via-green-500 to-teal-600 text-white border-emerald-300 shadow-xl shadow-emerald-500/40 dark:from-emerald-500 dark:via-green-600 dark:to-teal-700 dark:border-emerald-400'
+                          : 'bg-gradient-to-br from-slate-100 via-gray-50 to-zinc-100 text-slate-700 border-slate-300 hover:from-blue-50 hover:via-indigo-50 hover:to-purple-50 hover:border-blue-400 hover:text-blue-700 hover:shadow-lg hover:shadow-blue-200/50 dark:from-slate-700 dark:via-gray-800 dark:to-zinc-800 dark:text-slate-200 dark:border-slate-600 dark:hover:from-blue-900/60 dark:hover:via-indigo-900/60 dark:hover:to-purple-900/60 dark:hover:border-blue-500 dark:hover:text-blue-300'
+                      }
+                    `.trim()}
+                  >
+                    <span className="relative z-10 font-extrabold tracking-tight">
+                      {episodeNumber}
+                    </span>
+                    {/* 光晕效果 */}
+                    <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${isActive ? 'bg-gradient-to-br from-white/20 to-transparent' : 'bg-gradient-to-br from-blue-400/20 via-indigo-400/20 to-purple-400/20'}`} />
+                    {/* 闪光效果 */}
+                    <div className="absolute -inset-x-full top-0 h-full bg-gradient-to-r from-transparent via-white/30 to-transparent transform -skew-x-12 group-hover:translate-x-full transition-transform duration-700 ease-in-out" />
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </>
       )}
