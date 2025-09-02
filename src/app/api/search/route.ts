@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server';
 
 import { getAvailableApiSites, getCacheTime } from '@/lib/config';
+import { addCorsHeaders, handleOptionsRequest } from '@/lib/cors';
 import { searchFromApi } from '@/lib/downstream';
 
 export const runtime = 'edge';
+
+// 处理OPTIONS预检请求（OrionTV客户端需要）
+export async function OPTIONS() {
+  return handleOptionsRequest();
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -11,7 +17,7 @@ export async function GET(request: Request) {
 
   if (!query) {
     const cacheTime = await getCacheTime();
-    return NextResponse.json(
+    const response = NextResponse.json(
       { results: [] },
       {
         headers: {
@@ -21,6 +27,7 @@ export async function GET(request: Request) {
         },
       }
     );
+    return addCorsHeaders(response);
   }
 
   const apiSites = await getAvailableApiSites();
@@ -31,7 +38,7 @@ export async function GET(request: Request) {
     const flattenedResults = results.flat();
     const cacheTime = await getCacheTime();
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       { results: flattenedResults },
       {
         headers: {
@@ -41,7 +48,9 @@ export async function GET(request: Request) {
         },
       }
     );
+    return addCorsHeaders(response);
   } catch (error) {
-    return NextResponse.json({ error: '搜索失败' }, { status: 500 });
+    const response = NextResponse.json({ error: '搜索失败' }, { status: 500 });
+    return addCorsHeaders(response);
   }
 }
