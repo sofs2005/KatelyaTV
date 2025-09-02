@@ -399,14 +399,36 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
             </button>
           </div>
 
-          {/* 集数网格 - 超灵活响应式布局 */}
+          {/* 测试区域 - 验证响应式是否工作 */}
+          <div className='mb-4 p-3 bg-red-100 dark:bg-red-900 border-2 border-red-500 rounded-lg'>
+            <p className='text-red-800 dark:text-red-200 font-bold mb-2'>🔧 响应式测试区域</p>
+            <div className='grid gap-1 grid-cols-[repeat(auto-fit,minmax(20px,1fr))] xs:grid-cols-[repeat(auto-fit,minmax(25px,1fr))] sm:grid-cols-[repeat(auto-fit,minmax(30px,1fr))] md:grid-cols-[repeat(auto-fit,minmax(35px,1fr))]'>
+              {[1,2,3,4,5,6,7,8,9,10].map(n => (
+                <div key={n} className='aspect-square bg-blue-500 text-white text-xs flex items-center justify-center rounded font-bold'>
+                  {n}
+                </div>
+              ))}
+            </div>
+            <p className='text-xs text-red-600 dark:text-red-400 mt-1'>如果这个网格随着浏览器缩放改变，说明响应式正常工作</p>
+          </div>
+
+          {/* 集数网格 - 超响应式布局 */}
           <div className='overflow-y-auto h-full pb-4 px-2'>
             {/* 调试信息 */}
-            <div className='text-xs text-gray-500 mb-2 p-1 bg-yellow-100 dark:bg-yellow-900 rounded'>
-              总共{totalEpisodes}集 | 每页{episodesPerPage}集 | 当前第{currentPage + 1}页 | 共{pageCount}页
+            <div className='text-xs text-center bg-gradient-to-r from-yellow-200 to-orange-200 dark:from-yellow-800 dark:to-orange-800 text-yellow-800 dark:text-yellow-200 mb-3 p-2 rounded-lg border border-yellow-300 dark:border-yellow-600 font-mono'>
+              📊 总共 <strong>{totalEpisodes}</strong> 集 | 每页 <strong>{episodesPerPage}</strong> 集 | 当前第 <strong className="text-red-600 dark:text-red-400">{currentPage + 1}</strong> 页 | 共 <strong>{pageCount}</strong> 页
             </div>
             
-            <div className='episode-responsive-grid'>
+            {/* 响应式网格 - 简化但有效的方案 */}
+            <div className='
+              grid gap-3
+              grid-cols-4 
+              sm:grid-cols-6 
+              md:grid-cols-8 
+              lg:grid-cols-10 
+              xl:grid-cols-12 
+              2xl:grid-cols-14
+            '>
               {(() => {
                 const len = currentEnd - currentStart + 1;
                 const episodes = Array.from({ length: len }, (_, i) =>
@@ -420,150 +442,44 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                     key={episodeNumber}
                     onClick={() => handleEpisodeClick(episodeNumber - 1)}
                     className={`
-                      episode-btn relative overflow-hidden group
-                      flex items-center justify-center font-bold rounded-xl border-2 
-                      transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 hover:rotate-1
+                      aspect-square relative group overflow-hidden
+                      min-h-[28px] min-w-[28px]
+                      xs:min-h-[32px] xs:min-w-[32px]
+                      sm:min-h-[36px] sm:min-w-[36px] 
+                      md:min-h-[42px] md:min-w-[42px]
+                      lg:min-h-[48px] lg:min-w-[48px]
+                      xl:min-h-[54px] xl:min-w-[54px]
+                      2xl:min-h-[60px] 2xl:min-w-[60px]
+                      flex items-center justify-center 
+                      text-xs xs:text-sm sm:text-base lg:text-lg font-black
+                      rounded-xl border-3 
+                      transition-all duration-300 ease-out 
+                      transform hover:scale-110 hover:rotate-3 active:scale-95 active:rotate-0
                       ${
                         isActive
-                          ? 'bg-gradient-to-br from-emerald-400 via-green-500 to-teal-600 text-white border-emerald-300 shadow-2xl shadow-emerald-500/50 scale-105'
-                          : 'bg-gradient-to-br from-white via-gray-50 to-slate-100 text-gray-800 border-gray-300 hover:from-blue-50 hover:via-indigo-50 hover:to-purple-100 hover:border-blue-400 hover:text-blue-700 hover:shadow-xl hover:shadow-blue-200/30 dark:from-slate-700 dark:via-gray-800 dark:to-zinc-800 dark:text-slate-200 dark:border-slate-600 dark:hover:from-blue-900/70 dark:hover:to-purple-900/70 dark:hover:border-blue-500'
+                          ? 'bg-gradient-to-br from-red-500 via-pink-500 to-purple-600 text-white border-red-300 shadow-2xl shadow-red-500/60 scale-110 rotate-6 z-10'
+                          : 'bg-gradient-to-br from-yellow-200 via-orange-200 to-red-200 text-black border-orange-400 hover:from-green-100 hover:via-blue-100 hover:to-purple-100 hover:border-blue-500 hover:text-blue-800 hover:shadow-xl hover:shadow-blue-300/50'
                       }
                     `.trim()}
                   >
-                    <span className="relative z-10 font-black text-sm">
+                    <span className="relative z-20 font-black tracking-tight select-none">
                       {episodeNumber}
                     </span>
-                    {/* 动态光效 */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -skew-x-12 group-hover:translate-x-full transition-all duration-700" />
+                    
+                    {/* 流光效果 */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-0 group-hover:opacity-100 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out" />
+                    
+                    {/* 光晕效果 */}
+                    <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+                      isActive 
+                        ? 'bg-gradient-to-br from-white/30 via-transparent to-emerald-300/20' 
+                        : 'bg-gradient-to-br from-blue-200/30 via-indigo-200/20 to-purple-200/30 dark:from-blue-800/30 dark:via-indigo-800/20 dark:to-purple-800/30'
+                    }`} />
                   </button>
                 );
               })}
             </div>
           </div>
-
-          <style jsx>{`
-            .episode-responsive-grid {
-              display: grid;
-              gap: 0.5rem;
-              /* 基础网格 - 移动端 */
-              grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
-            }
-            
-            .episode-btn {
-              aspect-ratio: 1;
-              min-height: 32px;
-              min-width: 32px;
-            }
-            
-            /* 响应式断点 - 使用媒体查询确保兼容性 */
-            @media (min-width: 360px) {
-              .episode-responsive-grid {
-                grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
-                gap: 0.6rem;
-              }
-              .episode-btn {
-                min-height: 36px;
-                min-width: 36px;
-              }
-            }
-            
-            @media (min-width: 480px) {
-              .episode-responsive-grid {
-                grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
-                gap: 0.7rem;
-              }
-              .episode-btn {
-                min-height: 40px;
-                min-width: 40px;
-              }
-            }
-            
-            @media (min-width: 640px) {
-              .episode-responsive-grid {
-                grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
-                gap: 0.8rem;
-              }
-              .episode-btn {
-                min-height: 44px;
-                min-width: 44px;
-              }
-            }
-            
-            @media (min-width: 768px) {
-              .episode-responsive-grid {
-                grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
-                gap: 0.9rem;
-              }
-              .episode-btn {
-                min-height: 48px;
-                min-width: 48px;
-              }
-            }
-            
-            @media (min-width: 1024px) {
-              .episode-responsive-grid {
-                grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
-                gap: 1rem;
-              }
-              .episode-btn {
-                min-height: 52px;
-                min-width: 52px;
-              }
-            }
-            
-            @media (min-width: 1280px) {
-              .episode-responsive-grid {
-                grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
-                gap: 1.1rem;
-              }
-              .episode-btn {
-                min-height: 56px;
-                min-width: 56px;
-              }
-            }
-            
-            @media (min-width: 1536px) {
-              .episode-responsive-grid {
-                grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-                gap: 1.2rem;
-              }
-              .episode-btn {
-                min-height: 60px;
-                min-width: 60px;
-              }
-            }
-            
-            /* 超宽屏和高分辨率显示器 */
-            @media (min-width: 1800px) {
-              .episode-responsive-grid {
-                grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
-                gap: 1.5rem;
-              }
-              .episode-btn {
-                min-height: 64px;
-                min-width: 64px;
-              }
-            }
-            
-            /* 缩放适配 - 针对浏览器缩放 */
-            @media (min-resolution: 120dpi) and (max-width: 1200px) {
-              .episode-responsive-grid {
-                grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
-              }
-            }
-            
-            @media (min-resolution: 144dpi) and (max-width: 1000px) {
-              .episode-responsive-grid {
-                grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
-              }
-            }
-            
-            @media (min-resolution: 192dpi) and (max-width: 800px) {
-              .episode-responsive-grid {
-                grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
-              }
-            }
-          `}</style>
         </>
       )}
 
