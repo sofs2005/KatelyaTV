@@ -321,7 +321,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
           </div>
 
           {/* 集数网格 */}
-          <div className='grid grid-cols-[repeat(auto-fill,48px)] justify-center gap-x-2 gap-y-1.5 overflow-y-auto h-full pb-4'>
+          <div className='grid grid-cols-[repeat(auto-fill,48px)] justify-center gap-x-2 gap-y-0 overflow-y-auto h-full pb-4'>
             {(() => {
               const len = currentEnd - currentStart + 1;
               const episodes = Array.from({ length: len }, (_, i) =>
