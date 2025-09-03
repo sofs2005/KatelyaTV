@@ -65,16 +65,21 @@
 
 ## 🚀 部署教程
 
-> **💡 推荐方案**：新手优先选择 **Docker 单容器**（最简单），需要多用户再升级到 **Docker + Redis**
+> **💡 推荐方案**：
+>
+> - 🆕 **个人用户**：优先选择 **Docker 单容器**（最简单）
+> - 🏠 **家庭/团队**：选择 **Docker + Redis**（功能完整）
+> - 🏢 **生产环境**：强烈推荐 **Docker + Kvrocks**（极高可靠性，零数据丢失风险）
 
 ### 📋 部署方式对比
 
-| 方式                  | 难度   | 成本     | 多用户 | 推荐场景            |
-| --------------------- | ------ | -------- | ------ | ------------------- |
-| 🐳 **Docker 单容器**  | ⭐     | 需服务器 | ❌     | 个人使用，最简单    |
-| 🐳 **Docker + Redis** | ⭐⭐   | 需服务器 | ✅     | 家庭/团队，功能完整 |
-| ☁️ **Vercel**         | ⭐     | 免费     | ❌     | 临时体验，无服务器  |
-| 🌐 **Cloudflare**     | ⭐⭐⭐ | 免费     | ✅     | 技术爱好者          |
+| 方式                    | 难度   | 成本     | 多用户 | 数据可靠性 | 推荐场景            |
+| ----------------------- | ------ | -------- | ------ | ---------- | ------------------- |
+| 🐳 **Docker 单容器**    | ⭐     | 需服务器 | ❌     | ⭐⭐       | 个人使用，最简单    |
+| 🐳 **Docker + Redis**   | ⭐⭐   | 需服务器 | ✅     | ⭐⭐⭐     | 家庭/团队，功能完整 |
+| 🏪 **Docker + Kvrocks** | ⭐⭐   | 需服务器 | ✅     | ⭐⭐⭐⭐⭐ | 生产环境，高可靠性  |
+| ☁️ **Vercel**           | ⭐     | 免费     | ❌     | ⭐         | 临时体验，无服务器  |
+| 🌐 **Cloudflare**       | ⭐⭐⭐ | 免费     | ✅     | ⭐⭐⭐     | 技术爱好者          |
 
 ---
 
@@ -325,7 +330,153 @@ docker run --rm -v katelyatv-redis-data:/data -v $(pwd):/backup alpine tar xzf /
 
 ---
 
-## 🎯 方案三：Vercel 部署（免服务器）
+## � 方案三：Docker + Kvrocks（高可靠性推荐）
+
+> **适合场景**：生产环境，需要极高的数据可靠性，担心 Redis 数据丢失风险
+
+### 🌟 Kvrocks 优势
+
+- **🛡️ 极高可靠性**：基于 RocksDB，数据持久化到磁盘，几乎零丢失风险
+- **⚡ 性能优异**：完全兼容 Redis 协议，性能接近甚至超越 Redis
+- **💾 节省内存**：数据存储在磁盘，内存使用量大幅降低
+- **🔄 无需 AOF/RDB**：RocksDB 天然支持数据持久化，无需额外配置
+- **📈 更好扩展性**：支持更大的数据集，不受内存限制
+
+### 🔧 前置要求
+
+- 服务器/NAS/电脑（支持 Docker）
+- 已安装 Docker 和 Docker Compose
+
+### 📝 详细步骤
+
+#### 第一步：下载配置文件
+
+```bash
+# 创建项目目录
+mkdir katelyatv-kvrocks && cd katelyatv-kvrocks
+
+# 下载 Kvrocks 部署配置
+curl -O https://raw.githubusercontent.com/katelya77/KatelyaTV/main/docker-compose.kvrocks.yml
+curl -O https://raw.githubusercontent.com/katelya77/KatelyaTV/main/.env.kvrocks.example
+
+# 复制环境变量模板
+cp .env.kvrocks.example .env
+```
+
+#### 第二步：配置环境变量
+
+```bash
+# 编辑环境变量文件
+nano .env
+```
+
+**重要配置项**：
+
+```bash
+# 存储类型：使用 Kvrocks
+NEXT_PUBLIC_STORAGE_TYPE=kvrocks
+
+# Kvrocks 连接配置
+KVROCKS_URL=redis://kvrocks:6666
+KVROCKS_PASSWORD=your_secure_password_here  # 改成你的密码
+KVROCKS_DATABASE=0
+
+# NextAuth 配置
+NEXTAUTH_SECRET=your_nextauth_secret_here    # 改成随机字符串
+NEXTAUTH_URL=http://localhost:3000           # 改成你的域名
+```
+
+#### 第三步：启动服务
+
+```bash
+# 一键启动 KatelyaTV + Kvrocks
+docker compose -f docker-compose.kvrocks.yml up -d
+
+# 查看启动状态
+docker compose -f docker-compose.kvrocks.yml ps
+```
+
+#### 第四步：验证部署
+
+```bash
+# 检查 Kvrocks 连接
+docker compose -f docker-compose.kvrocks.yml exec kvrocks redis-cli -h localhost -p 6666 ping
+
+# 查看日志
+docker compose -f docker-compose.kvrocks.yml logs -f
+```
+
+#### 第五步：访问应用
+
+1. 浏览器访问：`http://你的服务器IP:3000`
+2. 注册账号开始使用
+
+### 🛠️ 管理命令
+
+```bash
+# 停止服务
+docker compose -f docker-compose.kvrocks.yml stop
+
+# 重启服务
+docker compose -f docker-compose.kvrocks.yml restart
+
+# 查看 Kvrocks 状态
+docker compose -f docker-compose.kvrocks.yml exec kvrocks redis-cli -h localhost -p 6666 info
+
+# 备份数据
+docker compose -f docker-compose.kvrocks.yml exec kvrocks redis-cli -h localhost -p 6666 BGSAVE
+
+# 数据量统计
+docker compose -f docker-compose.kvrocks.yml exec kvrocks redis-cli -h localhost -p 6666 dbsize
+```
+
+### 🔒 数据备份与恢复
+
+#### 备份数据
+
+```bash
+# 自动备份（推荐）
+docker run --rm \
+  -v katelyatv-kvrocks_kvrocks-data:/data \
+  -v $(pwd):/backup \
+  alpine tar czf /backup/kvrocks-backup-$(date +%Y%m%d).tar.gz /data
+
+# 手动触发 RocksDB 备份
+docker compose -f docker-compose.kvrocks.yml exec kvrocks redis-cli -h localhost -p 6666 BGSAVE
+```
+
+#### 恢复数据
+
+```bash
+# 先停止服务
+docker compose -f docker-compose.kvrocks.yml down
+
+# 恢复数据
+docker run --rm \
+  -v katelyatv-kvrocks_kvrocks-data:/data \
+  -v $(pwd):/backup \
+  alpine tar xzf /backup/kvrocks-backup-20241201.tar.gz -C /
+
+# 重新启动
+docker compose -f docker-compose.kvrocks.yml up -d
+```
+
+### 🚀 性能优化建议
+
+1. **SSD 存储**：建议使用 SSD 存储以获得最佳性能
+2. **内存配置**：为 Kvrocks 分配 512MB-1GB 内存即可
+3. **磁盘空间**：预留足够磁盘空间，推荐至少 10GB
+4. **监控配置**：定期检查磁盘使用率和性能指标
+
+### ⚠️ 注意事项
+
+- Kvrocks 端口 6666 仅限内部网络访问，确保安全
+- 定期备份数据，虽然 Kvrocks 可靠性很高，但备份是好习惯
+- 监控磁盘空间使用，避免磁盘满导致的问题
+
+---
+
+## �🎯 方案四：Vercel 部署（免服务器）
 
 > **适合场景**：没有服务器，想要快速体验，个人使用
 
@@ -395,7 +546,7 @@ docker run --rm -v katelyatv-redis-data:/data -v $(pwd):/backup alpine tar xzf /
 
 ---
 
-## 🎯 方案四：Cloudflare Pages（进阶用户）
+## 🎯 方案五：Cloudflare Pages（进阶用户）
 
 > **适合场景**：技术爱好者，想要全球 CDN 加速，免费但配置复杂
 
