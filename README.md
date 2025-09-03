@@ -78,14 +78,15 @@ KatelyaTV 新增了 TVBox 配置接口，可以将您的视频源导入到各种
 
 ### 🚀 快速使用
 
-1. **访问配置页面**：在 KatelyaTV 中点击侧边栏的"TVBox 配置"
-2. **复制配置链接**：选择适合的格式并复制链接
-3. **导入到 TVBox**：在 TVBox 应用中导入配置链接
+1. **访问配置页面**：在 KatelyaTV 中点击侧边栏的"TVBox 配置"或访问 `/config` 页面
+2. **选择格式类型**：在页面中选择 JSON 或 Base64 格式
+3. **复制配置链接**：点击复制按钮获取配置链接
+4. **导入到 TVBox**：在 TVBox 应用中导入配置链接
 
 ### 🔗 API 端点
 
-- **JSON 配置**：`https://your-domain.com/api/tvbox`
-- **Base64 配置**：`https://your-domain.com/api/tvbox?format=txt`
+- **JSON 配置**：`https://your-domain.com/api/tvbox?format=json`
+- **Base64 配置**：`https://your-domain.com/api/tvbox?format=base64`
 - **视频解析**：`https://your-domain.com/api/parse?url={视频地址}`
 
 > 📖 详细使用说明请查看：[TVBox 配置指南](docs/TVBOX.md)

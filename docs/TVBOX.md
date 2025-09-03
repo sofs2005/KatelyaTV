@@ -11,23 +11,30 @@ KatelyaTV 现在支持 TVBox 配置接口，可以将您的视频源直接导入
 在 KatelyaTV 网站中，点击左侧导航栏的"TVBox 配置"菜单，或直接访问：
 
 ```
-https://your-domain.com/tvbox
+https://your-domain.com/config
 ```
 
-### 2. 复制配置链接
+### 2. 生成配置链接
 
-选择以下任一配置格式：
+在配置页面中：
 
-**JSON 格式（推荐）：**
+1. **选择格式类型**：
+
+   - **JSON 格式（推荐）**：标准的 JSON 配置文件，便于调试和查看
+   - **Base64 格式**：编码后的配置，适合某些特殊环境
+
+2. **复制配置链接**：点击"复制"按钮，系统会自动生成对应格式的配置链接
+
+**JSON 格式：**
 
 ```
-https://your-domain.com/api/tvbox
+https://your-domain.com/api/tvbox?format=json
 ```
 
 **Base64 格式：**
 
 ```
-https://your-domain.com/api/tvbox?format=txt
+https://your-domain.com/api/tvbox?format=base64
 ```
 
 ### 3. 导入到 TVBox
@@ -39,7 +46,16 @@ https://your-domain.com/api/tvbox?format=txt
 
 ## 🔧 配置说明
 
-### 支持的功能
+### 🖥️ 配置页面功能
+
+KatelyaTV 提供了直观的 TVBox 配置管理界面：
+
+- **格式切换**：支持 JSON 和 Base64 两种格式切换
+- **一键复制**：点击复制按钮快速获取配置链接
+- **实时生成**：根据当前网站配置实时生成最新的 TVBox 配置
+- **使用指南**：页面内置详细的使用说明和功能介绍
+
+### 📋 支持的功能
 
 - ✅ 自动同步 KatelyaTV 的所有视频源
 - ✅ 支持搜索功能
@@ -86,7 +102,7 @@ https://your-domain.com/api/parse?url={视频地址}
 
 - `format`: 返回格式
   - `json`（默认）：返回 JSON 格式配置
-  - `txt`：返回 Base64 编码的配置
+  - `base64`：返回 Base64 编码的配置
 
 **响应：**
 
