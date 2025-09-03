@@ -1,20 +1,9 @@
-import fs from 'fs';
 import { NextRequest, NextResponse } from 'next/server';
-import path from 'path';
 
-// 定义配置文件结构
-interface ApiSite {
-  api: string;
-  name: string;
-  detail?: string;
-}
+import { getConfig } from '@/lib/config';
 
-interface ConfigFileStruct {
-  cache_time?: number;
-  api_site: {
-    [key: string]: ApiSite;
-  };
-}
+// 强制使用 Edge Runtime 以支持 Cloudflare Pages
+export const runtime = 'edge';
 
 // TVBox源格式接口
 interface TVBoxSource {
@@ -55,25 +44,22 @@ interface TVBoxConfig {
   ads?: string[]; // 广告过滤规则
 }
 
-// 读取配置文件
-function readConfigFile(): ConfigFileStruct {
-  const configPath = path.join(process.cwd(), 'config.json');
-  const raw = fs.readFileSync(configPath, 'utf-8');
-  return JSON.parse(raw) as ConfigFileStruct;
-}
-
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const format = searchParams.get('format') || 'json'; // 支持json和txt格式
+    const format = searchParams.get('format') || 'json'; // 支持json和base64格式
     const host = request.headers.get('host') || 'localhost:3000';
     const protocol = request.headers.get('x-forwarded-proto') || 'http';
     const baseUrl = `${protocol}://${host}`;
 
     // 读取当前配置
-    const config = readConfigFile();
-    if (!config?.api_site) {
-      return NextResponse.json({ error: '配置文件读取失败' }, { status: 500 });
+    const config = await getConfig();
+    
+    // 从配置中获取源站列表
+    const sourceConfigs = config.SourceConfig || [];
+    
+    if (sourceConfigs.length === 0) {
+      return NextResponse.json({ error: '没有配置任何视频源' }, { status: 500 });
     }
 
     // 转换为TVBox格式
@@ -83,8 +69,8 @@ export async function GET(request: NextRequest) {
       wallpaper: `${baseUrl}/screenshot1.png`, // 使用项目截图作为壁纸
       
       // 影视源配置
-      sites: Object.entries(config.api_site).map(([key, source]) => ({
-        key: key,
+      sites: sourceConfigs.map((source) => ({
+        key: source.key || source.name,
         name: source.name,
         type: 0, // 影视源
         api: source.api,
