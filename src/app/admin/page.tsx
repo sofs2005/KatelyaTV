@@ -693,6 +693,13 @@ const VideoSourceConfig = ({
   };
 
   const handleDelete = (key: string) => {
+    // 检查是否为示例源
+    const source = sources.find(s => s.key === key);
+    if (source?.from === 'config') {
+      showError('示例源不可删除，这些源用于演示功能');
+      return;
+    }
+    
     callSourceApi({ action: 'delete', key }).catch(() => {
       console.error('操作失败', 'delete', key);
     });
@@ -741,8 +748,9 @@ const VideoSourceConfig = ({
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      // 选择所有视频源（包括示例源）
-      setSelectedSources(new Set(sources.map(source => source.key)));
+      // 只选择可删除的视频源（排除示例源）
+      const deletableSources = sources.filter(source => source.from !== 'config');
+      setSelectedSources(new Set(deletableSources.map(source => source.key)));
     } else {
       setSelectedSources(new Set());
     }
@@ -756,44 +764,83 @@ const VideoSourceConfig = ({
 
     const selectedArray = Array.from(selectedSources);
     const result = await Swal.fire({
-      title: '⚡ 一键批量删除',
-      html: `
-        <p>即将<strong>瞬间删除</strong> ${selectedArray.length} 个视频源</p>
-        <p class="text-sm text-gray-600 mt-2">包含所有选中的视频源（含示例源）</p>
-        <p class="text-red-600 font-semibold mt-2">⚠️ 此操作不可撤销！</p>
-      `,
+      title: '确认批量删除',
+      text: `即将删除 ${selectedArray.length} 个视频源，此操作不可撤销！`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: '⚡ 瞬间删除',
+      confirmButtonText: '确认删除',
       cancelButtonText: '取消',
       confirmButtonColor: '#ef4444',
-      cancelButtonColor: '#6b7280',
-      showLoaderOnConfirm: true,
-      allowOutsideClick: () => !Swal.isLoading(),
-      preConfirm: async () => {
-        try {
-          // 并行删除所有选中的视频源，实现真正的一键删除
-          const deletePromises = selectedArray.map(key => 
-            callSourceApi({ action: 'delete', key })
-          );
-          
-          await Promise.all(deletePromises);
-          return { success: true, count: selectedArray.length };
-        } catch (error) {
-          Swal.showValidationMessage(
-            `删除失败: ${error instanceof Error ? error.message : '未知错误'}`
-          );
-          return false;
-        }
-      }
+      cancelButtonColor: '#6b7280'
     });
 
-    if (result.isConfirmed && result.value) {
-      showSuccess(`⚡ 瞬间删除成功！已删除 ${result.value.count} 个视频源`);
-      setSelectedSources(new Set());
-      setBatchMode(false);
-      await refreshConfig();
+    if (!result.isConfirmed) return;
+
+    // 批量删除逐个进行，显示进度
+    let successCount = 0;
+    let errorCount = 0;
+    const errors: string[] = [];
+
+    for (let i = 0; i < selectedArray.length; i++) {
+      const key = selectedArray[i];
+      try {
+        await callSourceApi({ action: 'delete', key });
+        successCount++;
+        
+        // 显示进度
+        if (selectedArray.length > 1) {
+          Swal.update({
+            title: '正在删除...',
+            text: `进度: ${i + 1}/${selectedArray.length}`,
+            showConfirmButton: false,
+            showCancelButton: false,
+            allowOutsideClick: false
+          });
+        }
+      } catch (error) {
+        errorCount++;
+        const sourceName = sources.find(s => s.key === key)?.name || key;
+        errors.push(`${sourceName}: ${error instanceof Error ? error.message : '删除失败'}`);
+      }
     }
+
+    // 显示删除结果
+    if (errorCount === 0) {
+      showSuccess(`成功删除 ${successCount} 个视频源`);
+      setSelectedSources(new Set()); // 清空选择
+      setBatchMode(false); // 退出批量模式
+    } else {
+      await Swal.fire({
+        title: '删除完成',
+        html: `
+          <div class="text-left">
+            <p class="text-green-600 mb-2">✅ 成功删除: ${successCount} 个</p>
+            <p class="text-red-600 mb-2">❌ 删除失败: ${errorCount} 个</p>
+            ${errors.length > 0 ? `
+              <details class="mt-3">
+                <summary class="cursor-pointer text-gray-600">查看错误详情</summary>
+                <div class="mt-2 text-sm text-gray-500 max-h-32 overflow-y-auto">
+                  ${errors.map(err => `<div class="py-1">${err}</div>`).join('')}
+                </div>
+              </details>
+            ` : ''}
+          </div>
+        `,
+        icon: successCount > 0 ? 'warning' : 'error',
+        confirmButtonText: '确定'
+      });
+      
+      // 清空已成功删除的选择项
+      const failedKeys = new Set(
+        errors.map(err => {
+          const keyMatch = err.split(':')[0];
+          return sources.find(s => s.name === keyMatch)?.key;
+        }).filter((key): key is string => Boolean(key))
+      );
+      setSelectedSources(failedKeys);
+    }
+
+    await refreshConfig();
   };
 
   // 导出配置
@@ -997,12 +1044,20 @@ const VideoSourceConfig = ({
               type='checkbox'
               checked={selectedSources.has(source.key)}
               onChange={(e) => handleSelectSource(source.key, e.target.checked)}
-              className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600'
+              disabled={source.from === 'config'} // 禁用示例源选择
+              className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 disabled:opacity-50'
             />
           </td>
         )}
         <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100'>
-          {source.name}
+          <div className="flex items-center space-x-2">
+            <span>{source.name}</span>
+            {source.from === 'config' && (
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
+                示例源
+              </span>
+            )}
+          </div>
         </td>
         <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100'>
           {source.key}
@@ -1041,12 +1096,18 @@ const VideoSourceConfig = ({
           >
             {!source.disabled ? '禁用' : '启用'}
           </button>
-          <button
-            onClick={() => handleDelete(source.key)}
-            className='inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-700/40 dark:hover:bg-gray-700/60 dark:text-gray-200 transition-colors'
-          >
-            删除
-          </button>
+          {source.from !== 'config' ? (
+            <button
+              onClick={() => handleDelete(source.key)}
+              className='inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-700/40 dark:hover:bg-gray-700/60 dark:text-gray-200 transition-colors'
+            >
+              删除
+            </button>
+          ) : (
+            <span className='inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'>
+              不可删除
+            </span>
+          )}
         </td>
       </tr>
     );
