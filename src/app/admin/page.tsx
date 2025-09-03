@@ -741,9 +741,8 @@ const VideoSourceConfig = ({
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      // 只选择可删除的视频源（from !== 'config'）
-      const deletableSources = sources.filter(source => source.from !== 'config');
-      setSelectedSources(new Set(deletableSources.map(source => source.key)));
+      // 选择所有视频源（包括示例源）
+      setSelectedSources(new Set(sources.map(source => source.key)));
     } else {
       setSelectedSources(new Set());
     }
@@ -757,68 +756,43 @@ const VideoSourceConfig = ({
 
     const selectedArray = Array.from(selectedSources);
     const result = await Swal.fire({
-      title: '确认批量删除',
-      text: `即将删除 ${selectedArray.length} 个视频源，此操作不可撤销！`,
+      title: '⚡ 一键批量删除',
+      html: `
+        <p>即将<strong>瞬间删除</strong> ${selectedArray.length} 个视频源</p>
+        <p class="text-sm text-gray-600 mt-2">包含所有选中的视频源（含示例源）</p>
+        <p class="text-red-600 font-semibold mt-2">⚠️ 此操作不可撤销！</p>
+      `,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: '确认删除',
+      confirmButtonText: '⚡ 瞬间删除',
       cancelButtonText: '取消',
       confirmButtonColor: '#ef4444',
-      cancelButtonColor: '#6b7280'
+      cancelButtonColor: '#6b7280',
+      showLoaderOnConfirm: true,
+      allowOutsideClick: () => !Swal.isLoading(),
+      preConfirm: async () => {
+        try {
+          // 并行删除所有选中的视频源，实现真正的一键删除
+          const deletePromises = selectedArray.map(key => 
+            callSourceApi({ action: 'delete', key })
+          );
+          
+          await Promise.all(deletePromises);
+          return { success: true, count: selectedArray.length };
+        } catch (error) {
+          Swal.showValidationMessage(
+            `删除失败: ${error instanceof Error ? error.message : '未知错误'}`
+          );
+          return false;
+        }
+      }
     });
 
-    if (!result.isConfirmed) return;
-
-    // 批量删除
-    let successCount = 0;
-    let errorCount = 0;
-    const errors: string[] = [];
-
-    for (const key of selectedArray) {
-      try {
-        await callSourceApi({ action: 'delete', key });
-        successCount++;
-      } catch (error) {
-        errorCount++;
-        const sourceName = sources.find(s => s.key === key)?.name || key;
-        errors.push(`${sourceName}: ${error instanceof Error ? error.message : '删除失败'}`);
-      }
-    }
-
-    // 显示删除结果
-    if (errorCount === 0) {
-      showSuccess(`成功删除 ${successCount} 个视频源`);
-      setSelectedSources(new Set()); // 清空选择
-      setBatchMode(false); // 退出批量模式
-    } else {
-      await Swal.fire({
-        title: '删除完成',
-        html: `
-          <div class="text-left">
-            <p class="text-green-600 mb-2">✅ 成功删除: ${successCount} 个</p>
-            <p class="text-red-600 mb-2">❌ 删除失败: ${errorCount} 个</p>
-            ${errors.length > 0 ? `
-              <details class="mt-3">
-                <summary class="cursor-pointer text-gray-600">查看错误详情</summary>
-                <div class="mt-2 text-sm text-gray-500 max-h-32 overflow-y-auto">
-                  ${errors.map(err => `<div class="py-1">${err}</div>`).join('')}
-                </div>
-              </details>
-            ` : ''}
-          </div>
-        `,
-        icon: successCount > 0 ? 'warning' : 'error',
-        confirmButtonText: '确定'
-      });
-      
-      // 清空已成功删除的选择项
-      const failedKeys = new Set(
-        errors.map(err => {
-          const keyMatch = err.split(':')[0];
-          return sources.find(s => s.name === keyMatch)?.key;
-        }).filter((key): key is string => Boolean(key))
-      );
-      setSelectedSources(failedKeys);
+    if (result.isConfirmed && result.value) {
+      showSuccess(`⚡ 瞬间删除成功！已删除 ${result.value.count} 个视频源`);
+      setSelectedSources(new Set());
+      setBatchMode(false);
+      await refreshConfig();
     }
   };
 
@@ -1023,8 +997,7 @@ const VideoSourceConfig = ({
               type='checkbox'
               checked={selectedSources.has(source.key)}
               onChange={(e) => handleSelectSource(source.key, e.target.checked)}
-              disabled={source.from === 'config'}
-              className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 disabled:opacity-50'
+              className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600'
             />
           </td>
         )}
@@ -1068,14 +1041,12 @@ const VideoSourceConfig = ({
           >
             {!source.disabled ? '禁用' : '启用'}
           </button>
-          {source.from !== 'config' && (
-            <button
-              onClick={() => handleDelete(source.key)}
-              className='inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-700/40 dark:hover:bg-gray-700/60 dark:text-gray-200 transition-colors'
-            >
-              删除
-            </button>
-          )}
+          <button
+            onClick={() => handleDelete(source.key)}
+            className='inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-700/40 dark:hover:bg-gray-700/60 dark:text-gray-200 transition-colors'
+          >
+            删除
+          </button>
         </td>
       </tr>
     );
@@ -1232,7 +1203,7 @@ const VideoSourceConfig = ({
                 <th className='w-12 px-4 py-3'>
                   <input
                     type='checkbox'
-                    checked={selectedSources.size > 0 && selectedSources.size === sources.filter(s => s.from !== 'config').length}
+                    checked={selectedSources.size > 0 && selectedSources.size === sources.length}
                     onChange={(e) => handleSelectAll(e.target.checked)}
                     className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600'
                   />
