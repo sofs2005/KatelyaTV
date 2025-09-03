@@ -391,6 +391,8 @@ curl -O https://raw.githubusercontent.com/katelya77/KatelyaTV/main/.env.kvrocks.
 cp .env.kvrocks.example .env
 ```
 
+> **📌 重要说明**：此配置使用预构建的 Docker 镜像 (`ghcr.io/katelya77/katelyatv:latest`)，无需下载源代码。镜像会自动从 GitHub Container Registry 拉取。
+
 #### 第二步：配置环境变量
 
 ```bash
@@ -433,6 +435,21 @@ docker compose -f docker-compose.kvrocks.yml exec kvrocks redis-cli -h localhost
 # 查看日志
 docker compose -f docker-compose.kvrocks.yml logs -f
 ```
+
+### 🔧 高级选项：本地构建
+
+如果你想要从源代码本地构建而不是使用预构建镜像，可以：
+
+```bash
+# 克隆完整源代码
+git clone https://github.com/katelya77/KatelyaTV.git
+cd KatelyaTV
+
+# 使用本地构建版本的配置
+docker compose -f docker-compose.kvrocks.local.yml up -d
+```
+
+> **注意**：本地构建需要下载完整源代码，首次构建时间较长，但可以自定义修改代码。
 
 #### 第五步：访问应用
 
