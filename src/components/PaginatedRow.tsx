@@ -32,15 +32,14 @@ export default function PaginatedRow({
     }
   }, [children, startIndex, itemsPerPage]);
 
-  // 向前翻页
+  // 向前翻页 - 只有不在第一页时才能向前
   const handlePrevPage = () => {
-    setStartIndex((prev) => {
-      const newIndex = prev - itemsPerPage;
-      return newIndex < 0 ? Math.max(0, children.length - itemsPerPage) : newIndex;
-    });
+    if (startIndex > 0) {
+      setStartIndex((prev) => Math.max(0, prev - itemsPerPage));
+    }
   };
 
-  // 向后翻页 - 支持无限浏览
+  // 向后翻页 - 支持无限浏览，到达末尾时循环到开头
   const handleNextPage = () => {
     setStartIndex((prev) => {
       const newIndex = prev + itemsPerPage;
@@ -49,11 +48,9 @@ export default function PaginatedRow({
     });
   };
 
-  // 计算当前页码用于指示器
-  const currentPageIndex = Math.floor(startIndex / itemsPerPage);
-  const totalPages = Math.ceil(children.length / itemsPerPage);
-
-  // 如果没有足够的内容需要分页，就不显示按钮
+  // 检查是否可以向前翻页
+  const canGoPrev = startIndex > 0;
+  // 检查是否需要显示翻页按钮
   const needsPagination = children.length > itemsPerPage;
 
   return (
@@ -70,22 +67,24 @@ export default function PaginatedRow({
         {/* 改进的导航按钮 - 仅在容器悬停时显示 */}
         {needsPagination && (
           <>
-            {/* 左箭头按钮 */}
-            <button
-              onClick={handlePrevPage}
-              className={`absolute -left-12 z-20 w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${
-                isHovered ? 'opacity-100' : 'opacity-0'
-              }`}
-              style={{
-                // 确保按钮在两行中间
-                top: 'calc(50% - 20px)',
-              }}
-              aria-label='上一页'
-            >
-              <ChevronLeft className='w-5 h-5 text-white' />
-            </button>
+            {/* 左箭头按钮 - 只有不在第一页时才显示 */}
+            {canGoPrev && (
+              <button
+                onClick={handlePrevPage}
+                className={`absolute -left-12 z-20 w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${
+                  isHovered ? 'opacity-100' : 'opacity-0'
+                }`}
+                style={{
+                  // 确保按钮在两行中间
+                  top: 'calc(50% - 20px)',
+                }}
+                aria-label='上一页'
+              >
+                <ChevronLeft className='w-5 h-5 text-white' />
+              </button>
+            )}
 
-            {/* 右箭头按钮 */}
+            {/* 右箭头按钮 - 始终显示 */}
             <button
               onClick={handleNextPage}
               className={`absolute -right-12 z-20 w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${
@@ -102,28 +101,6 @@ export default function PaginatedRow({
           </>
         )}
       </div>
-
-      {/* 优化的页码指示器 - 显示无限浏览状态 */}
-      {needsPagination && (
-        <div className='flex justify-center mt-4 space-x-2'>
-          {Array.from({ length: Math.min(totalPages, 5) }, (_, index) => {
-            // 显示当前页附近的页码指示器
-            const displayIndex = (currentPageIndex + index) % totalPages;
-            return (
-              <button
-                key={`${displayIndex}-${currentPageIndex}`}
-                onClick={() => setStartIndex(displayIndex * itemsPerPage)}
-                className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                  index === 0
-                    ? 'bg-purple-500 dark:bg-purple-400 scale-125'
-                    : 'bg-gray-300 hover:bg-purple-300 dark:bg-gray-600 dark:hover:bg-purple-500 hover:scale-110'
-                }`}
-                aria-label={`第 ${displayIndex + 1} 页`}
-              />
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 }
