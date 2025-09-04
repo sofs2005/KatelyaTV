@@ -352,9 +352,9 @@ wrangler pages deploy .vercel/output/static --project-name katelyatv
 
 **🚨 Docker + Kvrocks 登录失败（重要修复）**：
 
-**症状**: 部署成功但登录时提示"账号或密码错误"，Kvrocks中admin_config存在但Users数组为空
+**症状**: 部署成功但登录时提示"账号或密码错误"，Kvrocks 中 admin_config 存在但 Users 数组为空
 
-**原因**: 环境变量配置不完整，缺少USERNAME导致无法创建管理员用户
+**原因**: 环境变量配置不完整，缺少 USERNAME 导致无法创建管理员用户
 
 **解决方案**:
 
