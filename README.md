@@ -259,10 +259,10 @@ NEXT_PUBLIC_ENABLE_REGISTER=true
 4. **环境变量配置**：
 
    ```bash
-   PASSWORD=your_password
-   USERNAME=admin
+   PASSWORD=your_password   #在这设置密码
+   USERNAME=admin           #在这设置管理员用户名
    NEXT_PUBLIC_STORAGE_TYPE=d1
-   NEXT_PUBLIC_ENABLE_REGISTER=true
+   NEXT_PUBLIC_ENABLE_REGISTER=true   #账号注册功能
    ```
 
 5. **创建 D1 数据库**（多用户支持）：
