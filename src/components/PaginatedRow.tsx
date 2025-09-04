@@ -32,14 +32,15 @@ export default function PaginatedRow({
     }
   }, [children, startIndex, itemsPerPage]);
 
-  // 向前翻页 - 只有不在第一页时才能向前
+  // 向前翻页 - 禁止超出第一页
   const handlePrevPage = () => {
-    if (startIndex > 0) {
-      setStartIndex((prev) => Math.max(0, prev - itemsPerPage));
-    }
+    setStartIndex((prev) => {
+      const newIndex = prev - itemsPerPage;
+      return newIndex < 0 ? 0 : newIndex; // 不允许小于0
+    });
   };
 
-  // 向后翻页 - 支持无限浏览，到达末尾时循环到开头
+  // 向后翻页 - 真正的无限浏览
   const handleNextPage = () => {
     setStartIndex((prev) => {
       const newIndex = prev + itemsPerPage;
@@ -50,7 +51,10 @@ export default function PaginatedRow({
 
   // 检查是否可以向前翻页
   const canGoPrev = startIndex > 0;
-  // 检查是否需要显示翻页按钮
+  // 总是可以向后翻页（无限循环）
+  const canGoNext = children.length > itemsPerPage;
+
+  // 如果没有足够的内容需要分页，就不显示按钮
   const needsPagination = children.length > itemsPerPage;
 
   return (
@@ -84,23 +88,27 @@ export default function PaginatedRow({
               </button>
             )}
 
-            {/* 右箭头按钮 - 始终显示 */}
-            <button
-              onClick={handleNextPage}
-              className={`absolute -right-12 z-20 w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${
-                isHovered ? 'opacity-100' : 'opacity-0'
-              }`}
-              style={{
-                // 确保按钮在两行中间
-                top: 'calc(50% - 20px)',
-              }}
-              aria-label='下一页'
-            >
-              <ChevronRight className='w-5 h-5 text-white' />
-            </button>
+            {/* 右箭头按钮 - 总是显示，支持无限循环 */}
+            {canGoNext && (
+              <button
+                onClick={handleNextPage}
+                className={`absolute -right-12 z-20 w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${
+                  isHovered ? 'opacity-100' : 'opacity-0'
+                }`}
+                style={{
+                  // 确保按钮在两行中间
+                  top: 'calc(50% - 20px)',
+                }}
+                aria-label='下一页'
+              >
+                <ChevronRight className='w-5 h-5 text-white' />
+              </button>
+            )}
           </>
         )}
       </div>
+
+      {/* 移除页码指示器 - 不再需要 */}
     </div>
   );
 }
