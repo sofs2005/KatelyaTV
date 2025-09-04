@@ -7,10 +7,10 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # 数据库配置 - 使用 Kvrocks
+      # 数据库配置 - 使用 Kvrocks (带密码)
       NEXT_PUBLIC_STORAGE_TYPE: kvrocks
       KVROCKS_URL: redis://kvrocks:6666
-      KVROCKS_PASSWORD: ${KVROCKS_PASSWORD:-}
+      KVROCKS_PASSWORD: ${KVROCKS_PASSWORD}
       KVROCKS_DATABASE: 0
       
       # 站点访问密码配置
@@ -25,7 +25,7 @@ services:
     networks:
       - katelyatv-network
 
-  # Kvrocks 数据库服务
+  # Kvrocks 数据库服务 (带密码认证)
   kvrocks:
     image: apache/kvrocks:latest
     ports:
@@ -36,16 +36,18 @@ services:
       KVROCKS_PORT: 6666
       KVROCKS_DIR: /var/lib/kvrocks/data
       KVROCKS_LOG_LEVEL: info
+      # 设置密码
+      KVROCKS_REQUIREPASS: ${KVROCKS_PASSWORD}
     volumes:
       # 持久化数据存储
       - kvrocks-data:/var/lib/kvrocks/data
       # 挂载配置文件
-      - ./docker/kvrocks/kvrocks.conf:/etc/kvrocks/kvrocks.conf:ro
+      - ./docker/kvrocks/kvrocks.auth.conf:/etc/kvrocks/kvrocks.conf:ro
     restart: unless-stopped
     networks:
       - katelyatv-network
     healthcheck:
-      test: ["CMD", "redis-cli", "-h", "localhost", "-p", "6666", "ping"]
+      test: ["CMD", "redis-cli", "-h", "localhost", "-p", "6666", "-a", "${KVROCKS_PASSWORD}", "ping"]
       interval: 30s
       timeout: 10s
       retries: 3

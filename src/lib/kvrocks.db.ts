@@ -351,10 +351,11 @@ export function getKvrocksClient(): RedisClientType {
 
     console.log('🏪 Initializing Kvrocks client...');
     console.log('🔗 Kvrocks URL:', kvrocksUrl.replace(/\/\/.*@/, '//***:***@'));
+    console.log('🔑 Password configured:', kvrocksPassword ? 'Yes' : 'No');
 
-    kvrocksClient = createClient({
+    // 构建客户端配置
+    const clientConfig: any = {
       url: kvrocksUrl,
-      password: kvrocksPassword,
       database: kvrocksDatabase,
       socket: {
         connectTimeout: 10000, // 10秒连接超时
@@ -364,7 +365,17 @@ export function getKvrocksClient(): RedisClientType {
           return delay;
         },
       },
-    });
+    };
+
+    // 只有当密码存在且不为空时才添加密码配置
+    if (kvrocksPassword && kvrocksPassword.trim() !== '') {
+      clientConfig.password = kvrocksPassword;
+      console.log('🔐 Using password authentication');
+    } else {
+      console.log('🔓 No password authentication (connecting without password)');
+    }
+
+    kvrocksClient = createClient(clientConfig);
 
     kvrocksClient.on('error', (err) => {
       console.error('❌ Kvrocks Client Error:', err);
