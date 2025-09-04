@@ -182,6 +182,7 @@ NEXT_PUBLIC_ENABLE_REGISTER=true
 #### 基础部署（仅密码保护）
 
 1. **Fork 仓库**：
+
    - 访问 [KatelyaTV](https://github.com/katelya77/KatelyaTV)
    - 点击右上角 `Fork` 按钮，将项目 Fork 到你的 GitHub 账号
 
@@ -198,26 +199,29 @@ NEXT_PUBLIC_ENABLE_REGISTER=true
 #### 高级配置（多用户支持）
 
 3. **创建 Upstash Redis 数据库**：
+
    - 访问 [Upstash](https://upstash.com/)，使用 GitHub 账号登录
    - 点击 `Create Database`，选择免费的区域（推荐选择离你最近的区域）
    - 记录数据库的 `UPSTASH_REDIS_REST_URL` 和 `UPSTASH_REDIS_REST_TOKEN`
 
 4. **在 Vercel 中添加环境变量**：
+
    - 进入 Vercel 项目设置页面
    - 在 `Environment Variables` 添加以下变量：
+
    ```bash
    # 存储配置
    NEXT_PUBLIC_STORAGE_TYPE=upstash
    UPSTASH_REDIS_REST_URL=https://xxx.upstash.io
    UPSTASH_REDIS_REST_TOKEN=your_token
-   
+
    # 管理员账号
    USERNAME=admin
    PASSWORD=admin_password
-   
+
    # 用户注册
    NEXT_PUBLIC_ENABLE_REGISTER=true
-   
+
    # 站点配置
    NEXT_PUBLIC_SITE_NAME=KatelyaTV
    NEXT_PUBLIC_SITE_DESCRIPTION=高性能影视播放平台
@@ -227,20 +231,23 @@ NEXT_PUBLIC_ENABLE_REGISTER=true
    - 在 Vercel 项目页面点击 `Deployments` 标签
    - 点击最新部署旁的三点菜单，选择 `Redeploy`
 
-### 方案五：Cloudflare Pages + D1（全球CDN加速）
+### 方案五：Cloudflare Pages + D1（全球 CDN 加速）
 
-**适合场景**：全球访问，免费CDN，无限带宽，支持多用户
+**适合场景**：全球访问，免费 CDN，无限带宽，支持多用户
 
 #### 方法一：网页操作部署（推荐新手）
 
 1. **准备代码仓库**：
+
    - Fork [KatelyaTV](https://github.com/katelya77/KatelyaTV) 到你的 GitHub 账号
 
 2. **创建 Cloudflare Pages 项目**：
+
    - 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)
    - 左侧菜单选择 `Workers and Pages` → `Create application` → `Pages` → `Connect to Git`
 
 3. **连接仓库并配置**：
+
    - 选择 Fork 的 `KatelyaTV` 仓库，分支选择 `main`
    - **构建设置**：
      ```
@@ -250,6 +257,7 @@ NEXT_PUBLIC_ENABLE_REGISTER=true
    - **兼容性标志**：添加 `nodejs_compat`
 
 4. **环境变量配置**：
+
    ```bash
    PASSWORD=your_password
    USERNAME=admin
@@ -284,23 +292,28 @@ wrangler pages deploy .vercel/output/static --project-name katelyatv
 **适合场景**：GitHub 集成，自动部署，免费额度充足
 
 1. **准备仓库**：
+
    - Fork [KatelyaTV](https://github.com/katelya77/KatelyaTV) 到你的 GitHub
 
 2. **部署到 Netlify**：
+
    - 登录 [Netlify](https://app.netlify.com/)
    - 点击 `New site from Git`
    - 选择 GitHub 并授权访问
    - 选择 KatelyaTV 仓库
 
 3. **配置构建设置**：
+
    ```
    Build command: pnpm run build
    Publish directory: .next
    ```
 
 4. **添加环境变量**：
+
    - 在站点设置中找到 `Environment variables`
    - 添加：
+
    ```bash
    PASSWORD=your_password
    NEXT_PUBLIC_STORAGE_TYPE=localstorage
@@ -317,16 +330,19 @@ wrangler pages deploy .vercel/output/static --project-name katelyatv
 ### 🚀 性能优化建议
 
 **Cloudflare Pages 优化**：
+
 - 启用 Brotli 压缩：在 Cloudflare Dashboard 的 Speed 标签中启用
 - 配置缓存规则：静态资源缓存 30 天，API 缓存 5 分钟
 - 开启 Auto Minify：JS、CSS、HTML 自动压缩
 
 **Vercel 优化**：
+
 - 使用 Edge Functions 替代 Serverless Functions
 - 配置合理的缓存头：`Cache-Control: public, max-age=3600`
 - 启用分析面板监控性能
 
 **Docker 优化**：
+
 - 使用多阶段构建减小镜像体积
 - 配置健康检查：`HEALTHCHECK --interval=30s CMD curl -f http://localhost:3000 || exit 1`
 - 设置合理的内存限制：`--memory=512m`
@@ -334,6 +350,7 @@ wrangler pages deploy .vercel/output/static --project-name katelyatv
 ### 🔧 常见问题排除
 
 **构建失败**：
+
 ```bash
 # 检查 Node.js 版本（需要 18+）
 node --version
@@ -347,11 +364,13 @@ echo $PASSWORD
 ```
 
 **视频播放问题**：
+
 - 检查 config.json 格式是否正确
 - 确认视频源 API 地址可访问
 - 查看浏览器控制台错误信息
 
 **数据库连接失败**：
+
 ```bash
 # Redis 连接测试
 redis-cli -u $REDIS_URL ping
@@ -365,6 +384,7 @@ curl -H "Authorization: Bearer $UPSTASH_REDIS_REST_TOKEN" \
 ```
 
 **内存溢出**：
+
 - 调整 Node.js 内存限制：`NODE_OPTIONS="--max-old-space-size=1024"`
 - Docker 增加内存分配：`--memory=1g`
 - 优化视频缓存策略
@@ -372,6 +392,7 @@ curl -H "Authorization: Bearer $UPSTASH_REDIS_REST_TOKEN" \
 ### 🔒 安全配置
 
 **生产环境必配**：
+
 ```bash
 # 强密码策略
 PASSWORD="$(openssl rand -base64 32)"
@@ -387,6 +408,7 @@ ADMIN_IP_WHITELIST="192.168.1.0/24,10.0.0.0/8"
 ```
 
 **防护措施**：
+
 - 启用 DDoS 防护（Cloudflare 免费提供）
 - 配置 CSP 内容安全策略
 - 定期更新依赖包：`pnpm update`
@@ -395,6 +417,7 @@ ADMIN_IP_WHITELIST="192.168.1.0/24,10.0.0.0/8"
 ### 💾 数据备份
 
 **定期备份策略**：
+
 ```bash
 # Redis 数据备份
 redis-cli -u $REDIS_URL --rdb backup.rdb
@@ -416,11 +439,13 @@ mkdir -p backups/$DATE
 ### 📊 监控和日志
 
 **性能监控**：
+
 - Vercel Analytics：自动启用
 - Cloudflare Analytics：在 Dashboard 查看
 - 自定义监控：集成 Sentry 或类似服务
 
 **日志分析**：
+
 ```bash
 # Docker 容器日志
 docker logs katelyatv-container -f
@@ -438,34 +463,36 @@ wrangler tail --format=pretty
 
 ### 🔧 环境变量详解
 
-| 变量名 | 说明 | 默认值 | 示例值 |
-|--------|------|--------|--------|
-| `PASSWORD` | 访问密码（必填） | 无 | `mySecretPass123` |
-| `USERNAME` | 管理员用户名 | 无 | `admin` |
-| `NEXT_PUBLIC_SITE_NAME` | 站点显示名称 | KatelyaTV | `我的影视站` |
-| `NEXT_PUBLIC_SITE_DESCRIPTION` | 站点描述 | 高性能... | `专业的在线影视平台` |
-| `NEXT_PUBLIC_STORAGE_TYPE` | 数据存储方式 | localstorage | `redis/d1/upstash` |
-| `REDIS_URL` | Redis 连接字符串 | 无 | `redis://localhost:6379` |
-| `UPSTASH_REDIS_REST_URL` | Upstash REST API 地址 | 无 | `https://xxx.upstash.io` |
-| `UPSTASH_REDIS_REST_TOKEN` | Upstash 访问令牌 | 无 | `AX_xxx` |
-| `NEXT_PUBLIC_ENABLE_REGISTER` | 是否允许用户注册 | false | `true/false` |
-| `ENABLE_ANALYTICS` | 启用访问统计 | false | `true/false` |
-| `CORS_ORIGIN` | 允许的跨域来源 | * | `https://example.com` |
+| 变量名                         | 说明                  | 默认值       | 示例值                   |
+| ------------------------------ | --------------------- | ------------ | ------------------------ |
+| `PASSWORD`                     | 访问密码（必填）      | 无           | `mySecretPass123`        |
+| `USERNAME`                     | 管理员用户名          | 无           | `admin`                  |
+| `NEXT_PUBLIC_SITE_NAME`        | 站点显示名称          | KatelyaTV    | `我的影视站`             |
+| `NEXT_PUBLIC_SITE_DESCRIPTION` | 站点描述              | 高性能...    | `专业的在线影视平台`     |
+| `NEXT_PUBLIC_STORAGE_TYPE`     | 数据存储方式          | localstorage | `redis/d1/upstash`       |
+| `REDIS_URL`                    | Redis 连接字符串      | 无           | `redis://localhost:6379` |
+| `UPSTASH_REDIS_REST_URL`       | Upstash REST API 地址 | 无           | `https://xxx.upstash.io` |
+| `UPSTASH_REDIS_REST_TOKEN`     | Upstash 访问令牌      | 无           | `AX_xxx`                 |
+| `NEXT_PUBLIC_ENABLE_REGISTER`  | 是否允许用户注册      | false        | `true/false`             |
+| `ENABLE_ANALYTICS`             | 启用访问统计          | false        | `true/false`             |
+| `CORS_ORIGIN`                  | 允许的跨域来源        | \*           | `https://example.com`    |
 
 ### 🎨 自定义主题
 
 **颜色配置**：
+
 ```css
 /* 在 src/styles/colors.css 中自定义 */
 :root {
-  --primary-color: #3b82f6;    /* 主色调 */
-  --secondary-color: #64748b;  /* 次要颜色 */
+  --primary-color: #3b82f6; /* 主色调 */
+  --secondary-color: #64748b; /* 次要颜色 */
   --background-color: #0f172a; /* 背景色 */
-  --text-color: #e2e8f0;       /* 文字颜色 */
+  --text-color: #e2e8f0; /* 文字颜色 */
 }
 ```
 
 **Logo 替换**：
+
 - 替换 `public/logo.png`（推荐尺寸：200x60px）
 - 更新 `public/favicon.ico`
 - 修改 `public/manifest.json` 中的图标路径
@@ -475,6 +502,7 @@ wrangler tail --format=pretty
 #### 推荐配置源
 
 1. **基础版配置**：
+
    - 包含 20+ 优质片源
    - 下载：[config.json](https://www.mediafire.com/file/xl3yo7la2ci378w/config.json/file)
    - 适合个人使用
@@ -487,6 +515,7 @@ wrangler tail --format=pretty
 #### 配置方式说明
 
 **Docker 部署**：
+
 ```bash
 # 方法1：挂载本地配置文件
 docker run -d \
@@ -502,16 +531,19 @@ docker run -d \
 ```
 
 **Vercel 部署**：
+
 1. 将配置内容复制到仓库的 `config.json` 文件中
 2. 提交并推送到 GitHub
 3. Vercel 会自动重新部署
 
 **Cloudflare Pages**：
+
 1. 编辑仓库的 `config.json` 文件
 2. 推送更改触发自动部署
 3. 或在管理员界面 `/admin` 上传配置
 
 **管理员界面配置**：
+
 1. 访问 `https://你的域名/admin`
 2. 使用管理员账号登录
 3. 在「配置管理」中导入或编辑 JSON 配置
@@ -532,7 +564,7 @@ docker run -d \
     },
     "resource2": {
       "api": "https://api.example2.com/provide/vod",
-      "name": "高清资源站2", 
+      "name": "高清资源站2",
       "detail": "https://example2.com",
       "type": 2,
       "playMode": "direct"
@@ -542,6 +574,7 @@ docker run -d \
 ```
 
 **字段说明**：
+
 - `cache_time`：缓存时间（秒）
 - `api`：资源站 API 接口地址
 - `name`：资源站显示名称
@@ -556,24 +589,27 @@ docker run -d \
 ### 🎯 跳过片头片尾
 
 **功能介绍**：
+
 - 自动识别并跳过片头片尾
 - 支持手动设置跳过时间点
 - 多设备同步跳过记录（需配置数据库）
 
 **使用方法**：
+
 1. 播放视频时点击「设置」按钮
 2. 选择「跳过片段设置」
 3. 设置片头结束时间和片尾开始时间
 4. 下次播放自动跳过
 
 **批量设置**：
+
 ```json
 // 在管理员界面批量导入跳过配置
 {
   "skip_settings": {
     "电视剧名称": {
-      "intro_end": 90,    // 片头结束时间（秒）
-      "outro_start": 2700  // 片尾开始时间（秒）
+      "intro_end": 90, // 片头结束时间（秒）
+      "outro_start": 2700 // 片尾开始时间（秒）
     }
   }
 }
@@ -582,11 +618,13 @@ docker run -d \
 ### 📺 TVBox 兼容模式
 
 **配置地址生成**：
+
 - JSON 格式：`https://你的域名/api/tvbox?format=json`
 - TXT 格式：`https://你的域名/api/tvbox?format=txt`
 - XML 格式：`https://你的域名/api/tvbox?format=xml`
 
 **支持的 TVBox 应用**：
+
 - TVBox（开源版）
 - CatVodTVOfficial
 - EasyBox
@@ -594,6 +632,7 @@ docker run -d \
 - 其他兼容应用
 
 **配置导入步骤**：
+
 1. 打开 TVBox 应用
 2. 进入「配置」或「设置」页面
 3. 选择「导入配置」或「添加配置」
@@ -603,6 +642,7 @@ docker run -d \
 ### 🔄 多设备数据同步
 
 **支持的数据**：
+
 - 观看历史记录
 - 收藏夹内容
 - 跳过片段设置
@@ -610,38 +650,41 @@ docker run -d \
 
 **同步方式对比**：
 
-| 存储方式 | 同步范围 | 配置难度 | 免费程度 |
-|----------|----------|----------|----------|
-| LocalStorage | 单设备 | 无需配置 | 完全免费 |
-| Redis | 全同步 | 需要服务器 | 自建免费 |
-| Upstash | 全同步 | 简单配置 | 有免费额度 |
-| D1 | 全同步 | 中等难度 | 完全免费 |
-| Kvrocks | 全同步 | 需要部署 | 自建免费 |
+| 存储方式     | 同步范围 | 配置难度   | 免费程度   |
+| ------------ | -------- | ---------- | ---------- |
+| LocalStorage | 单设备   | 无需配置   | 完全免费   |
+| Redis        | 全同步   | 需要服务器 | 自建免费   |
+| Upstash      | 全同步   | 简单配置   | 有免费额度 |
+| D1           | 全同步   | 中等难度   | 完全免费   |
+| Kvrocks      | 全同步   | 需要部署   | 自建免费   |
 
 ### 🎨 界面自定义
 
 **主题切换**：
+
 - 支持深色/浅色主题自动切换
 - 跟随系统主题设置
 - 手动切换并记忆偏好
 
 **界面布局**：
+
 - 响应式设计，适配手机/平板/桌面
 - 可调节视频播放器大小
 - 隐藏/显示侧边栏
 - 自定义首页展示内容
 
 **个性化设置**：
+
 ```json
 // 在用户设置中自定义
 {
   "ui_preferences": {
-    "theme": "dark",                // 主题：dark/light/auto
-    "layout": "grid",               // 布局：grid/list
-    "items_per_page": 24,           // 每页显示数量
-    "auto_play": true,              // 自动播放下一集
-    "video_quality": "auto",        // 默认清晰度
-    "subtitle_language": "zh-cn"    // 字幕语言偏好
+    "theme": "dark", // 主题：dark/light/auto
+    "layout": "grid", // 布局：grid/list
+    "items_per_page": 24, // 每页显示数量
+    "auto_play": true, // 自动播放下一集
+    "video_quality": "auto", // 默认清晰度
+    "subtitle_language": "zh-cn" // 字幕语言偏好
   }
 }
 ```
@@ -649,12 +692,14 @@ docker run -d \
 ### 📊 数据统计分析
 
 **管理员面板功能**：
+
 - 访问量统计图表
 - 热门内容排行榜
 - 用户活跃度分析
 - 系统性能监控
 
 **访问数据**：
+
 ```bash
 # 通过管理员界面查看或API获取
 GET /api/admin/analytics
@@ -667,8 +712,9 @@ GET /api/admin/analytics
   ]
 }
 ```
-   - 下载：[configplus.json](https://www.mediafire.com/file/fbpk1mlupxp3u3v/configplus.json/file)
-   - 重命名为 config.json 使用
+
+- 下载：[configplus.json](https://www.mediafire.com/file/fbpk1mlupxp3u3v/configplus.json/file)
+- 重命名为 config.json 使用
 
 1. 下载配置文件：
 
@@ -733,6 +779,7 @@ GET /api/admin/analytics
 ### 🔄 升级更新
 
 **自动更新检测**：
+
 - 网站会自动检测新版本
 - 在管理员界面查看更新状态
 - 支持一键更新提醒
@@ -740,6 +787,7 @@ GET /api/admin/analytics
 **手动更新步骤**：
 
 **Docker 更新**：
+
 ```bash
 # 停止并更新服务
 docker compose pull
@@ -753,6 +801,7 @@ docker compose logs -f katelyatv
 ```
 
 **Git 部署更新**：
+
 ```bash
 # 备份当前配置
 cp config.json config.json.backup
@@ -774,6 +823,7 @@ pm2 restart katelyatv
 ```
 
 **Vercel/Cloudflare 更新**：
+
 - Fork 的仓库会自动接收上游更新提醒
 - 在 GitHub 中点击 `Sync fork` 同步更新
 - 平台会自动重新部署
@@ -781,6 +831,7 @@ pm2 restart katelyatv
 ### 💾 数据备份与恢复
 
 **备份脚本示例**：
+
 ```bash
 #!/bin/bash
 # backup.sh - 完整备份脚本
@@ -821,6 +872,7 @@ echo "✓ 备份完成: katelyatv-backup-$DATE.tar.gz"
 ```
 
 **恢复数据**：
+
 ```bash
 #!/bin/bash
 # restore.sh - 数据恢复脚本
@@ -852,15 +904,16 @@ echo "✓ 数据恢复完成"
 
 **常见问题快速排查**：
 
-| 问题症状 | 可能原因 | 解决方案 |
-|---------|----------|----------|
-| 无法访问网站 | 端口未开放/服务未启动 | 检查防火墙和服务状态 |
-| 视频无法播放 | 配置文件错误/源失效 | 验证 config.json 格式和源可用性 |
-| 登录失败 | 密码错误/环境变量未设置 | 检查 PASSWORD 环境变量 |
-| 数据库连接失败 | 连接信息错误/服务未启动 | 验证连接字符串和服务状态 |
-| 页面加载缓慢 | 内存不足/缓存失效 | 重启服务或清理缓存 |
+| 问题症状       | 可能原因                | 解决方案                        |
+| -------------- | ----------------------- | ------------------------------- |
+| 无法访问网站   | 端口未开放/服务未启动   | 检查防火墙和服务状态            |
+| 视频无法播放   | 配置文件错误/源失效     | 验证 config.json 格式和源可用性 |
+| 登录失败       | 密码错误/环境变量未设置 | 检查 PASSWORD 环境变量          |
+| 数据库连接失败 | 连接信息错误/服务未启动 | 验证连接字符串和服务状态        |
+| 页面加载缓慢   | 内存不足/缓存失效       | 重启服务或清理缓存              |
 
 **诊断命令**：
+
 ```bash
 # 系统状态检查
 docker compose ps
@@ -889,29 +942,30 @@ ss -tlnp | grep 3000
 ### 📊 性能监控与优化
 
 **监控指标**：
+
 ```bash
 # 实时系统监控脚本
 #!/bin/bash
 # monitor.sh
 while true; do
     echo "=== $(date) ==="
-    
+
     # Docker 容器状态
     echo "容器资源使用:"
     docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"
-    
+
     # 系统负载
     echo -e "\n系统负载:"
     uptime
-    
+
     # 磁盘使用
     echo -e "\n磁盘使用:"
     df -h / | tail -1
-    
+
     # 内存使用
     echo -e "\n内存使用:"
     free -h | head -2
-    
+
     echo "================================"
     sleep 30
 done
@@ -920,20 +974,22 @@ done
 **性能优化建议**：
 
 1. **内存优化**：
+
    ```bash
    # Node.js 内存限制
    export NODE_OPTIONS="--max-old-space-size=1024"
-   
+
    # Docker 内存限制
    docker run --memory=1g --memory-swap=1.5g ...
    ```
 
 2. **缓存优化**：
+
    ```json
    // config.json 中增加缓存时间
    {
-     "cache_time": 21600,  // 6小时缓存
-     "api_cache_time": 3600  // API缓存1小时
+     "cache_time": 21600, // 6小时缓存
+     "api_cache_time": 3600 // API缓存1小时
    }
    ```
 
@@ -946,45 +1002,46 @@ done
 
 **生产环境安全检查清单**：
 
-- [ ] 设置强密码策略（至少12位包含特殊字符）
+- [ ] 设置强密码策略（至少 12 位包含特殊字符）
 - [ ] 启用 HTTPS（使用 Let's Encrypt 或 Cloudflare）
 - [ ] 配置防火墙规则（仅开放必要端口）
 - [ ] 定期更新系统和依赖包
 - [ ] 设置访问日志监控
 - [ ] 配置自动备份策略
-- [ ] 限制管理员界面访问（IP白名单）
+- [ ] 限制管理员界面访问（IP 白名单）
 - [ ] 启用 fail2ban 防止暴力破解
 
 **安全配置示例**：
+
 ```bash
 # nginx 配置增强安全性
 # /etc/nginx/sites-available/katelyatv
 server {
     listen 443 ssl http2;
     server_name your-domain.com;
-    
+
     # SSL 配置
     ssl_certificate /path/to/cert.pem;
     ssl_certificate_key /path/to/key.pem;
     ssl_protocols TLSv1.2 TLSv1.3;
-    
+
     # 安全头
     add_header X-Frame-Options DENY;
     add_header X-Content-Type-Options nosniff;
     add_header X-XSS-Protection "1; mode=block";
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains";
-    
+
     # 限制请求大小
     client_max_body_size 10M;
-    
+
     # 速率限制
     limit_req_zone $binary_remote_addr zone=api:10m rate=10r/m;
-    
+
     location /api/ {
         limit_req zone=api burst=5 nodelay;
         proxy_pass http://localhost:3000;
     }
-    
+
     location /admin {
         # 仅允许特定IP访问管理界面
         allow 192.168.1.0/24;
@@ -1001,18 +1058,21 @@ server {
 ### 📖 详细指南
 
 **部署相关**：
+
 - [🐳 Docker 完整部署指南](DOCKER_DEPLOYMENT.md)
-- [☁️ Cloudflare Pages 详细配置](CLOUDFLARE_PAGES.md)  
+- [☁️ Cloudflare Pages 详细配置](CLOUDFLARE_PAGES.md)
 - [🚀 Vercel 部署最佳实践](VERCEL_DEPLOYMENT.md)
 - [🔧 环境变量完整说明](ENVIRONMENT_VARIABLES.md)
 
 **功能配置**：
+
 - [📺 TVBox 兼容配置指南](docs/TVBOX.md)
 - [💾 Kvrocks 高性能部署](docs/KVROCKS.md)
 - [🗄️ D1 数据库迁移指南](D1_MIGRATION.md)
 - [⚡ Redis 集群配置](REDIS_CLUSTER.md)
 
 **故障排除**：
+
 - [🔧 Docker 故障排除手册](DOCKER_TROUBLESHOOTING.md)
 - [🌐 网络连接问题诊断](NETWORK_TROUBLESHOOTING.md)
 - [⚠️ 兼容性问题解决](DEPLOYMENT_COMPATIBILITY.md)
@@ -1021,12 +1081,14 @@ server {
 ### 🎯 最佳实践
 
 **新手快速上手路径**：
+
 1. 选择 Vercel + 基础配置（最简单）
 2. 升级到 Vercel + Upstash（支持多用户）
 3. 进阶到 Docker 自建（完全控制）
 4. 终极配置：Kvrocks 集群（高可用）
 
 **生产环境推荐方案**：
+
 - **小型个人站**：Vercel + Upstash
 - **中型团队使用**：Docker + Redis Cluster
 - **大型服务**：Kubernetes + Kvrocks 集群
@@ -1035,18 +1097,21 @@ server {
 ### 🔗 相关资源
 
 **官方资源**：
+
 - [📦 GitHub 仓库](https://github.com/katelya77/KatelyaTV)
 - [🐳 Docker Hub](https://hub.docker.com/r/katelya77/katelyatv)
 - [📊 GitHub Container Registry](https://github.com/katelya77/KatelyaTV/pkgs/container/katelyatv)
 - [📋 版本发布页](https://github.com/katelya77/KatelyaTV/releases)
 
 **社区支持**：
+
 - [💬 Discussions 讨论区](https://github.com/katelya77/KatelyaTV/discussions)
 - [🐛 Issues 问题反馈](https://github.com/katelya77/KatelyaTV/issues)
 - [📖 Wiki 知识库](https://github.com/katelya77/KatelyaTV/wiki)
 - [💡 Feature Requests](https://github.com/katelya77/KatelyaTV/issues?q=label%3Aenhancement)
 
 **在线演示**：
+
 - [🎬 官方演示站点](https://katelyatv-demo.pages.dev/) (密码: `demo123`)
 - [📱 PWA 功能演示](https://katelyatv-pwa.vercel.app/)
 - [🎨 主题预览站点](https://katelyatv-themes.pages.dev/)
@@ -1054,6 +1119,7 @@ server {
 ### 🤝 参与贡献
 
 **贡献方式**：
+
 - ⭐ 给项目点 Star
 - 🐛 报告 Bug 和问题
 - 💡 提出新功能建议
@@ -1061,6 +1127,7 @@ server {
 - 💻 贡献代码和修复
 
 **开发者指南**：
+
 ```bash
 # 本地开发环境搭建
 git clone https://github.com/katelya77/KatelyaTV.git
@@ -1090,12 +1157,14 @@ pnpm format
 ### 🚨 重要提醒
 
 **强烈建议**：
+
 - ✅ **设置强密码**：避免公开访问，保护个人隐私
 - ✅ **个人使用**：请勿公开分享实例链接或商业使用
 - ✅ **遵守法律**：确保使用行为符合当地法律法规
 - ✅ **版权意识**：尊重内容版权，支持正版
 
 **安全配置**：
+
 - 启用 HTTPS 加密传输
 - 设置访问密码和用户认证
 - 配置 IP 访问限制
@@ -1117,18 +1186,21 @@ pnpm format
 感谢以下优秀的开源项目和技术社区：
 
 **核心依赖**：
+
 - [Next.js](https://nextjs.org/) — 强大的 React 全栈框架
 - [ArtPlayer](https://github.com/zhw2590582/ArtPlayer) — 功能丰富的 HTML5 视频播放器
 - [Tailwind CSS](https://tailwindcss.com/) — 实用优先的 CSS 框架
 - [TypeScript](https://www.typescriptlang.org/) — JavaScript 的超集
 
 **基础设施**：
+
 - [Cloudflare](https://cloudflare.com/) — 全球 CDN 和边缘计算
-- [Vercel](https://vercel.com/) — 现代化的部署平台  
+- [Vercel](https://vercel.com/) — 现代化的部署平台
 - [Docker](https://docker.com/) — 容器化部署方案
 - [Redis](https://redis.io/) — 高性能内存数据库
 
 **项目启发**：
+
 - [LibreTV](https://github.com/LibreSpark/LibreTV) — 提供设计理念
 - [LunaTV](https://github.com/MoonTechLab/LunaTV) — 项目基础架构
 
@@ -1137,13 +1209,15 @@ pnpm format
 如果 KatelyaTV 对您有帮助，欢迎通过以下方式支持项目：
 
 **免费支持**：
+
 - ⭐ [GitHub 点 Star](https://github.com/katelya77/KatelyaTV/stargazers)
-- 🍴 [Fork 项目](https://github.com/katelya77/KatelyaTV/fork) 
+- 🍴 [Fork 项目](https://github.com/katelya77/KatelyaTV/fork)
 - 💬 [参与讨论](https://github.com/katelya77/KatelyaTV/discussions)
 - 📖 [完善文档](https://github.com/katelya77/KatelyaTV/tree/main/docs)
 - 🔗 [推荐朋友](https://github.com/katelya77/KatelyaTV)
 
 **赞助支持**：
+
 <div align="center">
   <img src="public/wechat.jpg" alt="微信赞赏码" width="200">
   <br>
