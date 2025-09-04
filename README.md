@@ -350,6 +350,38 @@ wrangler pages deploy .vercel/output/static --project-name katelyatv
 
 ### 🔧 常见问题排除
 
+**🚨 Docker + Kvrocks 登录失败（重要修复）**：
+
+**症状**: 部署成功但登录时提示"账号或密码错误"，Kvrocks中admin_config存在但Users数组为空
+
+**原因**: 环境变量配置不完整，缺少USERNAME导致无法创建管理员用户
+
+**解决方案**:
+
+```bash
+# 1. 确保 .env 文件包含必要的管理员配置
+cat > .env << EOF
+USERNAME=admin
+PASSWORD=your_secure_password
+NEXT_PUBLIC_STORAGE_TYPE=kvrocks
+NEXTAUTH_SECRET=your_secret_here
+NEXTAUTH_URL=http://localhost:3000
+NEXT_PUBLIC_ENABLE_REGISTER=true
+EOF
+
+# 2. 重启服务以应用新配置
+docker compose -f docker-compose.kvrocks.yml down
+docker compose -f docker-compose.kvrocks.yml up -d
+
+# 3. 检查日志确认配置初始化
+docker compose logs katelyatv
+
+# 4. 验证Kvrocks中的用户配置
+docker exec -it $(docker compose ps -q kvrocks) redis-cli
+127.0.0.1:6666> GET admin_config
+# 应该看到 Users 数组包含管理员用户
+```
+
 **构建失败**：
 
 ```bash
