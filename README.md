@@ -148,6 +148,25 @@ docker compose -f docker-compose.kvrocks.yml up -d
 # docker compose -f docker-compose.kvrocks.auth.yml up -d
 ```
 
+**重要环境变量配置**：
+
+```bash
+# 存储类型
+NEXT_PUBLIC_STORAGE_TYPE=kvrocks
+
+# 管理员账号（必填）
+USERNAME=admin
+PASSWORD=your_admin_password
+
+# Kvrocks配置
+KVROCKS_URL=redis://kvrocks:6666
+# 密码配置（可选）
+# KVROCKS_PASSWORD=your_kvrocks_password
+
+# 开启用户注册
+NEXT_PUBLIC_ENABLE_REGISTER=true
+```
+
 **Kvrocks 优势**：
 
 - 🛡️ **极高可靠性**：基于 RocksDB，数据持久化到磁盘

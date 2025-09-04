@@ -2,6 +2,8 @@
 
 本文档介绍如何使用 Docker + Kvrocks 部署 KatelyaTV。
 
+> **⚠️ 重要提醒**：Kvrocks 部署需要配置管理员账号（`USERNAME` 和 `PASSWORD`），否则会出现"页面显示账号密码登录但无法登录"的问题！
+
 ## 🚀 快速开始
 
 ### 方案一：无密码部署（推荐用于开发环境）
@@ -22,9 +24,16 @@ nano .env
 # 数据库配置
 NEXT_PUBLIC_STORAGE_TYPE=kvrocks
 KVROCKS_URL=redis://kvrocks:6666
-# 不设置密码
+# 不设置 Kvrocks 密码
 # KVROCKS_PASSWORD=
 KVROCKS_DATABASE=0
+
+# 管理员账号配置（必填！）
+USERNAME=admin
+PASSWORD=your_admin_password
+
+# 用户注册配置
+NEXT_PUBLIC_ENABLE_REGISTER=true
 
 # 应用配置
 NEXTAUTH_SECRET=your_nextauth_secret_here
@@ -72,7 +81,29 @@ docker-compose -f docker-compose.kvrocks.auth.yml up -d
 
 ## 🔧 故障排除
 
-### 问题 1：密码认证错误
+### 问题 1：页面显示账号密码登录但无法登录
+
+**现象：**
+
+- 部署后页面显示用户名+密码登录界面
+- 但是只配置了 `PASSWORD` 环境变量
+- 无法登录或提示"用户名或密码错误"
+
+**原因：**
+
+- Kvrocks 部署属于多用户模式，需要配置管理员账号
+- 缺少 `USERNAME` 环境变量导致系统无法识别管理员
+
+**解决方案：**
+
+```bash
+# 在 .env 文件中添加管理员账号配置
+USERNAME=admin
+PASSWORD=your_admin_password
+NEXT_PUBLIC_ENABLE_REGISTER=true
+```
+
+### 问题 2：密码认证错误
 
 ```
 ❌ Kvrocks Client Error: [Error]: ERR Client sent AUTH, but no password is set
@@ -85,7 +116,7 @@ docker-compose -f docker-compose.kvrocks.auth.yml up -d
 - 无密码部署使用：`docker-compose.kvrocks.yml`
 - 密码认证部署使用：`docker-compose.kvrocks.auth.yml`
 
-### 问题 2：连接超时
+### 问题 3：连接超时
 
 ```
 ❌ Failed to connect to Kvrocks: connect ECONNREFUSED
