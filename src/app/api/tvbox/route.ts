@@ -70,8 +70,17 @@ export async function GET(request: NextRequest) {
       
       // 影视源配置
       sites: sourceConfigs.map((source) => {
-        // 智能判断type：如果api地址以.json结尾，则type为1，否则为0
-        const type = source.api.toLowerCase().endsWith('.json') ? 1 : 0;
+        // 更智能的type判断逻辑：
+        // 1. 如果api地址包含 "/provide/vod" 且不包含 "at/xml"，则认为是JSON类型 (type=1)
+        // 2. 如果api地址包含 "at/xml"，则认为是XML类型 (type=0)
+        // 3. 如果api地址以 ".json" 结尾，则认为是JSON类型 (type=1)
+        // 4. 其他情况默认为JSON类型 (type=1)，因为现在大部分都是JSON
+        let type = 1; // 默认为JSON类型
+        
+        const apiLower = source.api.toLowerCase();
+        if (apiLower.includes('at/xml') || apiLower.endsWith('.xml')) {
+          type = 0; // XML类型
+        }
         
         return {
           key: source.key || source.name,
