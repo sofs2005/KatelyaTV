@@ -210,7 +210,7 @@ export const UserMenu: React.FC = () => {
 
   const handleSettings = () => {
     setIsOpen(false);
-    setIsSettingsOpen(true);
+    router.push('/settings');
   };
 
   const handleCloseSettings = () => {
