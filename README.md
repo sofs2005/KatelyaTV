@@ -262,7 +262,7 @@ NEXT_PUBLIC_ENABLE_REGISTER=true
    PASSWORD=your_password   #在这设置密码
    USERNAME=admin           #在这设置管理员用户名
    NEXT_PUBLIC_STORAGE_TYPE=d1
-   NEXT_PUBLIC_ENABLE_REGISTER=true   #账号注册功能
+   NEXT_PUBLIC_ENABLE_REGISTER=true   #用户注册功能
    ```
 
 5. **创建 D1 数据库**（多用户支持）：
