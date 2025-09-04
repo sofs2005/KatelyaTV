@@ -7,12 +7,18 @@ interface PaginatedRowProps {
   children: React.ReactNode[];
   itemsPerPage?: number;
   className?: string;
+  onLoadMore?: () => Promise<void>; // 新增：加载更多数据的回调函数
+  hasMoreData?: boolean; // 新增：是否还有更多数据可加载
+  isLoading?: boolean; // 新增：是否正在加载中
 }
 
 export default function PaginatedRow({
   children,
   itemsPerPage = 10,
   className = '',
+  onLoadMore,
+  hasMoreData = true,
+  isLoading = false,
 }: PaginatedRowProps) {
   const [startIndex, setStartIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
@@ -40,19 +46,32 @@ export default function PaginatedRow({
     });
   };
 
-  // 向后翻页 - 真正的无限浏览
-  const handleNextPage = () => {
-    setStartIndex((prev) => {
-      const newIndex = prev + itemsPerPage;
-      // 当超出总长度时，从头开始，实现无限循环
-      return newIndex >= children.length ? 0 : newIndex;
-    });
+  // 向后翻页 - 支持动态加载更多数据
+  const handleNextPage = async () => {
+    const newIndex = startIndex + itemsPerPage;
+    
+    // 如果即将超出当前数据范围，且有更多数据可加载，且有加载回调函数
+    if (newIndex >= children.length && hasMoreData && onLoadMore && !isLoading) {
+      try {
+        await onLoadMore(); // 加载更多数据
+        // 加载完成后，直接设置到下一页
+        setStartIndex(newIndex);
+      } catch (error) {
+        // 静默处理加载错误，保持用户体验
+      }
+    } else if (newIndex < children.length) {
+      // 如果还在当前数据范围内，直接翻页
+      setStartIndex(newIndex);
+    } else {
+      // 如果没有更多数据可加载，循环回到第一页
+      setStartIndex(0);
+    }
   };
 
   // 检查是否可以向前翻页
   const canGoPrev = startIndex > 0;
-  // 总是可以向后翻页（无限循环）
-  const canGoNext = children.length > itemsPerPage;
+  // 检查是否可以向后翻页：有更多数据或者当前不在最后一页
+  const canGoNext = children.length > itemsPerPage && (startIndex + itemsPerPage < children.length || hasMoreData || startIndex + itemsPerPage >= children.length);
 
   // 如果没有足够的内容需要分页，就不显示按钮
   const needsPagination = children.length > itemsPerPage;
@@ -88,20 +107,25 @@ export default function PaginatedRow({
               </button>
             )}
 
-            {/* 右箭头按钮 - 总是显示，支持无限循环 */}
+            {/* 右箭头按钮 - 总是显示，支持动态加载 */}
             {canGoNext && (
               <button
                 onClick={handleNextPage}
-                className={`absolute -right-12 z-20 w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${
+                disabled={isLoading}
+                className={`absolute -right-12 z-20 w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 dark:focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed ${
                   isHovered ? 'opacity-100' : 'opacity-0'
                 }`}
                 style={{
                   // 确保按钮在两行中间
                   top: 'calc(50% - 20px)',
                 }}
-                aria-label='下一页'
+                aria-label={isLoading ? '加载中...' : '下一页'}
               >
-                <ChevronRight className='w-5 h-5 text-white' />
+                {isLoading ? (
+                  <div className='w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin' />
+                ) : (
+                  <ChevronRight className='w-5 h-5 text-white' />
+                )}
               </button>
             )}
           </>
