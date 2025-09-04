@@ -575,16 +575,31 @@ docker compose -f docker-compose.kvrocks.yml up -d
 
 #### 方法一：使用推荐配置（推荐）
 
-1. **下载配置文件**：[点击下载 config.json](https://www.mediafire.com/file/xl3yo7la2ci378w/config.json/file)
+**第一步：下载配置文件**
 
-   **配置文件 Plus 下载地址**: [配置文件 Plus 版本【94 片源】](https://www.mediafire.com/file/fbpk1mlupxp3u3v/configplus.json/file)
+选择以下任一配置文件：
+- **基础版**: [config.json](https://www.mediafire.com/file/xl3yo7la2ci378w/config.json/file)
+- **Plus版**: [配置文件 Plus 版本【94 片源】](https://www.mediafire.com/file/fbpk1mlupxp3u3v/configplus.json/file)
 
-2. **替换仓库配置**：
-   - 在你 Fork 的仓库中找到 `config.json` 文件
-   - 点击编辑按钮（铅笔图标）
-   - 将下载的配置内容复制替换原有内容
-   - 点击 **Commit changes**
-3. **等待重新部署**：Vercel 会自动重新部署（约 1-2 分钟）
+**第二步：获取正确的 JSON 内容**
+
+⚠️ **重要**: 请下载文件到本地，不要直接复制网页内容！
+
+1. **下载文件**: 点击 MediaFire 的 "Download" 按钮
+2. **打开文件**: 用记事本打开下载的 `.json` 文件
+3. **复制内容**: 全选并复制文件中的 JSON 内容
+
+**第三步：更新仓库配置**
+
+1. 在你 Fork 的仓库中找到 `config.json` 文件
+2. 点击编辑按钮（✏️ 铅笔图标）
+3. **删除所有原有内容**，粘贴从本地文件复制的完整 JSON 内容
+4. 确保内容格式正确（以 `{` 开头，以 `}` 结尾）
+5. 点击 **Commit changes**
+
+**第四步：等待重新部署**
+
+Vercel 会自动重新部署（约 1-2 分钟），部署成功后即可正常使用。
 
 #### 方法二：手动配置
 
@@ -719,20 +734,68 @@ docker compose -f docker-compose.kvrocks.yml up -d
 
 > **📢 重要提醒**：为保障项目长期稳定运行，应用户建议已移除内置视频源，需要配置资源站。
 
-##### 推荐配置方法：
+##### 📋 详细配置步骤（重要）：
 
-1. **下载配置文件**：[点击下载 config.json](https://www.mediafire.com/file/xl3yo7la2ci378w/config.json/file)
+**第一步：下载配置文件**
 
-   **配置文件 Plus 下载地址**: [配置文件 Plus 版本【94 片源】](https://www.mediafire.com/file/fbpk1mlupxp3u3v/configplus.json/file)
+选择以下任一配置文件下载：
+- **基础版**: [config.json](https://www.mediafire.com/file/xl3yo7la2ci378w/config.json/file)
+- **Plus版**: [配置文件 Plus 版本【94 片源】](https://www.mediafire.com/file/fbpk1mlupxp3u3v/configplus.json/file)
 
-2. **更新仓库配置**：
-   - 回到你的 GitHub 仓库
-   - 找到 `config.json` 文件，点击编辑
-   - 用下载的内容替换原有配置
-   - 提交更改
-3. **等待自动部署**：Cloudflare Pages 会自动重新构建部署
+**第二步：验证下载的文件内容**
 
-🎉 **完成！现在可以正常使用影视聚合功能了**
+❌ **错误做法**: 直接复制网页上显示的内容  
+✅ **正确做法**: 下载 `.json` 文件到本地，然后打开查看
+
+⚠️ **常见错误**: 如果你直接从 MediaFire 页面复制内容，可能会包含网页元素，导致 JSON 格式错误！
+
+**第三步：获取正确的 JSON 内容**
+
+1. **下载文件**: 点击 MediaFire 的 "Download" 按钮，下载 `.json` 文件到电脑
+2. **打开文件**: 用记事本或代码编辑器打开下载的 `.json` 文件
+3. **复制内容**: 选择全部内容并复制（应该以 `{` 开头，以 `}` 结尾）
+
+**第四步：更新 GitHub 仓库**
+
+1. **进入仓库**: 回到你 Fork 的 GitHub 仓库
+2. **编辑文件**: 找到 `config.json` 文件，点击 **✏️ 编辑** 按钮
+3. **替换内容**: 
+   - **删除所有原有内容** 
+   - **粘贴从本地文件复制的完整 JSON 内容**
+   - **确保内容以 `{` 开头，以 `}` 结尾**
+4. **验证格式**: 在提交前检查内容是否为有效的 JSON 格式
+5. **提交更改**: 填写提交信息，点击 **Commit changes**
+
+**第五步：等待自动部署**
+
+1. Cloudflare Pages 会自动检测到 GitHub 仓库的更改
+2. 等待 2-3 分钟自动重新构建和部署
+3. 部署成功后即可正常使用影视聚合功能
+
+##### 🔍 故障排除
+
+**如果遇到 "config.json 不是有效的 JSON" 错误：**
+
+1. **检查文件内容**: 确保内容是纯 JSON，没有 HTML 标签或其他字符
+2. **重新下载**: 从 MediaFire 重新下载文件，不要复制网页内容
+3. **使用 JSON 验证器**: 将内容粘贴到 [JSON 验证器](https://jsonlint.com/) 检查格式
+4. **查看构建日志**: 在 Cloudflare Pages 的部署页面查看详细错误信息
+
+**示例正确的 JSON 格式开头：**
+```json
+{
+  "cache_time": 7200,
+  "api_site": {
+    "example": {
+      "api": "https://example.com/api.php/provide/vod",
+      "name": "示例资源站"
+    }
+    // ... 更多配置
+  }
+}
+```
+
+🎉 **完成！配置正确后即可正常使用所有影视聚合功能了**
 
 ### 🗄️ 启用 D1 数据库（可选，支持多用户）
 
