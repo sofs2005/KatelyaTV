@@ -378,9 +378,30 @@ export async function getCacheTime(): Promise<number> {
   return config.SiteConfig.SiteInterfaceCacheTime || 7200;
 }
 
-export async function getAvailableApiSites(): Promise<ApiSite[]> {
+export async function getAvailableApiSites(filterAdult = false): Promise<ApiSite[]> {
   const config = await getConfig();
-  return config.SourceConfig.filter((s) => !s.disabled).map((s) => ({
+  let sites = config.SourceConfig.filter((s) => !s.disabled);
+  
+  // 如果需要过滤成人内容，则排除标记为成人内容的资源站
+  if (filterAdult) {
+    sites = sites.filter((s) => !s.is_adult);
+  }
+  
+  return sites.map((s) => ({
+    key: s.key,
+    name: s.name,
+    api: s.api,
+    detail: s.detail,
+  }));
+}
+
+// 获取成人内容资源站
+export async function getAdultApiSites(): Promise<ApiSite[]> {
+  const config = await getConfig();
+  const adultSites = config.SourceConfig
+    .filter((s) => !s.disabled && s.is_adult);
+  
+  return adultSites.map((s) => ({
     key: s.key,
     name: s.name,
     api: s.api,

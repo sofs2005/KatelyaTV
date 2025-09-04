@@ -4,7 +4,14 @@
     "example_test": {
       "api": "https://example.com/api.php/provide/vod",
       "name": "示例视频源",
-      "detail": "https://example.com"
+      "detail": "https://example.com",
+      "is_adult": false
+    },
+    "adult_example": {
+      "api": "https://adult-example.com/api.php/provide/vod", 
+      "name": "成人内容源（仅供示例）",
+      "detail": "https://adult-example.com",
+      "is_adult": true
     }
   }
 }

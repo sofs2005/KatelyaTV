@@ -3,7 +3,7 @@
 import { createClient, RedisClientType } from 'redis';
 
 import { AdminConfig } from './admin.types';
-import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord } from './types';
+import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord, UserSettings } from './types';
 
 // 搜索历史最大条数
 const SEARCH_HISTORY_LIMIT = 20;
@@ -223,6 +223,50 @@ export class RedisStorage implements IStorage {
     if (favoriteKeys.length > 0) {
       await withRetry(() => this.client.del(favoriteKeys));
     }
+
+    // 删除用户设置
+    await withRetry(() => this.client.del(this.userSettingsKey(userName)));
+  }
+
+  // ---------- 用户设置 ----------
+  private userSettingsKey(user: string) {
+    return `u:${user}:settings`; // u:username:settings
+  }
+
+  async getUserSettings(userName: string): Promise<UserSettings | null> {
+    const data = await withRetry(() =>
+      this.client.get(this.userSettingsKey(userName))
+    );
+    
+    if (data) {
+      return JSON.parse(ensureString(data));
+    }
+    
+    // 如果用户设置不存在，返回默认设置
+    const defaultSettings: UserSettings = {
+      filter_adult_content: true, // 默认开启成人内容过滤
+      theme: 'auto',
+      language: 'zh-CN',
+      auto_play: true,
+      video_quality: 'auto'
+    };
+    
+    return defaultSettings;
+  }
+
+  async setUserSettings(userName: string, settings: UserSettings): Promise<void> {
+    await withRetry(() =>
+      this.client.set(
+        this.userSettingsKey(userName),
+        JSON.stringify(settings)
+      )
+    );
+  }
+
+  async updateUserSettings(userName: string, settings: Partial<UserSettings>): Promise<void> {
+    const currentSettings = await this.getUserSettings(userName);
+    const updatedSettings = { ...currentSettings, ...settings };
+    await this.setUserSettings(userName, updatedSettings as UserSettings);
   }
 
   // ---------- 搜索历史 ----------
