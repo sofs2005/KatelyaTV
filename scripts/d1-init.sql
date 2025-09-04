@@ -68,6 +68,22 @@ CREATE TABLE IF NOT EXISTS skip_configs (
   UNIQUE (user_id, config_key)
 );
 
+-- 用户设置表
+CREATE TABLE IF NOT EXISTS user_settings (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  username TEXT NOT NULL,
+  filter_adult_content BOOLEAN DEFAULT 1,
+  theme TEXT DEFAULT 'auto',
+  language TEXT DEFAULT 'zh-CN',
+  auto_play BOOLEAN DEFAULT 1,
+  video_quality TEXT DEFAULT 'auto',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  UNIQUE (user_id, username)
+);
+
 -- 管理员配置表
 CREATE TABLE IF NOT EXISTS admin_configs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -92,6 +108,8 @@ CREATE INDEX IF NOT EXISTS idx_play_records_record_key ON play_records(record_ke
 CREATE INDEX IF NOT EXISTS idx_favorites_user_id ON favorites(user_id);
 CREATE INDEX IF NOT EXISTS idx_search_history_user_id ON search_history(user_id);
 CREATE INDEX IF NOT EXISTS idx_skip_configs_user_id ON skip_configs(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_settings_user_id ON user_settings(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_settings_username ON user_settings(username);
 
 -- 创建视图以简化查询
 CREATE VIEW IF NOT EXISTS user_stats AS

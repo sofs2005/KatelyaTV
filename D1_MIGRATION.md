@@ -1,10 +1,36 @@
-# D1 数据库迁移 - 添加跳过配置功能
+# D1 数据库迁移 - 添加成人内容过滤和跳过配置功能
 
-如果您已经有一个运行中的 D1 数据库，需要执行以下 SQL 语句来添加跳过配置支持。
+如果您已经有一个运行中的 D1 数据库，需要执行以下 SQL 语句来添加成人内容过滤和跳过配置支持。
 
 ## 🗄️ 新增表结构
 
-### skip_configs 表
+### user_settings 表（成人内容过滤功能 - 必需）
+
+这个表用于存储用户的个人设置，包括成人内容过滤开关：
+
+```sql
+-- 创建用户设置表（成人内容过滤功能）
+CREATE TABLE IF NOT EXISTS user_settings (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  username TEXT NOT NULL,
+  filter_adult_content BOOLEAN DEFAULT 1,
+  theme TEXT DEFAULT 'auto',
+  language TEXT DEFAULT 'zh-CN',
+  auto_play BOOLEAN DEFAULT 1,
+  video_quality TEXT DEFAULT 'auto',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  UNIQUE (user_id, username)
+);
+
+-- 为用户设置添加索引以优化查询性能
+CREATE INDEX IF NOT EXISTS idx_user_settings_user_id ON user_settings(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_settings_username ON user_settings(username);
+```
+
+### skip_configs 表（跳过功能 - 可选）
 
 这个表用于存储用户的跳过片头片尾配置：
 
@@ -12,35 +38,25 @@
 -- 创建跳过配置表
 CREATE TABLE IF NOT EXISTS skip_configs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  username TEXT NOT NULL,
-  key TEXT NOT NULL,
-  source TEXT NOT NULL,
-  video_id TEXT NOT NULL,
-  title TEXT NOT NULL,
-  segments TEXT NOT NULL,
-  updated_time INTEGER NOT NULL,
-  UNIQUE(username, key)
+  user_id INTEGER NOT NULL,
+  config_key TEXT NOT NULL,
+  start_time INTEGER DEFAULT 0,
+  end_time INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  UNIQUE (user_id, config_key)
 );
 
 -- 为跳过配置添加索引以优化查询性能
-CREATE INDEX IF NOT EXISTS idx_skip_configs_username ON skip_configs(username);
-CREATE INDEX IF NOT EXISTS idx_skip_configs_username_key ON skip_configs(username, key);
-CREATE INDEX IF NOT EXISTS idx_skip_configs_username_updated_time ON skip_configs(username, updated_time DESC);
-
--- 创建用户设置表（成人内容过滤功能）
-CREATE TABLE IF NOT EXISTS user_settings (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  username TEXT NOT NULL UNIQUE,
-  settings TEXT NOT NULL,
-  updated_time INTEGER NOT NULL
-);
-
--- 为用户设置添加索引以优化查询性能
-CREATE INDEX IF NOT EXISTS idx_user_settings_username ON user_settings(username);
-CREATE INDEX IF NOT EXISTS idx_user_settings_updated_time ON user_settings(updated_time DESC);
+CREATE INDEX IF NOT EXISTS idx_skip_configs_user_id ON skip_configs(user_id);
 ```
 
 ## 🚀 执行迁移的方法
+
+### ⚠️ 重要提示
+
+如果您在 Cloudflare Pages 使用成人内容过滤功能时遇到"获取用户设置失败"错误，这是因为缺少 `user_settings` 表。**必须执行此迁移**才能使功能正常工作。
 
 ### 方法一：使用 Cloudflare Dashboard（推荐）
 
@@ -59,32 +75,95 @@ CREATE INDEX IF NOT EXISTS idx_user_settings_updated_time ON user_settings(updat
 # 首先登录 Cloudflare
 wrangler auth login
 
+# 创建迁移文件
+echo "-- 上面的SQL代码" > user_settings_migration.sql
+
 # 执行数据库迁移
-wrangler d1 execute your-database-name --file=migration.sql
+wrangler d1 execute your-database-name --file=user_settings_migration.sql
 ```
 
-其中 `migration.sql` 包含上面的 SQL 代码。
+### 方法三：使用项目内置迁移脚本
 
-### 方法三：通过 Pages 函数执行（高级）
+```bash
+# 克隆或更新项目代码
+git pull origin main
 
-也可以创建一个临时的迁移函数，部署后访问来执行迁移。
+# 执行完整的D1初始化（包含新表）
+wrangler d1 execute your-database-name --file=./scripts/d1-init.sql
+```
 
 ## 📋 字段说明
 
-| 字段名         | 类型    | 说明                            |
-| -------------- | ------- | ------------------------------- |
-| `id`           | INTEGER | 主键，自动递增                  |
-| `username`     | TEXT    | 用户名，关联到用户              |
-| `key`          | TEXT    | 配置键，格式：`source+video_id` |
-| `source`       | TEXT    | 视频源标识                      |
-| `video_id`     | TEXT    | 视频 ID                         |
-| `title`        | TEXT    | 视频标题                        |
-| `segments`     | TEXT    | 跳过片段数据（JSON 格式）       |
-| `updated_time` | INTEGER | 更新时间戳                      |
+### user_settings 表字段
+
+| 字段名                  | 类型     | 默认值  | 说明                      |
+| ----------------------- | -------- | ------- | ------------------------- |
+| `id`                    | INTEGER  | 自增    | 主键                      |
+| `user_id`               | INTEGER  | 无      | 用户ID，关联users表       |
+| `username`              | TEXT     | 无      | 用户名                    |
+| `filter_adult_content`  | BOOLEAN  | 1(true) | 成人内容过滤开关          |
+| `theme`                 | TEXT     | 'auto'  | 界面主题设置              |
+| `language`              | TEXT     | 'zh-CN' | 语言设置                  |
+| `auto_play`             | BOOLEAN  | 1(true) | 自动播放开关              |
+| `video_quality`         | TEXT     | 'auto'  | 视频质量偏好              |
+| `created_at`            | DATETIME | 当前时间 | 创建时间                  |
+| `updated_at`            | DATETIME | 当前时间 | 更新时间                  |
+
+### skip_configs 表字段
+
+| 字段名        | 类型     | 默认值   | 说明                      |
+| ------------- | -------- | -------- | ------------------------- |
+| `id`          | INTEGER  | 自增     | 主键                      |
+| `user_id`     | INTEGER  | 无       | 用户ID，关联users表       |
+| `config_key`  | TEXT     | 无       | 配置键，格式：`source+video_id` |
+| `start_time`  | INTEGER  | 0        | 跳过开始时间（秒）        |
+| `end_time`    | INTEGER  | 0        | 跳过结束时间（秒）        |
+| `created_at`  | DATETIME | 当前时间 | 创建时间                  |
+| `updated_at`  | DATETIME | 当前时间 | 更新时间                  |
 
 ## ✅ 迁移验证
 
 执行迁移后，可以通过以下 SQL 验证表是否创建成功：
+
+```sql
+-- 检查 user_settings 表是否存在
+SELECT name FROM sqlite_master WHERE type='table' AND name='user_settings';
+
+-- 检查 skip_configs 表是否存在
+SELECT name FROM sqlite_master WHERE type='table' AND name='skip_configs';
+
+-- 查看 user_settings 表结构
+PRAGMA table_info(user_settings);
+
+-- 查看 skip_configs 表结构
+PRAGMA table_info(skip_configs);
+```
+
+## 🔧 故障排除
+
+### 1. "获取用户设置失败" 错误
+
+**原因**：缺少 `user_settings` 表
+**解决**：执行上述迁移SQL，确保user_settings表已创建
+
+### 2. "表已存在" 错误
+
+**原因**：表已经创建过了
+**解决**：这是正常的，`CREATE TABLE IF NOT EXISTS` 语句是安全的
+
+### 3. 外键约束错误
+
+**原因**：users表不存在或结构不匹配
+**解决**：确保先运行完整的 `./scripts/d1-init.sql` 初始化脚本
+
+## 📞 需要帮助？
+
+如果在迁移过程中遇到问题：
+
+1. 检查 Cloudflare D1 Dashboard 中的数据库状态
+2. 确认环境变量 `NEXT_PUBLIC_STORAGE_TYPE=d1` 已设置
+3. 验证 `wrangler.toml` 中的数据库配置
+4. 查看项目 Issues 或提交新的问题报告
 
 ```sql
 -- 检查表是否存在

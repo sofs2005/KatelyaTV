@@ -596,12 +596,59 @@ docker run -d \
 - 默认开启过滤，确保安全浏览体验
 - 支持资源分组显示，避免误触
 
+**⚠️ 重要部署要求**：
+
+成人内容过滤功能需要服务器端存储支持，**不能使用 `localstorage` 存储类型**。
+
+| 部署平台       | 推荐存储类型 | 配置要求               |
+| -------------- | ------------ | ---------------------- |
+| Docker         | `redis` / `kvrocks` | 配置 Redis/Kvrocks 服务器 |
+| Vercel         | `upstash`    | 配置 Upstash Redis     |
+| Cloudflare Pages | `d1`       | 配置 D1 数据库         |
+
+**Cloudflare Pages 特殊配置**：
+
+如果你使用 Cloudflare Pages 部署，**必须配置 D1 数据库**才能使用成人内容过滤功能：
+
+1. **创建 D1 数据库**：
+   ```bash
+   wrangler d1 create katelyatv-db
+   ```
+
+2. **初始化数据库表**：
+   ```bash
+   wrangler d1 execute katelyatv-db --file=./scripts/d1-init.sql
+   ```
+
+3. **配置环境变量**：
+   ```bash
+   NEXT_PUBLIC_STORAGE_TYPE=d1
+   ```
+
+4. **更新 wrangler.toml**：
+   ```toml
+   [[d1_databases]]
+   binding = "DB"
+   database_name = "katelyatv-db"
+   database_id = "your-d1-database-id"
+   ```
+
+**故障排除**：
+
+- ❌ **错误**："获取用户设置失败"
+  - **原因**：使用了 `localstorage` 存储类型，服务器端API无法访问
+  - **解决**：按上述要求配置数据库存储
+
+- ❌ **错误**：过滤开关无法保存
+  - **原因**：存储后端未正确配置或连接失败
+  - **解决**：检查数据库连接和环境变量配置
+
 **使用方法**：
 
 1. **访问用户设置**：
 
    - 登录后访问 `/settings` 页面
-   - 或在用户菜单中点击「用户设置」
+   - 或在用户菜单中点击「内容过滤」
 
 2. **配置过滤选项**：
 
@@ -638,6 +685,11 @@ docker run -d \
 - 默认情况下，所有新用户和未登录用户的成人内容过滤均为开启状态
 - 关闭过滤功能需要用户主动操作，确保使用意图明确
 - 建议管理员在配置资源站时准确标记 `is_adult` 字段
+
+**详细配置指南**：
+
+- 📖 [Cloudflare Pages 成人内容过滤配置指南](./CLOUDFLARE_PAGES_ADULT_FILTER.md)
+- 🗄️ [D1 数据库迁移说明](./D1_MIGRATION.md)
 
 ### 🎯 跳过片头片尾
 
