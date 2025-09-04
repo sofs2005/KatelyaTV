@@ -312,8 +312,8 @@ curl -H "Authorization: Bearer $UPSTASH_REDIS_REST_TOKEN" \
 
 #### 推荐配置文件
 
-- **基础版**（20+站点）：[config.json](https://www.mediafire.com/file/xl3yo7la2ci378w/config.json/file)
-- **增强版**（94 站点）：[configplus.json](https://www.mediafire.com/file/fbpk1mlupxp3u3v/configplus.json/file)
+- **基础版**（20+站点）：[config_isadult.json](https://www.mediafire.com/file/upztrjc0g1ynbzy/config_isadult.json/file)
+- **增强版**（94 站点）：[configplus_isadult.json](https://www.mediafire.com/file/ff60ynj6z21iqfb/configplus_isadult.json/file)
 
 #### 配置方式
 
@@ -575,13 +575,13 @@ GET /api/admin/analytics
 }
 ```
 
-- 下载：[configplus.json](https://www.mediafire.com/file/fbpk1mlupxp3u3v/configplus.json/file)
+- 下载：[configplus_isadult.json](https://www.mediafire.com/file/ff60ynj6z21iqfb/configplus_isadult.json/file)
 - 重命名为 config.json 使用
 
 1. 下载配置文件：
 
-   - [基础版 config.json](https://www.mediafire.com/file/xl3yo7la2ci378w/config.json/file)
-   - [Plus 版（94 个片源）](https://www.mediafire.com/file/fbpk1mlupxp3u3v/configplus.json/file)
+   - [基础版 config_isadult.json](https://www.mediafire.com/file/upztrjc0g1ynbzy/config_isadult.json/file)
+   - [Plus 版（94 个片源）](https://www.mediafire.com/file/ff60ynj6z21iqfb/configplus_isadult.json/file)
 
 2. 配置方式：
    - **Docker**：挂载配置文件 `-v ./config.json:/app/config.json:ro`
