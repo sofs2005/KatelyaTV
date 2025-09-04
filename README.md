@@ -55,13 +55,13 @@
 
 ### 💡 方案选择指南
 
-| 使用场景 | 推荐方案 | 存储类型 | 成人内容过滤 | 多用户 | 部署难度 |
-|---------|---------|---------|------------|-------|---------|
-| **个人使用** | Docker 单容器 | localstorage | ❌ | ❌ | ⭐ |
-| **家庭使用** | Docker + Redis | redis | ✅ | ✅ | ⭐⭐ |
-| **免费部署** | Vercel + Upstash | upstash | ✅ | ✅ | ⭐⭐⭐ |
-| **生产环境** | Docker + Kvrocks | kvrocks | ✅ | ✅ | ⭐⭐ |
-| **全球加速** | Cloudflare Pages | d1 | ✅ | ✅ | ⭐⭐⭐⭐ |
+| 使用场景     | 推荐方案         | 存储类型     | 成人内容过滤 | 多用户 | 部署难度 |
+| ------------ | ---------------- | ------------ | ------------ | ------ | -------- |
+| **个人使用** | Docker 单容器    | localstorage | ❌           | ❌     | ⭐       |
+| **家庭使用** | Docker + Redis   | redis        | ✅           | ✅     | ⭐⭐     |
+| **免费部署** | Vercel + Upstash | upstash      | ✅           | ✅     | ⭐⭐⭐   |
+| **生产环境** | Docker + Kvrocks | kvrocks      | ✅           | ✅     | ⭐⭐     |
+| **全球加速** | Cloudflare Pages | d1           | ✅           | ✅     | ⭐⭐⭐⭐ |
 
 > 💡 **重要提示**：成人内容过滤功能需要数据库存储支持，不支持 `localstorage` 方式
 
@@ -71,7 +71,7 @@
 
 ### 方案一：Docker 单容器（最简单）
 
-**特点**：5分钟部署，个人使用，无多用户功能
+**特点**：5 分钟部署，个人使用，无多用户功能
 
 ```bash
 docker run -d \
@@ -83,6 +83,7 @@ docker run -d \
 ```
 
 **挂载自定义配置**（可选）：
+
 ```bash
 docker run -d \
   --name katelyatv \
@@ -107,6 +108,7 @@ cp .env.redis.example .env
 ```
 
 **编辑 .env 文件**：
+
 ```bash
 # 管理员账号（必填）
 USERNAME=admin
@@ -139,6 +141,7 @@ cp .env.kvrocks.example .env
 ```
 
 **编辑 .env 文件**：
+
 ```bash
 # 管理员账号（必填，否则无法登录）
 USERNAME=admin
@@ -159,23 +162,27 @@ docker compose -f docker-compose.kvrocks.yml up -d
 
 ### 方案四：Vercel + Upstash（免费推荐）
 
-**特点**：完全免费，自动HTTPS，全球CDN
+**特点**：完全免费，自动 HTTPS，全球 CDN
 
 #### 基础部署
-1. **Fork项目** → [GitHub仓库](https://github.com/katelya77/KatelyaTV)
-2. **部署到Vercel**：
+
+1. **Fork 项目** → [GitHub 仓库](https://github.com/katelya77/KatelyaTV)
+2. **部署到 Vercel**：
    - 登录 [Vercel](https://vercel.com/)
-   - 导入刚Fork的仓库
+   - 导入刚 Fork 的仓库
    - 添加环境变量：`PASSWORD=your_password`
-   - 点击Deploy
+   - 点击 Deploy
 
 #### 多用户配置
-3. **创建Upstash数据库**：
+
+3. **创建 Upstash 数据库**：
+
    - 访问 [Upstash](https://upstash.com/)
-   - 创建免费Redis数据库
+   - 创建免费 Redis 数据库
    - 获取 `UPSTASH_REDIS_REST_URL` 和 `UPSTASH_REDIS_REST_TOKEN`
 
 4. **添加环境变量**：
+
 ```bash
 # 存储配置
 NEXT_PUBLIC_STORAGE_TYPE=upstash
@@ -194,11 +201,13 @@ NEXT_PUBLIC_ENABLE_REGISTER=true
 
 ### 方案五：Cloudflare Pages + D1（全球加速）
 
-**特点**：全球CDN，无限带宽，免费SSL
+**特点**：全球 CDN，无限带宽，免费 SSL
 
 #### 快速部署
-1. **Fork项目** → [GitHub仓库](https://github.com/katelya77/KatelyaTV)
-2. **创建Pages项目**：
+
+1. **Fork 项目** → [GitHub 仓库](https://github.com/katelya77/KatelyaTV)
+2. **创建 Pages 项目**：
+
    - 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)
    - Pages → Connect to Git → 选择仓库
    - 构建设置：
@@ -209,6 +218,7 @@ NEXT_PUBLIC_ENABLE_REGISTER=true
    - 兼容性标志：`nodejs_compat`
 
 3. **环境变量配置**：
+
 ```bash
 # 管理员账号
 USERNAME=admin
@@ -221,7 +231,8 @@ NEXT_PUBLIC_STORAGE_TYPE=d1
 NEXT_PUBLIC_ENABLE_REGISTER=true
 ```
 
-4. **创建D1数据库**（多用户支持）：
+4. **创建 D1 数据库**（多用户支持）：
+
 ```bash
 # 安装Wrangler CLI
 npm install -g wrangler
@@ -232,7 +243,7 @@ wrangler d1 create katelyatv-db
 wrangler d1 execute katelyatv-db --file=./scripts/d1-init.sql
 ```
 
-5. **配置数据库绑定** → 在 `wrangler.toml` 中添加数据库ID
+5. **配置数据库绑定** → 在 `wrangler.toml` 中添加数据库 ID
 
 ---
 
@@ -241,9 +252,11 @@ wrangler d1 execute katelyatv-db --file=./scripts/d1-init.sql
 ### 常见部署问题
 
 #### Docker + Kvrocks 登录失败 ⚠️
+
 **症状**：部署成功但无法登录，提示"账号或密码错误"
 
 **解决方案**：
+
 ```bash
 # 确保 .env 包含完整配置
 USERNAME=admin
@@ -257,6 +270,7 @@ docker compose -f docker-compose.kvrocks.yml up -d
 ```
 
 #### 构建失败
+
 ```bash
 # 检查Node.js版本 (需要18+)
 node --version
@@ -267,6 +281,7 @@ pnpm install
 ```
 
 #### 数据库连接失败
+
 ```bash
 # Redis连接测试
 redis-cli -u $REDIS_URL ping
@@ -281,30 +296,33 @@ curl -H "Authorization: Bearer $UPSTASH_REDIS_REST_TOKEN" \
 
 ### 环境变量说明
 
-| 变量名 | 必填 | 说明 | 示例值 |
-|--------|-----|------|--------|
-| `USERNAME` | 是* | 管理员用户名 | `admin` |
-| `PASSWORD` | 是 | 访问密码 | `your_password` |
-| `NEXT_PUBLIC_STORAGE_TYPE` | 否 | 存储类型 | `redis/d1/upstash` |
-| `NEXT_PUBLIC_ENABLE_REGISTER` | 否 | 用户注册 | `true/false` |
-| `REDIS_URL` | 否** | Redis连接 | `redis://localhost:6379` |
-| `UPSTASH_REDIS_REST_URL` | 否** | Upstash地址 | `https://xxx.upstash.io` |
-| `UPSTASH_REDIS_REST_TOKEN` | 否** | Upstash令牌 | `AX_xxx` |
+| 变量名                        | 必填   | 说明         | 示例值                   |
+| ----------------------------- | ------ | ------------ | ------------------------ |
+| `USERNAME`                    | 是\*   | 管理员用户名 | `admin`                  |
+| `PASSWORD`                    | 是     | 访问密码     | `your_password`          |
+| `NEXT_PUBLIC_STORAGE_TYPE`    | 否     | 存储类型     | `redis/d1/upstash`       |
+| `NEXT_PUBLIC_ENABLE_REGISTER` | 否     | 用户注册     | `true/false`             |
+| `REDIS_URL`                   | 否\*\* | Redis 连接   | `redis://localhost:6379` |
+| `UPSTASH_REDIS_REST_URL`      | 否\*\* | Upstash 地址 | `https://xxx.upstash.io` |
+| `UPSTASH_REDIS_REST_TOKEN`    | 否\*\* | Upstash 令牌 | `AX_xxx`                 |
 
-> *多用户部署必填 **对应存储类型必填
+> \*多用户部署必填 \*\*对应存储类型必填
 
 ### 视频源配置
 
 #### 推荐配置文件
+
 - **基础版**（20+站点）：[config.json](https://www.mediafire.com/file/xl3yo7la2ci378w/config.json/file)
-- **增强版**（94站点）：[configplus.json](https://www.mediafire.com/file/fbpk1mlupxp3u3v/configplus.json/file)
+- **增强版**（94 站点）：[configplus.json](https://www.mediafire.com/file/fbpk1mlupxp3u3v/configplus.json/file)
 
 #### 配置方式
+
 1. **Docker**：挂载到 `/app/config.json`
 2. **Vercel/Cloudflare**：提交到仓库根目录
 3. **管理员界面**：访问 `/admin` 上传配置
 
 #### 配置格式
+
 ```json
 {
   "cache_time": 7200,
