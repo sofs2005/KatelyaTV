@@ -1,17 +1,29 @@
 {
   "cache_time": 7200,
   "api_site": {
-    "example_test": {
-      "api": "https://example.com/api.php/provide/vod",
-      "name": "示例视频源",
-      "detail": "https://example.com",
+    "okzy": {
+      "api": "https://okzy.tv/api.php/provide/vod",
+      "name": "OK资源",
+      "detail": "https://okzy.tv/api.php/provide/vod/?ac=detail&ids={ids}",
       "is_adult": false
     },
-    "adult_example": {
-      "api": "https://adult-example.com/api.php/provide/vod", 
-      "name": "成人内容源（仅供示例）",
-      "detail": "https://adult-example.com",
-      "is_adult": true
+    "hnzy": {
+      "api": "https://www.hongniuzy.com/inc/api.php",
+      "name": "红牛资源", 
+      "detail": "https://www.hongniuzy.com/inc/api.php?ac=detail&ids={ids}",
+      "is_adult": false
+    },
+    "ffzy": {
+      "api": "https://cj.ffzyapi.com/api.php/provide/vod",
+      "name": "非凡资源",
+      "detail": "https://cj.ffzyapi.com/api.php/provide/vod/?ac=detail&ids={ids}",
+      "is_adult": false
+    },
+    "lzzy": {
+      "api": "https://api.lzapi.com/api.php/provide/vod",
+      "name": "量子资源",
+      "detail": "https://api.lzapi.com/api.php/provide/vod/?ac=detail&ids={ids}",
+      "is_adult": false
     }
   }
 }

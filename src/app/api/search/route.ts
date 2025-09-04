@@ -48,8 +48,12 @@ export async function GET(request: Request) {
 
     // 获取常规资源站
     const regularSites = await getAvailableApiSites(true); // 总是过滤成人内容
+    console.log('搜索API - 获取到的常规站点数量:', regularSites.length);
+    console.log('搜索API - 常规站点列表:', regularSites.map(s => s.name).join(', '));
+    
     const regularSearchPromises = regularSites.map((site) => searchFromApi(site, query));
     const regularResults = (await Promise.all(regularSearchPromises)).flat();
+    console.log('搜索API - 常规搜索结果数量:', regularResults.length);
 
     let adultResults: unknown[] = [];
     

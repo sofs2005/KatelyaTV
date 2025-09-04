@@ -185,16 +185,23 @@ function SearchPageClient() {
       );
       const data = await response.json();
       
-      // 如果返回了分组结果，我们需要处理这种格式
-      if (data.grouped) {
+      // 处理新的搜索结果格式
+      if (data.regular_results || data.adult_results) {
         // 处理分组结果
+        setGroupedResults({
+          regular: data.regular_results || [],
+          adult: data.adult_results || []
+        });
+        setSearchResults([...(data.regular_results || []), ...(data.adult_results || [])]);
+      } else if (data.grouped) {
+        // 兼容旧的分组格式
         setGroupedResults({
           regular: data.regular || [],
           adult: data.adult || []
         });
         setSearchResults([...(data.regular || []), ...(data.adult || [])]);
       } else {
-        // 处理普通结果
+        // 兼容旧的普通结果格式
         setGroupedResults(null);
         setSearchResults(data.results || []);
       }
