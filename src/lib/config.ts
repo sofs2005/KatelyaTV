@@ -101,6 +101,7 @@ async function initConfig() {
               detail: site.detail,
               from: 'config',
               disabled: false,
+              is_adult: (site as any).is_adult || false, // 确保 is_adult 字段被正确处理
             });
           }
         });
@@ -110,6 +111,12 @@ async function initConfig() {
         adminConfig.SourceConfig.forEach((source) => {
           if (!apiSiteKeys.has(source.key)) {
             source.from = 'custom';
+          } else {
+            // 更新现有源的 is_adult 字段
+            const siteConfig = fileConfig.api_site[source.key];
+            if (siteConfig) {
+              source.is_adult = (siteConfig as any).is_adult || false;
+            }
           }
         });
 
@@ -172,6 +179,7 @@ async function initConfig() {
             detail: site.detail,
             from: 'config',
             disabled: false,
+            is_adult: (site as any).is_adult || false, // 确保 is_adult 字段被正确处理
           })),
         };
       }
