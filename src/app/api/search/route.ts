@@ -50,10 +50,18 @@ export async function GET(request: Request) {
   const regularSites = await getAvailableApiSites();
   
   if (!regularSites || regularSites.length === 0) {
-    return Response.json({ 
+    const cacheTime = await getCacheTime();
+    const response = NextResponse.json({ 
       regular_results: [], 
       adult_results: [] 
+    }, {
+      headers: {
+        'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
+        'CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+        'Vercel-CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+      },
     });
+    return addCorsHeaders(response);
   }
 
   // 搜索常规（非成人）内容
