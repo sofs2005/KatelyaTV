@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-
 import { ArrowLeft, Settings, User } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+
+import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 
 import AdultContentFilter from '@/components/AdultContentFilter';
-import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 
 export default function UserSettingsPage() {
   const router = useRouter();

@@ -590,6 +590,7 @@ docker run -d \
 ### 🔒 成人内容过滤
 
 **功能介绍**：
+
 - 智能识别和过滤成人内容资源站
 - 用户可自主选择开启或关闭过滤功能
 - 默认开启过滤，确保安全浏览体验
@@ -598,10 +599,12 @@ docker run -d \
 **使用方法**：
 
 1. **访问用户设置**：
+
    - 登录后访问 `/settings` 页面
    - 或在用户菜单中点击「用户设置」
 
 2. **配置过滤选项**：
+
    - 在「内容过滤」部分找到「成人内容过滤」开关
    - **开启**：完全隐藏成人内容资源站和搜索结果
    - **关闭**：成人内容在搜索结果中单独分组显示
@@ -619,18 +622,19 @@ docker run -d \
     "regular_site": {
       "api": "https://example.com/api.php/provide/vod",
       "name": "常规影视站",
-      "is_adult": false  // 或省略此字段，默认为 false
+      "is_adult": false // 或省略此字段，默认为 false
     },
     "adult_site": {
-      "api": "https://adult.example.com/api.php/provide/vod", 
+      "api": "https://adult.example.com/api.php/provide/vod",
       "name": "成人内容站",
-      "is_adult": true   // 标记为成人内容
+      "is_adult": true // 标记为成人内容
     }
   }
 }
 ```
 
 **安全提示**：
+
 - 默认情况下，所有新用户和未登录用户的成人内容过滤均为开启状态
 - 关闭过滤功能需要用户主动操作，确保使用意图明确
 - 建议管理员在配置资源站时准确标记 `is_adult` 字段

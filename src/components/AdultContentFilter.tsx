@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-
 import { Shield, ShieldOff } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface AdultContentFilterProps {
   userName: string;
