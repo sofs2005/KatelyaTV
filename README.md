@@ -102,14 +102,14 @@ KatelyaTV 新增了 TVBox 配置接口，可以将您的视频源导入到各种
 
 ### 📋 部署方式对比
 
-| 方式                          | 难度   | 成本     | 多用户 | 数据可靠性 | 推荐场景                    |
-| ----------------------------- | ------ | -------- | ------ | ---------- | --------------------------- |
-| 🐳 **Docker 单容器**          | ⭐     | 需服务器 | ❌     | ⭐⭐       | 个人使用，最简单            |
-| 🐳 **Docker + Redis**         | ⭐⭐   | 需服务器 | ✅     | ⭐⭐⭐     | 家庭/团队，功能完整         |
-| 🏪 **Docker + Kvrocks**       | ⭐⭐   | 需服务器 | ✅     | ⭐⭐⭐⭐⭐ | 生产环境，高可靠性          |
-| ☁️ **Vercel（单机版）**       | ⭐     | 免费     | ❌     | ⭐         | 临时体验，无服务器          |
-| ☁️ **Vercel + Upstash**       | ⭐⭐   | 免费     | ✅     | ⭐⭐⭐⭐   | **推荐**：无服务器 + 多用户 |
-| 🌐 **Cloudflare + D1**        | ⭐⭐⭐ | 免费     | ✅     | ⭐⭐⭐     | 技术爱好者                  |
+| 方式                    | 难度   | 成本     | 多用户 | 数据可靠性 | 推荐场景                    |
+| ----------------------- | ------ | -------- | ------ | ---------- | --------------------------- |
+| 🐳 **Docker 单容器**    | ⭐     | 需服务器 | ❌     | ⭐⭐       | 个人使用，最简单            |
+| 🐳 **Docker + Redis**   | ⭐⭐   | 需服务器 | ✅     | ⭐⭐⭐     | 家庭/团队，功能完整         |
+| 🏪 **Docker + Kvrocks** | ⭐⭐   | 需服务器 | ✅     | ⭐⭐⭐⭐⭐ | 生产环境，高可靠性          |
+| ☁️ **Vercel（单机版）** | ⭐     | 免费     | ❌     | ⭐         | 临时体验，无服务器          |
+| ☁️ **Vercel + Upstash** | ⭐⭐   | 免费     | ✅     | ⭐⭐⭐⭐   | **推荐**：无服务器 + 多用户 |
+| 🌐 **Cloudflare + D1**  | ⭐⭐⭐ | 免费     | ✅     | ⭐⭐⭐     | 技术爱好者                  |
 
 ---
 
@@ -625,14 +625,14 @@ docker compose -f docker-compose.kvrocks.yml up -d
 1. 在 Vercel 项目仪表板中，进入 **Settings** → **Environment Variables**
 2. 添加以下环境变量：
 
-| Key | Value | 说明 |
-|-----|-------|------|
-| `NEXT_PUBLIC_STORAGE_TYPE` | `upstash` | 启用 Upstash 存储 |
-| `UPSTASH_URL` | `https://xxx-xxx-xxx.upstash.io` | Upstash REST URL |
-| `UPSTASH_TOKEN` | `AXXXXxxxxxxxxxxxxxx` | Upstash REST Token |
-| `NEXT_PUBLIC_ENABLE_REGISTER` | `true` | 开启用户注册 |
-| `USERNAME` | `admin` | 管理员用户名 |
-| `PASSWORD` | `your_admin_password` | 管理员密码 |
+| Key                           | Value                            | 说明               |
+| ----------------------------- | -------------------------------- | ------------------ |
+| `NEXT_PUBLIC_STORAGE_TYPE`    | `upstash`                        | 启用 Upstash 存储  |
+| `UPSTASH_URL`                 | `https://xxx-xxx-xxx.upstash.io` | Upstash REST URL   |
+| `UPSTASH_TOKEN`               | `AXXXXxxxxxxxxxxxxxx`            | Upstash REST Token |
+| `NEXT_PUBLIC_ENABLE_REGISTER` | `true`                           | 开启用户注册       |
+| `USERNAME`                    | `admin`                          | 管理员用户名       |
+| `PASSWORD`                    | `your_admin_password`            | 管理员密码         |
 
 3. 点击 **Save** 保存配置
 
@@ -1244,8 +1244,8 @@ echo $UPSTASH_TOKEN  # 应该是长字符串令牌
 | ANNOUNCEMENT                | 站点公告                                                    | 任意字符串                       | 本网站仅提供影视信息搜索服务，所有内容均来自第三方网站。本站不存储任何视频资源，不对任何内容的准确性、合法性、完整性负责。 |
 | NEXT_PUBLIC_STORAGE_TYPE    | 播放记录/收藏的存储方式                                     | localstorage、redis、d1、upstash | localstorage                                                                                                               |
 | REDIS_URL                   | redis 连接 url，若 NEXT_PUBLIC_STORAGE_TYPE 为 redis 则必填 | 连接 url                         | 空                                                                                                                         |
-| UPSTASH_URL                 | upstash redis 连接 url（REST API）                             | 连接 url                         | 空                                                                                                                         |
-| UPSTASH_TOKEN               | upstash redis 连接 token（REST API）                           | 连接 token                       | 空                                                                                                                         |
+| UPSTASH_URL                 | upstash redis 连接 url（REST API）                          | 连接 url                         | 空                                                                                                                         |
+| UPSTASH_TOKEN               | upstash redis 连接 token（REST API）                        | 连接 token                       | 空                                                                                                                         |
 | NEXT_PUBLIC_ENABLE_REGISTER | 是否开放注册，仅在非 localstorage 部署时生效                | true / false                     | false                                                                                                                      |
 | NEXT_PUBLIC_SEARCH_MAX_PAGE | 搜索接口可拉取的最大页数                                    | 1-50                             | 5                                                                                                                          |
 | NEXT_PUBLIC_IMAGE_PROXY     | 默认的浏览器端图片代理                                      | url prefix                       | (空)                                                                                                                       |
