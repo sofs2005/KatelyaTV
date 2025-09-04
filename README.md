@@ -600,27 +600,30 @@ docker run -d \
 
 成人内容过滤功能需要服务器端存储支持，**不能使用 `localstorage` 存储类型**。
 
-| 部署平台       | 推荐存储类型 | 配置要求               |
-| -------------- | ------------ | ---------------------- |
-| Docker         | `redis` / `kvrocks` | 配置 Redis/Kvrocks 服务器 |
-| Vercel         | `upstash`    | 配置 Upstash Redis     |
-| Cloudflare Pages | `d1`       | 配置 D1 数据库         |
+| 部署平台         | 推荐存储类型        | 配置要求                  |
+| ---------------- | ------------------- | ------------------------- |
+| Docker           | `redis` / `kvrocks` | 配置 Redis/Kvrocks 服务器 |
+| Vercel           | `upstash`           | 配置 Upstash Redis        |
+| Cloudflare Pages | `d1`                | 配置 D1 数据库            |
 
 **Cloudflare Pages 特殊配置**：
 
 如果你使用 Cloudflare Pages 部署，**必须配置 D1 数据库**才能使用成人内容过滤功能：
 
 1. **创建 D1 数据库**：
+
    ```bash
    wrangler d1 create katelyatv-db
    ```
 
 2. **初始化数据库表**：
+
    ```bash
    wrangler d1 execute katelyatv-db --file=./scripts/d1-init.sql
    ```
 
 3. **配置环境变量**：
+
    ```bash
    NEXT_PUBLIC_STORAGE_TYPE=d1
    ```
@@ -636,7 +639,8 @@ docker run -d \
 **故障排除**：
 
 - ❌ **错误**："获取用户设置失败"
-  - **原因**：使用了 `localstorage` 存储类型，服务器端API无法访问
+
+  - **原因**：使用了 `localstorage` 存储类型，服务器端 API 无法访问
   - **解决**：按上述要求配置数据库存储
 
 - ❌ **错误**：过滤开关无法保存

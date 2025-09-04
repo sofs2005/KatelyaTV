@@ -20,6 +20,7 @@ wrangler d1 create katelyatv-db
 ```
 
 记录输出的数据库 ID，类似：
+
 ```
 ✅ Successfully created DB 'katelyatv-db' in region APAC
 Created your database using D1's new storage backend.
@@ -112,11 +113,13 @@ wrangler pages deploy .vercel/output/static --project-name katelyatv
 ### 错误："获取用户设置失败"
 
 **可能原因**：
+
 - 未配置 D1 数据库
 - `NEXT_PUBLIC_STORAGE_TYPE` 未设置为 `d1`
 - 数据库中缺少 `user_settings` 表
 
 **解决方案**：
+
 1. 检查环境变量配置
 2. 验证 D1 数据库绑定
 3. 执行数据库迁移：
@@ -127,10 +130,12 @@ wrangler pages deploy .vercel/output/static --project-name katelyatv
 ### 错误：D1 数据库连接失败
 
 **可能原因**：
+
 - wrangler.toml 中的数据库配置错误
 - Cloudflare Pages 中的 D1 绑定未正确配置
 
 **解决方案**：
+
 1. 验证 `wrangler.toml` 中的 database_id 是否正确
 2. 在 Cloudflare Pages Dashboard 中检查 Functions → D1 database bindings
 3. 确保绑定的变量名为 `DB`
@@ -138,10 +143,12 @@ wrangler pages deploy .vercel/output/static --project-name katelyatv
 ### 错误：构建失败
 
 **可能原因**：
+
 - Node.js 兼容性问题
 - 依赖安装失败
 
 **解决方案**：
+
 1. 确保启用了 `nodejs_compat` 兼容性标志
 2. 检查构建命令是否正确
 3. 查看构建日志中的具体错误信息
@@ -167,11 +174,13 @@ wrangler pages deploy .vercel/output/static --project-name katelyatv
 当项目更新包含数据库结构变更时：
 
 1. **备份数据**：
+
    ```bash
    wrangler d1 export katelyatv-db --output backup.sql
    ```
 
 2. **执行迁移**：
+
    ```bash
    wrangler d1 execute katelyatv-db --file=D1_MIGRATION.md的SQL脚本
    ```
