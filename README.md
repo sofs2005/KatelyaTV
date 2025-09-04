@@ -578,8 +578,9 @@ docker compose -f docker-compose.kvrocks.yml up -d
 **第一步：下载配置文件**
 
 选择以下任一配置文件：
+
 - **基础版**: [config.json](https://www.mediafire.com/file/xl3yo7la2ci378w/config.json/file)
-- **Plus版**: [配置文件 Plus 版本【94 片源】](https://www.mediafire.com/file/fbpk1mlupxp3u3v/configplus.json/file)
+- **Plus 版**: [配置文件 Plus 版本【94 片源】](https://www.mediafire.com/file/fbpk1mlupxp3u3v/configplus.json/file)
 
 **第二步：获取正确的 JSON 内容**
 
@@ -739,8 +740,9 @@ Vercel 会自动重新部署（约 1-2 分钟），部署成功后即可正常�
 **第一步：下载配置文件**
 
 选择以下任一配置文件下载：
+
 - **基础版**: [config.json](https://www.mediafire.com/file/xl3yo7la2ci378w/config.json/file)
-- **Plus版**: [配置文件 Plus 版本【94 片源】](https://www.mediafire.com/file/fbpk1mlupxp3u3v/configplus.json/file)
+- **Plus 版**: [配置文件 Plus 版本【94 片源】](https://www.mediafire.com/file/fbpk1mlupxp3u3v/configplus.json/file)
 
 **第二步：验证下载的文件内容**
 
@@ -759,8 +761,8 @@ Vercel 会自动重新部署（约 1-2 分钟），部署成功后即可正常�
 
 1. **进入仓库**: 回到你 Fork 的 GitHub 仓库
 2. **编辑文件**: 找到 `config.json` 文件，点击 **✏️ 编辑** 按钮
-3. **替换内容**: 
-   - **删除所有原有内容** 
+3. **替换内容**:
+   - **删除所有原有内容**
    - **粘贴从本地文件复制的完整 JSON 内容**
    - **确保内容以 `{` 开头，以 `}` 结尾**
 4. **验证格式**: 在提交前检查内容是否为有效的 JSON 格式
@@ -782,6 +784,7 @@ Vercel 会自动重新部署（约 1-2 分钟），部署成功后即可正常�
 4. **查看构建日志**: 在 Cloudflare Pages 的部署页面查看详细错误信息
 
 **示例正确的 JSON 格式开头：**
+
 ```json
 {
   "cache_time": 7200,
