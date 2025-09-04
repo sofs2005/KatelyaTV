@@ -11,7 +11,7 @@
 ### 1. "获取用户设置失败" 错误
 
 **原因**：缺少 `user_settings` 表
-**解决**：执行上述迁移SQL，确保user_settings表已创建
+**解决**：执行上述迁移 SQL，确保 user_settings 表已创建
 
 ### 2. "表已存在" 错误
 
@@ -20,7 +20,7 @@
 
 ### 3. 外键约束错误
 
-**原因**：users表不存在或结构不匹配
+**原因**：users 表不存在或结构不匹配
 **解决**：确保先运行完整的 `./scripts/d1-init.sql` 初始化脚本
 
 ### 4. 🚨 表结构不兼容问题（重要修复）
@@ -53,7 +53,7 @@ CREATE INDEX IF NOT EXISTS idx_user_settings_updated_time ON user_settings(updat
 
 -- 插入用户设置（JSON格式，替换为您的用户名）
 INSERT INTO user_settings (username, settings, updated_time) VALUES (
-  'your_username_here', 
+  'your_username_here',
   '{"filter_adult_content":true,"theme":"auto","language":"zh-CN","auto_play":true,"video_quality":"auto"}',
   strftime('%s', 'now')
 );
@@ -79,6 +79,7 @@ PASSWORD = your_password_here
 #### 第四步：确认 D1 绑定
 
 在 Cloudflare Pages → Settings → Functions → D1 database bindings：
+
 - **Variable name**: `DB`
 - **D1 database**: 选择您的数据库
 
@@ -90,16 +91,16 @@ PASSWORD = your_password_here
 
 **表结构说明**：
 
-| 字段名         | 类型    | 说明                                    |
-| -------------- | ------- | --------------------------------------- |
-| `id`           | INTEGER | 主键，自动递增                          |
-| `username`     | TEXT    | 用户名，必须与 users 表中的用户名匹配   |
-| `settings`     | TEXT    | 用户设置的 JSON 字符串                  |
-| `updated_time` | INTEGER | 更新时间戳（Unix 时间戳）               |
+| 字段名         | 类型    | 说明                                  |
+| -------------- | ------- | ------------------------------------- |
+| `id`           | INTEGER | 主键，自动递增                        |
+| `username`     | TEXT    | 用户名，必须与 users 表中的用户名匹配 |
+| `settings`     | TEXT    | 用户设置的 JSON 字符串                |
+| `updated_time` | INTEGER | 更新时间戳（Unix 时间戳）             |
 
 **settings JSON 格式**：
 
-```json
+````json
 {
   "filter_adult_content": true,  // 成人内容过滤开关
   "theme": "auto",              // 主题设置
@@ -129,7 +130,7 @@ CREATE TABLE IF NOT EXISTS user_settings (
 -- 为用户设置添加索引以优化查询性能
 CREATE INDEX IF NOT EXISTS idx_user_settings_user_id ON user_settings(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_settings_username ON user_settings(username);
-```
+````
 
 ### skip_configs 表（跳过功能 - 可选）
 

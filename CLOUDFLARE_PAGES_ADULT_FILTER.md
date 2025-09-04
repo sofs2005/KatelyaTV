@@ -143,6 +143,7 @@ wrangler pages deploy .vercel/output/static --project-name katelyatv
 ### 🚨 错误：功能正常但开关无法操作（重要修复）
 
 **问题描述**：
+
 - 页面不再显示"获取用户设置失败"错误
 - 但成人内容过滤开关无法切换，点击无响应
 
@@ -177,7 +178,7 @@ CREATE INDEX IF NOT EXISTS idx_user_settings_updated_time ON user_settings(updat
 ```sql
 -- 插入设置数据（请替换 'your_username' 为实际用户名）
 INSERT INTO user_settings (username, settings, updated_time) VALUES (
-  'your_username', 
+  'your_username',
   '{"filter_adult_content":true,"theme":"auto","language":"zh-CN","auto_play":true,"video_quality":"auto"}',
   strftime('%s', 'now')
 );
@@ -197,6 +198,7 @@ SELECT * FROM user_settings WHERE username = 'your_username';
 3. 测试成人内容过滤开关功能
 
 **重要说明**：
+
 - `settings` 字段必须是有效的 JSON 字符串
 - `filter_adult_content` 为 `true` 表示开启过滤
 - `updated_time` 使用 Unix 时间戳格式
