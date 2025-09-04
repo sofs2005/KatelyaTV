@@ -262,6 +262,7 @@ export async function getConfig(): Promise<AdminConfig> {
           detail: site.detail,
           from: 'config',
           disabled: false,
+          is_adult: (site as any).is_adult || false, // 确保处理 is_adult 字段
         });
       }
     });
@@ -271,6 +272,12 @@ export async function getConfig(): Promise<AdminConfig> {
     adminConfig.SourceConfig.forEach((source) => {
       if (!apiSiteKeys.has(source.key)) {
         source.from = 'custom';
+      } else {
+        // 更新现有源的 is_adult 字段
+        const siteConfig = fileConfig.api_site[source.key];
+        if (siteConfig) {
+          source.is_adult = (siteConfig as any).is_adult || false;
+        }
       }
     });
 
@@ -388,7 +395,20 @@ export async function getCacheTime(): Promise<number> {
 
 export async function getAvailableApiSites(filterAdult = false): Promise<ApiSite[]> {
   const config = await getConfig();
-  let sites = config.SourceConfig.filter((s) => !s.disabled);
+  
+  // 防御性检查：确保 SourceConfig 存在且为数组
+  if (!config.SourceConfig || !Array.isArray(config.SourceConfig)) {
+    console.warn('SourceConfig is missing or not an array, returning empty array');
+    return [];
+  }
+  
+  // 防御性处理：为每个源确保 is_adult 字段存在
+  let sites = config.SourceConfig
+    .filter((s) => !s.disabled)
+    .map((s) => ({
+      ...s,
+      is_adult: s.is_adult === true // 严格检查，只有明确为 true 的才是成人内容
+    }));
   
   // 如果需要过滤成人内容，则排除标记为成人内容的资源站
   if (filterAdult) {
@@ -406,8 +426,16 @@ export async function getAvailableApiSites(filterAdult = false): Promise<ApiSite
 // 获取成人内容资源站
 export async function getAdultApiSites(): Promise<ApiSite[]> {
   const config = await getConfig();
+  
+  // 防御性检查：确保 SourceConfig 存在且为数组
+  if (!config.SourceConfig || !Array.isArray(config.SourceConfig)) {
+    console.warn('SourceConfig is missing or not an array, returning empty array');
+    return [];
+  }
+  
+  // 防御性处理：严格检查成人内容标记
   const adultSites = config.SourceConfig
-    .filter((s) => !s.disabled && s.is_adult);
+    .filter((s) => !s.disabled && s.is_adult === true); // 只有明确为 true 的才被认为是成人内容
   
   return adultSites.map((s) => ({
     key: s.key,
