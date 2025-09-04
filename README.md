@@ -411,6 +411,9 @@ nano .env
 # 存储类型：使用 Kvrocks
 NEXT_PUBLIC_STORAGE_TYPE=kvrocks
 
+# 站点全局访问密码 (必填)
+PASSWORD=your_site_access_password
+
 # Kvrocks 连接配置
 KVROCKS_URL=redis://kvrocks:6666
 KVROCKS_PASSWORD=your_secure_password_here  # 改成你的密码
