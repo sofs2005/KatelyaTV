@@ -3,7 +3,7 @@
 import { createClient, RedisClientType } from 'redis';
 
 import { AdminConfig } from './admin.types';
-import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord } from './types';
+import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord, UserSettings } from './types';
 
 // 搜索历史最大条数
 const SEARCH_HISTORY_LIMIT = 20;
@@ -336,6 +336,48 @@ export class KvrocksStorage implements IStorage {
     await withRetry(() =>
       this.client.set(this.adminConfigKey(), JSON.stringify(config))
     );
+  }
+
+  // ---------- 用户设置 ----------
+  private userSettingsKey(userName: string) {
+    return `u:${userName}:settings`;
+  }
+
+  async getUserSettings(userName: string): Promise<UserSettings | null> {
+    const val = await withRetry(() =>
+      this.client.get(this.userSettingsKey(userName))
+    );
+    return val ? (JSON.parse(val) as UserSettings) : null;
+  }
+
+  async setUserSettings(
+    userName: string,
+    settings: UserSettings
+  ): Promise<void> {
+    await withRetry(() =>
+      this.client.set(this.userSettingsKey(userName), JSON.stringify(settings))
+    );
+  }
+
+  async updateUserSettings(
+    userName: string,
+    settings: Partial<UserSettings>
+  ): Promise<void> {
+    const current = await this.getUserSettings(userName);
+    const defaultSettings: UserSettings = {
+      filter_adult_content: true,
+      theme: 'auto',
+      language: 'zh-CN',
+      auto_play: false,
+      video_quality: 'auto'
+    };
+    const updated: UserSettings = { 
+      ...defaultSettings, 
+      ...current, 
+      ...settings,
+      filter_adult_content: settings.filter_adult_content ?? current?.filter_adult_content ?? true
+    };
+    await this.setUserSettings(userName, updated);
   }
 }
 

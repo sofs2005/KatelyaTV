@@ -1,7 +1,7 @@
 /* eslint-disable no-console, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 
 import { AdminConfig } from './admin.types';
-import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord } from './types';
+import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord, UserSettings } from './types';
 
 // 搜索历史最大条数
 const SEARCH_HISTORY_LIMIT = 20;
@@ -572,5 +572,64 @@ export class D1Storage implements IStorage {
       console.error('Failed to delete skip config:', err);
       throw err;
     }
+  }
+
+  // ---------- 用户设置 ----------
+  async getUserSettings(userName: string): Promise<UserSettings | null> {
+    try {
+      const db = await this.getDatabase();
+      const row = await db
+        .prepare('SELECT settings FROM user_settings WHERE username = ?')
+        .bind(userName)
+        .first();
+      
+      if (row && row.settings) {
+        return JSON.parse(row.settings as string) as UserSettings;
+      }
+      return null;
+    } catch (err) {
+      console.error('Failed to get user settings:', err);
+      throw err;
+    }
+  }
+
+  async setUserSettings(
+    userName: string,
+    settings: UserSettings
+  ): Promise<void> {
+    try {
+      const db = await this.getDatabase();
+      await db
+        .prepare(`
+          INSERT OR REPLACE INTO user_settings (username, settings, updated_time)
+          VALUES (?, ?, ?)
+        `)
+        .bind(userName, JSON.stringify(settings), Date.now())
+        .run();
+    } catch (err) {
+      console.error('Failed to set user settings:', err);
+      throw err;
+    }
+  }
+
+  async updateUserSettings(
+    userName: string,
+    settings: Partial<UserSettings>
+  ): Promise<void> {
+    const current = await this.getUserSettings(userName);
+    const defaultSettings: UserSettings = {
+      filter_adult_content: true,
+      theme: 'auto',
+      language: 'zh-CN',
+      auto_play: false,
+      video_quality: 'auto'
+    };
+    const updated: UserSettings = { 
+      ...defaultSettings, 
+      ...current, 
+      ...settings,
+      filter_adult_content: settings.filter_adult_content ?? current?.filter_adult_content ?? true
+    };
+    await this.setUserSettings(userName, updated);
   }
 }

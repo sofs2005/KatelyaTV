@@ -26,6 +26,18 @@ CREATE TABLE IF NOT EXISTS skip_configs (
 CREATE INDEX IF NOT EXISTS idx_skip_configs_username ON skip_configs(username);
 CREATE INDEX IF NOT EXISTS idx_skip_configs_username_key ON skip_configs(username, key);
 CREATE INDEX IF NOT EXISTS idx_skip_configs_username_updated_time ON skip_configs(username, updated_time DESC);
+
+-- 创建用户设置表（成人内容过滤功能）
+CREATE TABLE IF NOT EXISTS user_settings (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT NOT NULL UNIQUE,
+  settings TEXT NOT NULL,
+  updated_time INTEGER NOT NULL
+);
+
+-- 为用户设置添加索引以优化查询性能
+CREATE INDEX IF NOT EXISTS idx_user_settings_username ON user_settings(username);
+CREATE INDEX IF NOT EXISTS idx_user_settings_updated_time ON user_settings(updated_time DESC);
 ```
 
 ## 🚀 执行迁移的方法

@@ -329,6 +329,48 @@ export class UpstashRedisStorage implements IStorage {
       await this.client.srem(this.skipConfigsKey(userName), key);
     });
   }
+
+  // ---------- 用户设置 ----------
+  private userSettingsKey(userName: string) {
+    return `u:${userName}:settings`;
+  }
+
+  async getUserSettings(userName: string): Promise<UserSettings | null> {
+    const val = await withRetry(() =>
+      this.client.get(this.userSettingsKey(userName))
+    );
+    return val ? (val as UserSettings) : null;
+  }
+
+  async setUserSettings(
+    userName: string,
+    settings: UserSettings
+  ): Promise<void> {
+    await withRetry(() =>
+      this.client.set(this.userSettingsKey(userName), settings)
+    );
+  }
+
+  async updateUserSettings(
+    userName: string,
+    settings: Partial<UserSettings>
+  ): Promise<void> {
+    const current = await this.getUserSettings(userName);
+    const defaultSettings: UserSettings = {
+      filter_adult_content: true,
+      theme: 'auto',
+      language: 'zh-CN',
+      auto_play: false,
+      video_quality: 'auto'
+    };
+    const updated: UserSettings = { 
+      ...defaultSettings, 
+      ...current, 
+      ...settings,
+      filter_adult_content: settings.filter_adult_content ?? current?.filter_adult_content ?? true
+    };
+    await this.setUserSettings(userName, updated);
+  }
 }
 
 // 单例 Upstash Redis 客户端
