@@ -46,16 +46,21 @@ export async function GET(request: Request) {
       shouldFilterAdult = userSettings?.filter_adult_content !== false;
     }
 
-    // 获取常规资源站
-    const regularSites = await getAvailableApiSites(true); // 总是过滤成人内容
-    console.log('搜索API - 获取到的常规站点数量:', regularSites.length);
-    console.log('搜索API - 常规站点列表:', regularSites.map(s => s.name).join(', '));
-    
-    const regularSearchPromises = regularSites.map((site) => searchFromApi(site, query));
-    const regularResults = (await Promise.all(regularSearchPromises)).flat();
-    console.log('搜索API - 常规搜索结果数量:', regularResults.length);
+      // 获取所有可用的API站点（不包含成人内容）
+  const regularSites = await getAvailableApiSites();
+  
+  if (!regularSites || regularSites.length === 0) {
+    return Response.json({ 
+      regular_results: [], 
+      adult_results: [] 
+    });
+  }
 
-    let adultResults: unknown[] = [];
+  // 搜索常规（非成人）内容
+  const regularSearchPromises = regularSites.map((site) => searchFromApi(site, query));
+  const regularResults = (await Promise.all(regularSearchPromises)).flat();
+
+  let adultResults: unknown[] = [];
     
     // 如果用户设置允许且明确请求包含成人内容，则搜索成人资源站
     if (!shouldFilterAdult && includeAdult) {
