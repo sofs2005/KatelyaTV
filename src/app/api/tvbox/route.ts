@@ -69,20 +69,25 @@ export async function GET(request: NextRequest) {
       wallpaper: `${baseUrl}/screenshot1.png`, // 使用项目截图作为壁纸
       
       // 影视源配置
-      sites: sourceConfigs.map((source) => ({
-        key: source.key || source.name,
-        name: source.name,
-        type: 0, // 影视源
-        api: source.api,
-        searchable: 1, // 可搜索
-        quickSearch: 1, // 支持快速搜索
-        filterable: 1, // 支持分类筛选
-        ext: source.detail || '', // 详情页地址作为扩展参数
-        timeout: 30, // 30秒超时
-        categories: [
-          "电影", "电视剧", "综艺", "动漫", "纪录片", "短剧"
-        ]
-      })),
+      sites: sourceConfigs.map((source) => {
+        // 智能判断type：如果api地址以.json结尾，则type为1，否则为0
+        const type = source.api.toLowerCase().endsWith('.json') ? 1 : 0;
+        
+        return {
+          key: source.key || source.name,
+          name: source.name,
+          type: type, // 使用智能判断的type
+          api: source.api,
+          searchable: 1, // 可搜索
+          quickSearch: 1, // 支持快速搜索
+          filterable: 1, // 支持分类筛选
+          ext: source.detail || '', // 详情页地址作为扩展参数
+          timeout: 30, // 30秒超时
+          categories: [
+            "电影", "电视剧", "综艺", "动漫", "纪录片", "短剧"
+          ]
+        };
+      }),
 
       // 解析源配置（添加一些常用的解析源）
       parses: [
