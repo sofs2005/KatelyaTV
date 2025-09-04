@@ -20,6 +20,7 @@ import { DoubanItem } from '@/lib/types';
 import CapsuleSwitch from '@/components/CapsuleSwitch';
 import ContinueWatching from '@/components/ContinueWatching';
 import PageLayout from '@/components/PageLayout';
+import PaginatedRow from '@/components/PaginatedRow';
 import { useSite } from '@/components/SiteProvider';
 import VideoCard from '@/components/VideoCard';
 
@@ -291,7 +292,7 @@ function HomeClient() {
                     <ChevronRight className='w-4 h-4 ml-1' />
                   </Link>
                 </div>
-                <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4'>
+                <PaginatedRow itemsPerPage={10}>
                   {loading
                     ? // 加载状态显示灰色占位数据 (显示10个，2行x5列)
                       Array.from({ length: 10 }).map((_, index) => (
@@ -305,8 +306,8 @@ function HomeClient() {
                           <div className='mt-2 h-4 bg-purple-200 rounded animate-pulse dark:bg-purple-800'></div>
                         </div>
                       ))
-                    : // 显示真实数据，只显示前10个实现2行布局
-                      hotMovies.slice(0, 10).map((movie, index) => (
+                    : // 显示真实数据
+                      hotMovies.map((movie, index) => (
                         <div
                           key={index}
                           className='w-full'
@@ -322,7 +323,7 @@ function HomeClient() {
                           />
                         </div>
                       ))}
-                </div>
+                </PaginatedRow>
               </section>
 
               {/* 热门剧集 */}
@@ -339,7 +340,7 @@ function HomeClient() {
                     <ChevronRight className='w-4 h-4 ml-1' />
                   </Link>
                 </div>
-                <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4'>
+                <PaginatedRow itemsPerPage={10}>
                   {loading
                     ? // 加载状态显示灰色占位数据 (显示10个，2行x5列)
                       Array.from({ length: 10 }).map((_, index) => (
@@ -353,8 +354,8 @@ function HomeClient() {
                           <div className='mt-2 h-4 bg-purple-200 rounded animate-pulse dark:bg-purple-800'></div>
                         </div>
                       ))
-                    : // 显示真实数据，只显示前10个实现2行布局
-                      hotTvShows.slice(0, 10).map((show, index) => (
+                    : // 显示真实数据
+                      hotTvShows.map((show, index) => (
                         <div
                           key={index}
                           className='w-full'
@@ -369,7 +370,7 @@ function HomeClient() {
                           />
                         </div>
                       ))}
-                </div>
+                </PaginatedRow>
               </section>
 
               {/* 热门综艺 */}
@@ -386,7 +387,7 @@ function HomeClient() {
                     <ChevronRight className='w-4 h-4 ml-1' />
                   </Link>
                 </div>
-                <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4'>
+                <PaginatedRow itemsPerPage={10}>
                   {loading
                     ? // 加载状态显示灰色占位数据 (显示10个，2行x5列)
                       Array.from({ length: 10 }).map((_, index) => (
@@ -400,8 +401,8 @@ function HomeClient() {
                           <div className='mt-2 h-4 bg-purple-200 rounded animate-pulse dark:bg-purple-800'></div>
                         </div>
                       ))
-                    : // 显示真实数据，只显示前10个实现2行布局
-                      hotVarietyShows.slice(0, 10).map((show, index) => (
+                    : // 显示真实数据
+                      hotVarietyShows.map((show, index) => (
                         <div
                           key={index}
                           className='w-full'
@@ -416,7 +417,7 @@ function HomeClient() {
                           />
                         </div>
                       ))}
-                </div>
+                </PaginatedRow>
               </section>
 
               {/* 首页底部 Logo */}

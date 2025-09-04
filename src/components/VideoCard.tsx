@@ -228,7 +228,7 @@ export default function VideoCard({
     const configs = {
       playrecord: {
         showSourceName: true,
-        showProgress: true,
+        showProgress: false,
         showPlayButton: true,
         showHeart: true,
         showCheckCircle: true,
