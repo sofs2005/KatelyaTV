@@ -30,4 +30,4 @@ INSERT OR IGNORE INTO admin_configs (config_key, config_value, description) VALU
 ('cache_ttl', '3600', '缓存时间（秒）');
 
 -- 可选：删除旧表（请谨慎使用，建议先备份数据）
-DROP TABLE IF EXISTS admin_config;
+-- DROP TABLE IF EXISTS admin_config;
