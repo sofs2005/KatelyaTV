@@ -560,15 +560,15 @@
       "is_adult": true
     },
     "adult_site": {
-      "api": "http://www.afasu.com/api/json.php",
-      "name": "小湿妹资源",
-      "detail": "http://www.afasu.com",
-      "is_adult": true
-    },
-    "adult_site": {
       "api": "https://apilsbzy1.com/api.php/provide/vod",
       "name": "老色逼资源",
       "detail": "https://apilsbzy1.com",
+      "is_adult": true
+    },   
+    "adult_site": {
+      "api": "http://www.afasu.com/api/json.php",
+      "name": "小湿妹资源",
+      "detail": "http://www.afasu.com",
       "is_adult": true
     }	
   }
