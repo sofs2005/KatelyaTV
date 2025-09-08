@@ -434,7 +434,7 @@ curl -H "Authorization: Bearer $UPSTASH_TOKEN" \
     },
     "adult_site": {
       "api": " ",
-      "name": "成人内容站",
+      "name": "成人影视站",
       "detail": " ",
       "is_adult": true  // 标记为成人内容
     }
