@@ -424,16 +424,19 @@ curl -H "Authorization: Bearer $UPSTASH_TOKEN" \
 ```json
 // config.json 中的资源站配置
 {
+  "cache_time": 7200,
   "api_site": {
     "regular_site": {
-      "api": "https://example.com/api.php/provide/vod",
+      "api": " ",
       "name": "常规影视站",
-      "is_adult": false // 或省略此字段，默认为 false
+      "detail": " ",	  
+      "is_adult": false  // 或省略此字段，默认为 false
     },
     "adult_site": {
-      "api": "https://adult.example.com/api.php/provide/vod",
+      "api": " ",
       "name": "成人内容站",
-      "is_adult": true // 标记为成人内容
+      "detail": " ",
+      "is_adult": true  // 标记为成人内容
     }
   }
 }
