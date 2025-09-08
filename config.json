@@ -1,6 +1,5 @@
 {
-  "cache_time": 7200,
-  //常规资源  
+  "cache_time": 7200,  
   "api_site": {
     "1080zyku": {
       "api": "https://api.1080zyku.com/inc/api_mac10.php",
@@ -337,8 +336,7 @@
       "name": "猫眼资源",
       "detail": "https://api.maoyanapi.top",
       "is_adult": false
-    },
-    //成人资源		
+    },		
     "adult_site": {
       "api": "https://api.douapi.cc/api.php/provide/vod",
       "name": "豆豆资源",
