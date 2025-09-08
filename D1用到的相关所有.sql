@@ -266,34 +266,6 @@ INSERT OR IGNORE INTO admin_configs (config_key, config_value, description) VALU
 -- 可选：删除旧表（请谨慎使用，建议先备份数据）
 -- DROP TABLE IF EXISTS admin_config;
 
-
--- 删除现有的不兼容表
-DROP TABLE IF EXISTS user_settings;
-
--- 创建与代码完全兼容的表结构
-CREATE TABLE user_settings (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  username TEXT NOT NULL UNIQUE,
-  settings TEXT NOT NULL,
-  updated_time INTEGER NOT NULL
-);
-
--- 添加必要索引
-CREATE INDEX IF NOT EXISTS idx_user_settings_username ON user_settings(username);
-CREATE INDEX IF NOT EXISTS idx_user_settings_updated_time ON user_settings(updated_time DESC);
-
-
--- 插入设置数据（请替换 'your_username' 为实际用户名）
-INSERT INTO user_settings (username, settings, updated_time) VALUES (
-  'your_username',
-  '{"filter_adult_content":true,"theme":"auto","language":"zh-CN","auto_play":true,"video_quality":"auto"}',
-  strftime('%s', 'now')
-);
-
--- 验证数据插入成功
-SELECT * FROM user_settings WHERE username = 'your_username';
-
-
 CREATE TABLE IF NOT EXISTS user_settings (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL,
@@ -352,3 +324,30 @@ PRAGMA table_info(skip_configs);
 
 -- 检查索引是否创建
 SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='skip_configs';
+
+
+-- 删除现有的不兼容表
+DROP TABLE IF EXISTS user_settings;
+
+-- 创建与代码完全兼容的表结构
+CREATE TABLE user_settings (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT NOT NULL UNIQUE,
+  settings TEXT NOT NULL,
+  updated_time INTEGER NOT NULL
+);
+
+-- 添加必要索引
+CREATE INDEX IF NOT EXISTS idx_user_settings_username ON user_settings(username);
+CREATE INDEX IF NOT EXISTS idx_user_settings_updated_time ON user_settings(updated_time DESC);
+
+
+-- 插入设置数据（请替换 'your_username' 为实际用户名）
+INSERT INTO user_settings (username, settings, updated_time) VALUES (
+  'your_username',
+  '{"filter_adult_content":true,"theme":"auto","language":"zh-CN","auto_play":true,"video_quality":"auto"}',
+  strftime('%s', 'now')
+);
+
+-- 验证数据插入成功
+SELECT * FROM user_settings WHERE username = 'your_username';
