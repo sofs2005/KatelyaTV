@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
           });
           targetEntry =
             adminConfig.UserConfig.Users[
-              adminConfig.UserConfig.Users.length - 1
+            adminConfig.UserConfig.Users.length - 1
             ];
           break;
         }
@@ -329,6 +329,83 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error: '用户管理操作失败',
+        details: (error as Error).message,
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
+  if (storageType === 'localstorage') {
+    return NextResponse.json(
+      {
+        error: '不支持本地存储进行管理员配置',
+      },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const body = await request.json();
+
+    const authInfo = getAuthInfoFromCookie(request);
+    if (!authInfo || !authInfo.username) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const username = authInfo.username;
+
+    const {
+      targetUsername,
+      filterAdultContent,
+    } = body as {
+      targetUsername: string;
+      filterAdultContent: boolean;
+    };
+
+    if (!targetUsername || typeof filterAdultContent !== 'boolean') {
+      return NextResponse.json({ error: '参数格式错误' }, { status: 400 });
+    }
+
+    // 获取配置与存储
+    const adminConfig = await getConfig();
+    const storage: IStorage | null = getStorage();
+
+    // 判定操作者角色
+    if (username !== process.env.USERNAME) {
+      const userEntry = adminConfig.UserConfig.Users.find(
+        (u) => u.username === username
+      );
+      if (!userEntry || userEntry.role !== 'admin') {
+        return NextResponse.json({ error: '权限不足' }, { status: 401 });
+      }
+    }
+
+    // 查找目标用户是否存在
+    const targetUserExists = await storage.checkUserExist(targetUsername);
+    if (!targetUserExists) {
+      return NextResponse.json({ error: '目标用户不存在' }, { status: 404 });
+    }
+
+    // 更新用户设置
+    await storage.updateUserSettings(targetUsername, {
+      filter_adult_content: filterAdultContent,
+    });
+
+    return NextResponse.json(
+      { ok: true, message: '用户设置更新成功' },
+      {
+        headers: {
+          'Cache-Control': 'no-store',
+        },
+      }
+    );
+  } catch (error) {
+    console.error('更新用户设置失败:', error);
+    return NextResponse.json(
+      {
+        error: '更新用户设置失败',
         details: (error as Error).message,
       },
       { status: 500 }

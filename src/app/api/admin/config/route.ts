@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AdminConfigResult } from '@/lib/admin.types';
 import { getAuthInfoFromCookie } from '@/lib/auth';
 import { getConfig } from '@/lib/config';
+import { getStorage } from '@/lib/db';
 
 export const runtime = 'edge';
 
@@ -27,6 +28,23 @@ export async function GET(request: NextRequest) {
 
   try {
     const config = await getConfig();
+    const storage = getStorage();
+
+    // Fetch settings for all users in parallel
+    const usersWithSettings = await Promise.all(
+      config.UserConfig.Users.map(async (user: any) => {
+        const settings = await storage.getUserSettings(user.username);
+        return {
+          ...user,
+          // Ensure a default value if settings are not found
+          filter_adult_content: settings?.filter_adult_content ?? true,
+        };
+      })
+    );
+
+    // Replace the original users array with the enriched one
+    config.UserConfig.Users = usersWithSettings;
+
     const result: AdminConfigResult = {
       Role: 'owner',
       Config: config,

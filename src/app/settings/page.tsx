@@ -6,7 +6,6 @@ import { useEffect, useState } from 'react';
 
 import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 
-import AdultContentFilter from '@/components/AdultContentFilter';
 
 export default function UserSettingsPage() {
   const router = useRouter();
@@ -24,10 +23,6 @@ export default function UserSettingsPage() {
     setIsLoading(false);
   }, [router]);
 
-  const handleFilterUpdate = (_enabled: boolean) => {
-    // 可以在这里添加一些全局状态更新或通知逻辑
-    // console.log('成人内容过滤状态已更新:', enabled);
-  };
 
   if (isLoading) {
     return (
@@ -79,10 +74,11 @@ export default function UserSettingsPage() {
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
               内容过滤
             </h2>
-            <AdultContentFilter 
-              userName={authInfo.userName} 
-              onUpdate={handleFilterUpdate}
-            />
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <p className="text-gray-500 dark:text-gray-400">
+                内容过滤设置已移至管理员后台统一管理。
+              </p>
+            </div>
           </div>
 
           {/* 其他设置部分预留 */}
