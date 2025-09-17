@@ -552,7 +552,7 @@
       "is_adult": false
     }
   }, 
-  "custom_category": {
+  "custom_category": [
     {
       "name": "热门",
       "type": "movie",
@@ -683,5 +683,5 @@
       "type": "tv",
       "query": "纪录片"
     }
-  }
+  ]
 }
