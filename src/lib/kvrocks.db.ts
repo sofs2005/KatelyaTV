@@ -371,11 +371,10 @@ export class KvrocksStorage implements IStorage {
       auto_play: false,
       video_quality: 'auto'
     };
-    const updated: UserSettings = { 
-      ...defaultSettings, 
-      ...current, 
+    const updated: UserSettings = {
+      ...defaultSettings,
+      ...current,
       ...settings,
-      filter_adult_content: settings.filter_adult_content ?? current?.filter_adult_content ?? true
     };
     await this.setUserSettings(userName, updated);
   }

@@ -70,16 +70,6 @@ export default function UserSettingsPage() {
         {/* 设置区域 */}
         <div className="space-y-6">
           {/* 内容过滤设置 */}
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              内容过滤
-            </h2>
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <p className="text-gray-500 dark:text-gray-400">
-                内容过滤设置已移至管理员后台统一管理。
-              </p>
-            </div>
-          </div>
 
           {/* 其他设置部分预留 */}
           <div>
