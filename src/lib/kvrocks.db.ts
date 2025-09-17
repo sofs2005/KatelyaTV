@@ -363,20 +363,30 @@ export class KvrocksStorage implements IStorage {
     userName: string,
     settings: Partial<UserSettings>
   ): Promise<void> {
-    const current = await this.getUserSettings(userName);
+    const current = (await this.getUserSettings(userName)) || {};
     const defaultSettings: UserSettings = {
       filter_adult_content: true,
       theme: 'auto',
       language: 'zh-CN',
       auto_play: false,
-      video_quality: 'auto'
+      video_quality: 'auto',
     };
-    const updated: UserSettings = {
+
+    // 合并设置，确保 current 不为 null
+    const mergedSettings = {
       ...defaultSettings,
       ...current,
       ...settings,
     };
-    await this.setUserSettings(userName, updated);
+
+    // 移除 undefined 键
+    Object.keys(mergedSettings).forEach((key) => {
+      if (mergedSettings[key as keyof typeof mergedSettings] === undefined) {
+        delete mergedSettings[key as keyof typeof mergedSettings];
+      }
+    });
+
+    await this.setUserSettings(userName, mergedSettings as UserSettings);
   }
 }
 
