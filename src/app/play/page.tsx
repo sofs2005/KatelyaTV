@@ -806,9 +806,14 @@ function PlayPageClient() {
   const handlePreviousEpisode = () => {
     const d = detailRef.current;
     const idx = currentEpisodeIndexRef.current;
-    if (d && d.episodes && idx > 0) {
+    if (contentType === 'video' && d && d.episodes && idx > 0) {
       if (artPlayerRef.current && !artPlayerRef.current.paused) {
         saveCurrentPlayProgress();
+      }
+      setCurrentEpisodeIndex(idx - 1);
+    } else if (contentType === 'audiobook' && idx > 0) {
+      if (artPlayerRef.current && !artPlayerRef.current.paused) {
+        // saveCurrentPlayProgress(); // Audiobook progress saving is disabled for now
       }
       setCurrentEpisodeIndex(idx - 1);
     }
@@ -817,9 +822,14 @@ function PlayPageClient() {
   const handleNextEpisode = () => {
     const d = detailRef.current;
     const idx = currentEpisodeIndexRef.current;
-    if (d && d.episodes && idx < (d.episodes?.length || 0) - 1) {
+    if (contentType === 'video' && d && d.episodes && idx < (d.episodes?.length || 0) - 1) {
       if (artPlayerRef.current && !artPlayerRef.current.paused) {
         saveCurrentPlayProgress();
+      }
+      setCurrentEpisodeIndex(idx + 1);
+    } else if (contentType === 'audiobook' && idx < audiobookTotalTracks - 1) {
+      if (artPlayerRef.current && !artPlayerRef.current.paused) {
+        // saveCurrentPlayProgress(); // Audiobook progress saving is disabled for now
       }
       setCurrentEpisodeIndex(idx + 1);
     }
@@ -1324,7 +1334,11 @@ function PlayPageClient() {
       artPlayerRef.current.on('video:ended', () => {
         const d = detailRef.current;
         const idx = currentEpisodeIndexRef.current;
-        if (d && d.episodes && idx < d.episodes.length - 1) {
+        if (contentType === 'video' && d && d.episodes && idx < d.episodes.length - 1) {
+          setTimeout(() => {
+            setCurrentEpisodeIndex(idx + 1);
+          }, 1000);
+        } else if (contentType === 'audiobook' && idx < audiobookTotalTracks - 1) {
           setTimeout(() => {
             setCurrentEpisodeIndex(idx + 1);
           }, 1000);
