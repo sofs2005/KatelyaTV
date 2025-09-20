@@ -170,3 +170,38 @@ declare global {
     RUNTIME_CONFIG?: RuntimeConfig;
   }
 }
+
+// 有声书搜索结果
+export interface AudiobookSearchResult {
+  albumId: number;
+  title: string;
+  type: string;
+  Nickname: string;
+  cover: string;
+  intro: string;
+}
+
+// 有声书专辑信息
+export interface AudiobookAlbum {
+  albumTitle: string;
+  trackTotalCount: number;
+  data: AudiobookTrack[];
+}
+
+// 有声书音轨信息
+export interface AudiobookTrack {
+  trackId: number;
+  title: string;
+}
+
+// 有声书音轨详情（播放链接）
+export interface AudiobookTrackDetail {
+  code: number;
+  msg: string;
+  nickname: string;
+  categoryName: string;
+  title: string;
+  cover: string;
+  link: string;
+  url: string;
+}

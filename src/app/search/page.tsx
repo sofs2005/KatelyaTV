@@ -3,7 +3,7 @@
 
 import { ChevronUp, Search, X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useCallback } from 'react';
 
 import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 import {
@@ -13,12 +13,16 @@ import {
   getSearchHistory,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
-import { SearchResult } from '@/lib/types';
+import { SearchResult, AudiobookSearchResult } from '@/lib/types';
 
 import PageLayout from '@/components/PageLayout';
 import VideoCard from '@/components/VideoCard';
+import AudiobookCard from '@/components/AudiobookCard'; // 引入有声书卡片
+import CapsuleSwitch from '@/components/CapsuleSwitch'; // 引入切换组件
 
 function SearchPageClient() {
+  // 搜索类型 (video 或 audiobook)
+  const [searchType, setSearchType] = useState<'video' | 'audiobook'>('video');
   // 搜索历史
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   // 返回顶部按钮显示状态
@@ -30,6 +34,7 @@ function SearchPageClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [audiobookSearchResults, setAudiobookSearchResults] = useState<AudiobookSearchResult[]>([]);
 
   // 分组结果状态
   const [groupedResults, setGroupedResults] = useState<{
@@ -182,98 +187,87 @@ function SearchPageClient() {
   }, []);
 
   useEffect(() => {
-    // 当搜索参数变化时更新搜索状态
     const query = searchParams.get('q');
-    if (query) {
+    const type = (searchParams.get('type') as 'video' | 'audiobook') || 'video';
+    setSearchType(type);
+
+    const fetchSearchResults = async () => {
+      if (!query) {
+        setShowResults(false);
+        return;
+      }
+
       setSearchQuery(query);
-      fetchSearchResults(query);
-
-      // 保存到搜索历史 (事件监听会自动更新界面)
-      addSearchHistory(query);
-    } else {
-      setShowResults(false);
-    }
-  }, [searchParams]);
-
-  const fetchSearchResults = async (query: string) => {
-    try {
       setIsLoading(true);
-
-      // 获取用户认证信息
-      const authInfo = getAuthInfoFromBrowserCookie();
-
-      // 构建请求头
-      const headers: HeadersInit = {};
-      if (authInfo?.username) {
-        headers['Authorization'] = `Bearer ${authInfo.username}`;
-      }
-
-      // 简化的搜索请求 - 成人内容过滤现在在API层面自动处理
-      // 添加时间戳参数避免缓存问题
-      const timestamp = Date.now();
-      const includeAdultParam =
-        userSettings && userSettings.filter_adult_content === false
-          ? '&include_adult=true'
-          : '';
-      const response = await fetch(
-        `/api/search?q=${encodeURIComponent(
-          query.trim()
-        )}&t=${timestamp}${includeAdultParam}`,
-        {
-          headers: {
-            ...headers,
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-          },
-        }
-      );
-      const data = await response.json();
-
-      // 处理新的搜索结果格式
-      if (data.regular_results || data.adult_results) {
-        // 处理分组结果
-        setGroupedResults({
-          regular: data.regular_results || [],
-          adult: data.adult_results || []
-        });
-        setSearchResults([...(data.regular_results || []), ...(data.adult_results || [])]);
-      } else if (data.grouped) {
-        // 兼容旧的分组格式
-        setGroupedResults({
-          regular: data.regular || [],
-          adult: data.adult || []
-        });
-        setSearchResults([...(data.regular || []), ...(data.adult || [])]);
-      } else {
-        // 兼容旧的普通结果格式
-        setGroupedResults(null);
-        setSearchResults(data.results || []);
-      }
-
       setShowResults(true);
-    } catch (error) {
-      setGroupedResults(null);
-      setSearchResults([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      addSearchHistory(query);
+
+      try {
+        if (type === 'video') {
+          const authInfo = getAuthInfoFromBrowserCookie();
+          const headers: HeadersInit = {};
+          if (authInfo?.username) {
+            headers['Authorization'] = `Bearer ${authInfo.username}`;
+          }
+          const timestamp = Date.now();
+          const includeAdultParam =
+            userSettings && userSettings.filter_adult_content === false
+              ? '&include_adult=true'
+              : '';
+          const response = await fetch(
+            `/api/search?q=${encodeURIComponent(
+              query.trim()
+            )}&t=${timestamp}${includeAdultParam}`
+          );
+          const data = await response.json();
+          if (data.regular_results || data.adult_results) {
+            setGroupedResults({
+              regular: data.regular_results || [],
+              adult: data.adult_results || [],
+            });
+            setSearchResults([...(data.regular_results || []), ...(data.adult_results || [])]);
+          } else {
+            setGroupedResults(null);
+            setSearchResults(data.results || []);
+          }
+          setAudiobookSearchResults([]);
+        } else {
+          const response = await fetch(`/api/audiobook/search?name=${encodeURIComponent(query.trim())}`);
+          const data = await response.json();
+          if (data && data.data) {
+            setAudiobookSearchResults(data.data);
+          } else {
+            setAudiobookSearchResults([]);
+          }
+          setSearchResults([]);
+          setGroupedResults(null);
+        }
+      } catch (error) {
+        setGroupedResults(null);
+        setSearchResults([]);
+        setAudiobookSearchResults([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSearchResults();
+  }, [searchParams, userSettings]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = searchQuery.trim().replace(/\s+/g, ' ');
     if (!trimmed) return;
+    router.push(`/search?q=${encodeURIComponent(trimmed)}&type=${searchType}`);
+  };
 
-    // 回显搜索框
-    setSearchQuery(trimmed);
-    setIsLoading(true);
-    setShowResults(true);
-
-    router.push(`/search?q=${encodeURIComponent(trimmed)}`);
-    // 直接发请求
-    fetchSearchResults(trimmed);
-
-    // 保存到搜索历史 (事件监听会自动更新界面)
-    addSearchHistory(trimmed);
+  const handleSearchTypeChange = (newType: 'video' | 'audiobook') => {
+    // No need to set state here, useEffect will do it from the URL
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}&type=${newType}`);
+    } else {
+      setSearchType(newType); // If no search query, just update the state for the placeholder text
+    }
   };
 
   // 返回顶部功能
@@ -303,11 +297,23 @@ function SearchPageClient() {
                 type='text'
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder='搜索电影、电视剧...'
+                placeholder={searchType === 'video' ? '搜索电影、电视剧...' : '搜索有声书...'}
                 className='w-full h-12 rounded-lg bg-gray-50/80 py-3 pl-10 pr-4 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:bg-white border border-gray-200/50 shadow-sm dark:bg-gray-800 dark:text-gray-300 dark:placeholder-gray-500 dark:focus:bg-gray-700 dark:border-gray-700'
               />
             </div>
           </form>
+        </div>
+
+        {/* 搜索类型切换 */}
+        <div className='mb-8 flex justify-center'>
+          <CapsuleSwitch
+            options={[
+              { label: '影视', value: 'video' },
+              { label: '有声书', value: 'audiobook' },
+            ]}
+            active={searchType}
+            onChange={(value) => handleSearchTypeChange(value as 'video' | 'audiobook')}
+          />
         </div>
 
         {/* 搜索结果或搜索历史 */}
@@ -351,8 +357,8 @@ function SearchPageClient() {
                       <button
                         onClick={() => setActiveTab('regular')}
                         className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'regular'
-                            ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
-                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                          ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                          : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                           }`}
                       >
                         常规结果 ({groupedResults.regular.length})
@@ -360,8 +366,8 @@ function SearchPageClient() {
                       <button
                         onClick={() => setActiveTab('adult')}
                         className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'adult'
-                            ? 'bg-white dark:bg-gray-700 text-red-600 dark:text-red-400 shadow-sm'
-                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                          ? 'bg-white dark:bg-gray-700 text-red-600 dark:text-red-400 shadow-sm'
+                          : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                           }`}
                       >
                         成人内容 ({groupedResults.adult.length})
@@ -377,69 +383,83 @@ function SearchPageClient() {
                   )}
                 </div>
               )}
-              <div
-                key={`search-results-${viewMode}-${activeTab}`}
-                className='justify-start grid grid-cols-3 gap-x-2 gap-y-14 sm:gap-y-20 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,_minmax(11rem,_1fr))] sm:gap-x-8'
-              >
-                {(() => {
-                  // 确定要显示的结果
-                  let displayResults = searchResults;
-                  if (groupedResults && groupedResults.adult.length > 0) {
-                    displayResults = activeTab === 'adult'
-                      ? groupedResults.adult
-                      : groupedResults.regular;
-                  }
+              {searchType === 'video' ? (
+                <div
+                  key={`search-results-${viewMode}-${activeTab}`}
+                  className='justify-start grid grid-cols-3 gap-x-2 gap-y-14 sm:gap-y-20 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,_minmax(11rem,_1fr))] sm:gap-x-8'
+                >
+                  {(() => {
+                    // 确定要显示的结果
+                    let displayResults = searchResults;
+                    if (groupedResults && groupedResults.adult.length > 0) {
+                      displayResults = activeTab === 'adult'
+                        ? groupedResults.adult
+                        : groupedResults.regular;
+                    }
 
-                  // 聚合显示模式
-                  if (viewMode === 'agg') {
-                    const aggregated = aggregateResults(displayResults);
-                    return aggregated.map(([mapKey, group]: [string, SearchResult[]]) => (
-                      <div key={`agg-${mapKey}`} className='w-full'>
+                    // 聚合显示模式
+                    if (viewMode === 'agg') {
+                      const aggregated = aggregateResults(displayResults);
+                      return aggregated.map(([mapKey, group]: [string, SearchResult[]]) => (
+                        <div key={`agg-${mapKey}`} className='w-full'>
+                          <VideoCard
+                            from='search'
+                            items={group}
+                            query={
+                              searchQuery.trim() !== group[0].title
+                                ? searchQuery.trim()
+                                : ''
+                            }
+                          />
+                        </div>
+                      ));
+                    }
+
+                    // 列表显示模式
+                    return displayResults.map((item) => (
+                      <div
+                        key={`all-${item.source}-${item.id}`}
+                        className='w-full'
+                      >
                         <VideoCard
-                          from='search'
-                          items={group}
+                          id={item.id}
+                          title={item.title}
+                          poster={item.poster}
+                          episodes={item.episodes.length}
+                          source={item.source}
+                          source_name={item.source_name}
+                          douban_id={item.douban_id?.toString()}
                           query={
-                            searchQuery.trim() !== group[0].title
+                            searchQuery.trim() !== item.title
                               ? searchQuery.trim()
                               : ''
                           }
+                          year={item.year}
+                          from='search'
+                          type={item.episodes.length > 1 ? 'tv' : 'movie'}
                         />
                       </div>
                     ));
-                  }
-
-                  // 列表显示模式
-                  return displayResults.map((item) => (
-                    <div
-                      key={`all-${item.source}-${item.id}`}
-                      className='w-full'
-                    >
-                      <VideoCard
-                        id={item.id}
-                        title={item.title}
-                        poster={item.poster}
-                        episodes={item.episodes.length}
-                        source={item.source}
-                        source_name={item.source_name}
-                        douban_id={item.douban_id?.toString()}
-                        query={
-                          searchQuery.trim() !== item.title
-                            ? searchQuery.trim()
-                            : ''
-                        }
-                        year={item.year}
-                        from='search'
-                        type={item.episodes.length > 1 ? 'tv' : 'movie'}
-                      />
+                  })()}
+                  {searchResults.length === 0 && (
+                    <div className='col-span-full text-center text-gray-500 py-8 dark:text-gray-400'>
+                      未找到相关结果
                     </div>
-                  ));
-                })()}
-                {searchResults.length === 0 && (
-                  <div className='col-span-full text-center text-gray-500 py-8 dark:text-gray-400'>
-                    未找到相关结果
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              ) : (
+                // 有声书搜索结果
+                <div className='justify-start grid grid-cols-3 gap-x-2 gap-y-14 sm:gap-y-20 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,_minmax(11rem,_1fr))] sm:gap-x-8'>
+                  {audiobookSearchResults.map((item) => (
+                    <AudiobookCard key={item.albumId} item={item} />
+                  ))}
+                  {audiobookSearchResults.length === 0 && (
+                    <div className='col-span-full text-center text-gray-500 py-8 dark:text-gray-400'>
+                      未找到相关有声书
+                    </div>
+                  )}
+                </div>
+              )}
             </section>
           ) : searchHistory.length > 0 ? (
             // 搜索历史
@@ -495,8 +515,8 @@ function SearchPageClient() {
       <button
         onClick={scrollToTop}
         className={`fixed bottom-20 md:bottom-6 right-6 z-[500] w-12 h-12 bg-green-500/90 hover:bg-green-500 text-white rounded-full shadow-lg backdrop-blur-sm transition-all duration-300 ease-in-out flex items-center justify-center group ${showBackToTop
-            ? 'opacity-100 translate-y-0 pointer-events-auto'
-            : 'opacity-0 translate-y-4 pointer-events-none'
+          ? 'opacity-100 translate-y-0 pointer-events-auto'
+          : 'opacity-0 translate-y-4 pointer-events-none'
           }`}
         aria-label='返回顶部'
       >

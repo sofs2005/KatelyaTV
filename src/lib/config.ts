@@ -9,6 +9,7 @@ export interface ApiSite {
   api: string;
   name: string;
   detail?: string;
+  type?: 'video' | 'audiobook';
 }
 
 interface ConfigFileStruct {
@@ -101,6 +102,7 @@ async function initConfig() {
               from: 'config',
               disabled: false,
               is_adult: (site as any).is_adult || false, // 确保 is_adult 字段被正确处理
+              type: (site as any).type,
             });
           }
         });
@@ -115,6 +117,7 @@ async function initConfig() {
             const siteConfig = fileConfig.api_site[source.key];
             if (siteConfig) {
               source.is_adult = (siteConfig as any).is_adult || false;
+              source.type = (siteConfig as any).type;
             }
           }
         });
@@ -179,6 +182,7 @@ async function initConfig() {
             from: 'config',
             disabled: false,
             is_adult: (site as any).is_adult || false, // 确保 is_adult 字段被正确处理
+            type: (site as any).type,
           })),
         };
       }
@@ -218,6 +222,8 @@ async function initConfig() {
         detail: site.detail,
         from: 'config',
         disabled: false,
+        is_adult: (site as any).is_adult || false,
+        type: (site as any).type,
       })),
     } as AdminConfig;
   }
@@ -262,6 +268,7 @@ export async function getConfig(): Promise<AdminConfig> {
           from: 'config',
           disabled: false,
           is_adult: (site as any).is_adult || false, // 确保处理 is_adult 字段
+          type: (site as any).type,
         });
       }
     });
@@ -276,6 +283,7 @@ export async function getConfig(): Promise<AdminConfig> {
         const siteConfig = fileConfig.api_site[source.key];
         if (siteConfig) {
           source.is_adult = (siteConfig as any).is_adult || false;
+          source.type = (siteConfig as any).type;
         }
       }
     });
@@ -372,6 +380,8 @@ export async function resetConfig() {
       detail: site.detail,
       from: 'config',
       disabled: false,
+      is_adult: (site as any).is_adult || false,
+      type: (site as any).type,
     })),
   } as AdminConfig;
 
@@ -392,49 +402,58 @@ export async function getCacheTime(): Promise<number> {
   return config.SiteConfig.SiteInterfaceCacheTime || 7200;
 }
 
-export async function getAvailableApiSites(filterAdult = false): Promise<ApiSite[]> {
+export async function getAvailableApiSites(
+  filterAdult = false,
+  type: 'video' | 'audiobook' | null = null
+): Promise<ApiSite[]> {
   const config = await getConfig();
-  
+
   // 防御性检查：确保 SourceConfig 存在且为数组
   if (!config.SourceConfig || !Array.isArray(config.SourceConfig)) {
     console.warn('SourceConfig is missing or not an array, returning empty array');
     return [];
   }
-  
-  // 防御性处理：为每个源确保 is_adult 字段存在
-  let sites = config.SourceConfig
-    .filter((s) => !s.disabled)
-    .map((s) => ({
-      ...s,
-      is_adult: s.is_adult === true // 严格检查，只有明确为 true 的才是成人内容
-    }));
-  
+
+  let sites = config.SourceConfig.filter((s) => !s.disabled);
+
   // 如果需要过滤成人内容，则排除标记为成人内容的资源站
   if (filterAdult) {
-    sites = sites.filter((s) => !s.is_adult);
+    sites = sites.filter((s) => s.is_adult !== true);
   }
-  
-  return sites.map((s) => ({
+
+  // 根据类型过滤
+  if (type) {
+    if (type === 'video') {
+      // 视频类型：包含 type 为 'video' 或没有 type 属性的源（为了向后兼容）
+      sites = sites.filter((s: any) => !s.type || s.type === 'video');
+    } else {
+      // 其他类型（如 audiobook）：严格匹配 type
+      sites = sites.filter((s: any) => s.type === type);
+    }
+  }
+
+  return sites.map((s: any) => ({
     key: s.key,
     name: s.name,
     api: s.api,
     detail: s.detail,
+    type: s.type,
   }));
 }
 
 // 根据用户设置动态获取可用资源站（你的想法实现）
 export async function getFilteredApiSites(userName?: string): Promise<ApiSite[]> {
   const config = await getConfig();
-  
+
   // 防御性检查：确保 SourceConfig 存在且为数组
   if (!config.SourceConfig || !Array.isArray(config.SourceConfig)) {
     console.warn('SourceConfig is missing or not an array, returning empty array');
     return [];
   }
-  
+
   // 默认过滤成人内容
   let shouldFilterAdult = true;
-  
+
   // 如果提供了用户名，获取用户设置
   if (userName) {
     try {
@@ -446,7 +465,7 @@ export async function getFilteredApiSites(userName?: string): Promise<ApiSite[]>
       console.warn('Failed to get user settings, using default filter:', error);
     }
   }
-  
+
   // 防御性处理：为每个源确保 is_adult 字段存在
   let sites = config.SourceConfig
     .filter((s) => !s.disabled)
@@ -454,12 +473,12 @@ export async function getFilteredApiSites(userName?: string): Promise<ApiSite[]>
       ...s,
       is_adult: s.is_adult === true // 严格检查，只有明确为 true 的才是成人内容
     }));
-  
+
   // 根据用户设置动态过滤成人内容源
   if (shouldFilterAdult) {
     sites = sites.filter((s) => !s.is_adult);
   }
-  
+
   return sites.map((s) => ({
     key: s.key,
     name: s.name,
@@ -471,17 +490,17 @@ export async function getFilteredApiSites(userName?: string): Promise<ApiSite[]>
 // 获取成人内容资源站
 export async function getAdultApiSites(): Promise<ApiSite[]> {
   const config = await getConfig();
-  
+
   // 防御性检查：确保 SourceConfig 存在且为数组
   if (!config.SourceConfig || !Array.isArray(config.SourceConfig)) {
     console.warn('SourceConfig is missing or not an array, returning empty array');
     return [];
   }
-  
+
   // 防御性处理：严格检查成人内容标记
   const adultSites = config.SourceConfig
     .filter((s) => !s.disabled && s.is_adult === true); // 只有明确为 true 的才被认为是成人内容
-  
+
   return adultSites.map((s) => ({
     key: s.key,
     name: s.name,
