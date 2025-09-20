@@ -554,7 +554,7 @@ function PlayPageClient() {
                 (searchType === 'movie' &&
                   result.episodes &&
                   result.episodes.length === 1)
-                : true)
+                : result.episodes && result.episodes.length > 0)
           );
           setAvailableSources(results);
           return results;
@@ -626,7 +626,7 @@ function PlayPageClient() {
       setVideoTitle(detailData.title || videoTitleRef.current);
       setVideoCover(detailData.poster);
       setDetail(detailData);
-      if (currentEpisodeIndex >= (detailData.episodes?.length || 0)) {
+      if (detailData.episodes && currentEpisodeIndex >= detailData.episodes.length) {
         setCurrentEpisodeIndex(0);
       }
 
