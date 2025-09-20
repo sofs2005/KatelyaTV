@@ -123,7 +123,6 @@ function PlayPageClient() {
   const [videoUrl, setVideoUrl] = useState('');
 
   // 总集数
-  const totalEpisodes = contentType === 'video' ? (detail?.episodes?.length || 0) : audiobookTotalTracks;
 
   // 用于记录是否需要在播放器 ready 后跳转到指定进度
   const resumeTimeRef = useRef<number | null>(null);
@@ -180,6 +179,7 @@ function PlayPageClient() {
 
   const artPlayerRef = useRef<any>(null);
   const artRef = useRef<HTMLDivElement | null>(null);
+
 
   // -----------------------------------------------------------------------------
   // 工具函数（Utils）
@@ -524,7 +524,7 @@ function PlayPageClient() {
       const fetchSourcesData = async (query: string): Promise<SearchResult[]> => {
         try {
           const response = await fetch(
-            `/api/search?q=${encodeURIComponent(query.trim())}`
+            `/api/search?q=${encodeURIComponent(query.trim())}&type=video`
           );
           if (!response.ok) {
             throw new Error('搜索失败');
@@ -671,10 +671,10 @@ function PlayPageClient() {
 
     if (contentType === 'video') {
       initVideo();
-    } else {
+    } else if (contentType === 'audiobook') {
       initAudiobook();
     }
-  }, [contentType, albumId]);
+  }, [contentType, albumId, currentSource, currentId]);
 
   // 播放记录处理
   useEffect(() => {
@@ -1528,6 +1528,12 @@ function PlayPageClient() {
     );
   }
 
+  // Only calculate total episodes when not loading and no error, ensuring `detail` is available.
+  const totalEpisodes =
+    contentType === 'video'
+      ? detail?.episodes?.length || 0
+      : audiobookTotalTracks;
+
   return (
     <PageLayout activePath='/play'>
       <div className='flex flex-col gap-3 py-4 px-5 lg:px-[3rem] 2xl:px-20'>
@@ -1782,10 +1788,26 @@ const FavoriteIcon = ({ filled }: { filled: boolean }) => {
   );
 };
 
+// Wrapper component to apply a key and force re-mounting on navigation
+function PlayPageWrapper() {
+  const searchParams = useSearchParams();
+  const source = searchParams.get('source') || '';
+  const id = searchParams.get('id') || '';
+  const albumId = searchParams.get('albumId') || '';
+  const type = searchParams.get('type') || 'video';
+
+  // Create a unique key based on the content being displayed.
+  // When this key changes, React will unmount the old component and mount a new one,
+  // completely resetting its state and avoiding all state synchronization issues.
+  const key = type === 'video' ? `${source}-${id}` : `${type}-${albumId}`;
+
+  return <PlayPageClient key={key} />;
+}
+
 export default function PlayPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <PlayPageClient />
+      <PlayPageWrapper />
     </Suspense>
   );
 }
