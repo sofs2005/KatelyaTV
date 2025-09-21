@@ -146,9 +146,11 @@ export default function VideoCard({
     const unsubscribe = subscribeToDataUpdates(
       'favoritesUpdated',
       (newFavorites: Record<string, Favorite>) => {
-        // 检查当前项目是否在新的收藏列表中
-        const isNowFavorited = !!newFavorites[storageKey];
-        setFavorited(isNowFavorited);
+        if (storageKey) {
+          // 检查当前项目是否在新的收藏列表中
+          const isNowFavorited = !!newFavorites[storageKey];
+          setFavorited(isNowFavorited);
+        }
       }
     );
 
