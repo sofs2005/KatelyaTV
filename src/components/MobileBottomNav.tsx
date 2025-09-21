@@ -1,8 +1,11 @@
 'use client';
 
-import { Clover, Film, Home, Search, Tv } from 'lucide-react';
+import { Clover, Film, Home, Search, Star, Tv } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
+
+import { getConfig } from '@/lib/config';
 
 interface MobileBottomNavProps {
   /**
@@ -13,11 +16,7 @@ interface MobileBottomNavProps {
 
 const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
   const pathname = usePathname();
-
-  // 当前激活路径：优先使用传入的 activePath，否则回退到浏览器地址
-  const currentActive = activePath ?? pathname;
-
-  const navItems = [
+  const [navItems, setNavItems] = useState([
     { icon: Home, label: '首页', href: '/' },
     { icon: Search, label: '搜索', href: '/search' },
     {
@@ -35,7 +34,44 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
       label: '综艺',
       href: '/douban?type=show',
     },
-  ];
+  ]);
+
+  useEffect(() => {
+    async function fetchConfigAndSetMenu() {
+      try {
+        const config = await getConfig();
+        if (config.CustomCategories && config.CustomCategories.length > 0) {
+          // 移动端最多显示5个，所以我们替换掉最后一个“综艺”
+          setNavItems([
+            { icon: Home, label: '首页', href: '/' },
+            { icon: Search, label: '搜索', href: '/search' },
+            {
+              icon: Film,
+              label: '电影',
+              href: '/douban?type=movie',
+            },
+            {
+              icon: Tv,
+              label: '剧集',
+              href: '/douban?type=tv',
+            },
+            {
+              icon: Star,
+              label: '分类',
+              href: '/douban?type=custom',
+            },
+          ]);
+        }
+      } catch (error) {
+        console.error('Failed to fetch custom categories for mobile nav:', error);
+      }
+    }
+
+    fetchConfigAndSetMenu();
+  }, []);
+
+  // 当前激活路径：优先使用传入的 activePath，否则回退到浏览器地址
+  const currentActive = activePath ?? pathname;
 
   const isActive = (href: string) => {
     const typeMatch = href.match(/type=([^&]+)/)?.[1];
@@ -70,11 +106,10 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
             <li key={item.href} className='flex-shrink-0 w-1/5'>
               <Link
                 href={item.href}
-                className={`flex flex-col items-center justify-center w-full h-14 gap-1 text-xs transition-all duration-200 relative ${
-                  active
+                className={`flex flex-col items-center justify-center w-full h-14 gap-1 text-xs transition-all duration-200 relative ${active
                     ? 'transform -translate-y-1'
                     : 'hover:transform hover:-translate-y-0.5'
-                }`}
+                  }`}
               >
                 {/* 激活状态的背景光晕 */}
                 {active && (
@@ -82,18 +117,16 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
                 )}
 
                 <item.icon
-                  className={`h-6 w-6 transition-all duration-200 ${
-                    active
+                  className={`h-6 w-6 transition-all duration-200 ${active
                       ? 'text-purple-600 dark:text-purple-400 scale-110'
                       : 'text-gray-500 dark:text-gray-400 hover:text-purple-500 dark:hover:text-purple-300'
-                  }`}
+                    }`}
                 />
                 <span
-                  className={`transition-all duration-200 font-medium ${
-                    active
+                  className={`transition-all duration-200 font-medium ${active
                       ? 'text-purple-600 dark:text-purple-400'
                       : 'text-gray-600 dark:text-gray-300 hover:text-purple-500 dark:hover:text-purple-300'
-                  }`}
+                    }`}
                 >
                   {item.label}
                 </span>

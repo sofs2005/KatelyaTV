@@ -25,6 +25,13 @@ export interface AdminConfig {
     is_adult?: boolean; // 新增：是否为成人内容资源站
     type?: 'video' | 'audiobook';
   }[];
+  CustomCategories?: {
+    name?: string;
+    type: 'movie' | 'tv';
+    query: string;
+    from: 'config' | 'custom';
+    disabled?: boolean;
+  }[];
 }
 
 export interface AdminConfigResult {
