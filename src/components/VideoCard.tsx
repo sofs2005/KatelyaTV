@@ -34,6 +34,10 @@ interface VideoCardProps {
   rate?: string;
   items?: SearchResult[];
   type?: string;
+  // For audiobook support in playrecords and favorites
+  albumId?: string;
+  intro?: string;
+  cardType?: 'video' | 'audiobook';
 }
 
 export default function VideoCard({
@@ -53,6 +57,9 @@ export default function VideoCard({
   rate,
   items,
   type = '',
+  albumId,
+  intro,
+  cardType,
 }: VideoCardProps) {
   const router = useRouter();
   const [favorited, setFavorited] = useState(false);
@@ -113,21 +120,27 @@ export default function VideoCard({
 
   // 获取收藏状态
   useEffect(() => {
-    if (from === 'douban' || !actualSource || !actualId) return;
+    let storageKey: string | null = null;
+    if (cardType === 'audiobook' && albumId) {
+      storageKey = generateStorageKey('audiobook', albumId);
+    } else if (actualSource && actualId) {
+      storageKey = generateStorageKey(actualSource, actualId);
+    }
+
+    if (!storageKey) return;
 
     const fetchFavoriteStatus = async () => {
       try {
-        const fav = await isFavorited(actualSource, actualId);
+        const fav = await isFavorited(storageKey);
         setFavorited(fav);
       } catch (err) {
-        throw new Error('检查收藏状态失败');
+        console.error('检查收藏状态失败:', err);
       }
     };
 
     fetchFavoriteStatus();
 
     // 监听收藏状态更新事件
-    const storageKey = generateStorageKey(actualSource, actualId);
     const unsubscribe = subscribeToDataUpdates(
       'favoritesUpdated',
       (newFavorites: Record<string, Favorite>) => {
@@ -138,32 +151,47 @@ export default function VideoCard({
     );
 
     return unsubscribe;
-  }, [from, actualSource, actualId]);
+  }, [from, actualSource, actualId, cardType, albumId]);
 
   const handleToggleFavorite = useCallback(
     async (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      if (from === 'douban' || !actualSource || !actualId) return;
+
+      let storageKey: string | null = null;
+      if (cardType === 'audiobook' && albumId) {
+        storageKey = generateStorageKey('audiobook', albumId);
+      } else if (actualSource && actualId) {
+        storageKey = generateStorageKey(actualSource, actualId);
+      }
+
+      if (!storageKey) return;
+
       try {
         if (favorited) {
           // 如果已收藏，删除收藏
-          await deleteFavorite(actualSource, actualId);
+          await deleteFavorite(storageKey);
           setFavorited(false);
         } else {
           // 如果未收藏，添加收藏
-          await saveFavorite(actualSource, actualId, {
+          const favoriteData: Favorite = {
             title: actualTitle,
             source_name: source_name || '',
             year: actualYear || '',
             cover: actualPoster,
             total_episodes: actualEpisodes ?? 1,
             save_time: Date.now(),
-          });
+          };
+          // If it's an audiobook, add type and albumId to the favorite data
+          if (cardType === 'audiobook') {
+            favoriteData.type = 'audiobook';
+            favoriteData.albumId = albumId;
+          }
+          await saveFavorite(storageKey, favoriteData);
           setFavorited(true);
         }
       } catch (err) {
-        throw new Error('切换收藏状态失败');
+        console.error('切换收藏状态失败:', err);
       }
     },
     [
@@ -176,6 +204,8 @@ export default function VideoCard({
       actualPoster,
       actualEpisodes,
       favorited,
+      cardType,
+      albumId,
     ]
   );
 
@@ -197,18 +227,26 @@ export default function VideoCard({
   const handleClick = useCallback(() => {
     if (from === 'douban') {
       router.push(
-        `/play?title=${encodeURIComponent(actualTitle.trim())}${
-          actualYear ? `&year=${actualYear}` : ''
+        `/play?title=${encodeURIComponent(actualTitle.trim())}${actualYear ? `&year=${actualYear}` : ''
         }${actualSearchType ? `&stype=${actualSearchType}` : ''}`
       );
+    } else if (cardType === 'audiobook' && albumId) {
+      // Generate audiobook link
+      const queryParams = new URLSearchParams({
+        type: 'audiobook',
+        albumId: albumId.toString(),
+        title: actualTitle,
+        cover: actualPoster,
+        intro: intro || '',
+      }).toString();
+      router.push(`/play?${queryParams}`);
     } else if (actualSource && actualId) {
+      // Generate video link
       router.push(
         `/play?source=${actualSource}&id=${actualId}&title=${encodeURIComponent(
           actualTitle
-        )}${actualYear ? `&year=${actualYear}` : ''}${
-          isAggregate ? '&prefer=true' : ''
-        }${
-          actualQuery ? `&stitle=${encodeURIComponent(actualQuery.trim())}` : ''
+        )}${actualYear ? `&year=${actualYear}` : ''}${isAggregate ? '&prefer=true' : ''
+        }${actualQuery ? `&stitle=${encodeURIComponent(actualQuery.trim())}` : ''
         }${actualSearchType ? `&stype=${actualSearchType}` : ''}`
       );
     }
@@ -222,6 +260,10 @@ export default function VideoCard({
     isAggregate,
     actualQuery,
     actualSearchType,
+    cardType,
+    albumId,
+    intro,
+    actualPoster,
   ]);
 
   const config = useMemo(() => {
@@ -313,11 +355,10 @@ export default function VideoCard({
               <Heart
                 onClick={handleToggleFavorite}
                 size={20}
-                className={`transition-all duration-300 ease-out ${
-                  favorited
-                    ? 'fill-red-600 stroke-red-600'
-                    : 'fill-transparent stroke-white hover:stroke-red-400'
-                } hover:scale-[1.1]`}
+                className={`transition-all duration-300 ease-out ${favorited
+                  ? 'fill-red-600 stroke-red-600'
+                  : 'fill-transparent stroke-white hover:stroke-red-400'
+                  } hover:scale-[1.1]`}
               />
             )}
           </div>

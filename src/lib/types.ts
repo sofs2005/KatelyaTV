@@ -6,12 +6,17 @@ export interface PlayRecord {
   source_name: string;
   cover: string;
   year: string;
-  index: number; // 第几集
-  total_episodes: number; // 总集数
-  play_time: number; // 播放进度（秒）
-  total_time: number; // 总进度（秒）
-  save_time: number; // 记录保存时间（时间戳）
-  search_title: string; // 搜索时使用的标题
+  index: number;
+  total_episodes: number;
+  play_time: number;
+  total_time: number;
+  save_time: number;
+  search_title: string;
+  type?: 'video' | 'audiobook';
+  albumId?: string;
+  source?: string;
+  id?: string;
+  intro?: string;
 }
 
 // 片头片尾数据结构
@@ -34,12 +39,17 @@ export interface EpisodeSkipConfig {
 // 收藏数据结构
 export interface Favorite {
   source_name: string;
-  total_episodes: number; // 总集数
+  total_episodes: number;
   title: string;
   year: string;
   cover: string;
-  save_time: number; // 记录保存时间（时间戳）
-  search_title: string; // 搜索时使用的标题
+  save_time: number;
+  search_title: string;
+  type?: 'video' | 'audiobook';
+  albumId?: string;
+  source?: string;
+  id?: string;
+  intro?: string;
 }
 
 // 存储接口

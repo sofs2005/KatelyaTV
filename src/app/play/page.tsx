@@ -101,6 +101,7 @@ function PlayPageClient() {
   const videoYearRef = useRef(videoYear);
   const detailRef = useRef<SearchResult | null>(detail);
   const currentEpisodeIndexRef = useRef(currentEpisodeIndex);
+  const startEpisodeInitialized = useRef(false);
 
   // 同步最新值到 refs
   useEffect(() => {
@@ -626,7 +627,11 @@ function PlayPageClient() {
       setVideoTitle(detailData.title || videoTitleRef.current);
       setVideoCover(detailData.poster);
       setDetail(detailData);
-      if (detailData.episodes && currentEpisodeIndex >= detailData.episodes.length) {
+      if (
+        !startEpisodeInitialized.current &&
+        detailData.episodes &&
+        currentEpisodeIndex >= detailData.episodes.length
+      ) {
         setCurrentEpisodeIndex(0);
       }
 
@@ -657,8 +662,10 @@ function PlayPageClient() {
         if (data && data.data && data.data.length > 0) {
           setAudiobookTracks(data.data);
           setAudiobookTotalTracks(data.trackTotalCount);
-          // 默认播放第一集
-          setCurrentEpisodeIndex(0);
+          // 默认播放第一集 (仅在未从历史记录恢复时)
+          if (!startEpisodeInitialized.current) {
+            setCurrentEpisodeIndex(0);
+          }
         } else {
           setError('未能获取到章节列表');
         }
@@ -674,33 +681,62 @@ function PlayPageClient() {
     } else if (contentType === 'audiobook') {
       initAudiobook();
     }
-  }, [contentType, albumId, currentSource, currentId]);
+  }, [contentType, albumId, searchTitle, videoTitle, videoYear, searchType, optimizationEnabled, needPrefer]);
 
   // 播放记录处理
   useEffect(() => {
     // 仅在初次挂载时检查播放记录
     const initFromHistory = async () => {
-      if (!currentSource || !currentId) return;
-
-      try {
-        const allRecords = await getAllPlayRecords();
-        const key = generateStorageKey(currentSource, currentId);
-        const record = allRecords[key];
-
-        if (record) {
-          const targetIndex = record.index - 1;
-          const targetTime = record.play_time;
-
-          // 更新当前选集索引
-          if (targetIndex !== currentEpisodeIndex) {
-            setCurrentEpisodeIndex(targetIndex);
-          }
-
-          // 保存待恢复的播放进度，待播放器就绪后跳转
-          resumeTimeRef.current = targetTime;
+      // 优先从 URL 参数获取集数
+      const episodeFromUrl = searchParams.get('episode');
+      if (episodeFromUrl) {
+        const episodeIndex = parseInt(episodeFromUrl, 10) - 1;
+        if (!isNaN(episodeIndex) && episodeIndex >= 0) {
+          setCurrentEpisodeIndex(episodeIndex);
+          startEpisodeInitialized.current = true;
+          // 注意：这里不再设置 resumeTimeRef.current = 0 并且不再 return
+          // 允许函数继续执行以从播放记录中加载时间戳
         }
-      } catch (err) {
-        console.error('读取播放记录失败:', err);
+      }
+
+      // 如果URL没有指定集数，则从播放记录中恢复
+      if (contentType === 'video' && currentSource && currentId) {
+        try {
+          const allRecords = await getAllPlayRecords();
+          const key = generateStorageKey(currentSource, currentId);
+          const record = allRecords[key];
+
+          if (record) {
+            const targetIndex = record.index - 1;
+            const targetTime = record.play_time;
+            if (targetIndex !== currentEpisodeIndex) {
+              setCurrentEpisodeIndex(targetIndex);
+              startEpisodeInitialized.current = true;
+            }
+            resumeTimeRef.current = targetTime;
+            startEpisodeInitialized.current = true;
+          }
+        } catch (err) {
+          console.error('读取视频播放记录失败:', err);
+        }
+      } else if (contentType === 'audiobook' && albumId) {
+        try {
+          const allRecords = await getAllPlayRecords();
+          const key = generateStorageKey('audiobook', albumId);
+          const record = allRecords[key];
+
+          if (record) {
+            const targetIndex = record.index - 1;
+            const targetTime = record.play_time;
+            if (targetIndex !== currentEpisodeIndex) {
+              setCurrentEpisodeIndex(targetIndex);
+            }
+            resumeTimeRef.current = targetTime;
+            startEpisodeInitialized.current = true;
+          }
+        } catch (err) {
+          console.error('读取有声书播放记录失败:', err);
+        }
       }
     };
 
@@ -813,7 +849,7 @@ function PlayPageClient() {
       setCurrentEpisodeIndex(idx - 1);
     } else if (contentType === 'audiobook' && idx > 0) {
       if (artPlayerRef.current && !artPlayerRef.current.paused) {
-        // saveCurrentPlayProgress(); // Audiobook progress saving is disabled for now
+        saveCurrentPlayProgress();
       }
       setCurrentEpisodeIndex(idx - 1);
     }
@@ -829,7 +865,7 @@ function PlayPageClient() {
       setCurrentEpisodeIndex(idx + 1);
     } else if (contentType === 'audiobook' && idx < audiobookTotalTracks - 1) {
       if (artPlayerRef.current && !artPlayerRef.current.paused) {
-        // saveCurrentPlayProgress(); // Audiobook progress saving is disabled for now
+        saveCurrentPlayProgress();
       }
       setCurrentEpisodeIndex(idx + 1);
     }
@@ -930,49 +966,66 @@ function PlayPageClient() {
   // ---------------------------------------------------------------------------
   // 保存播放进度
   const saveCurrentPlayProgress = async () => {
-    if (contentType === 'audiobook') return; // Do not save progress for audiobooks for now
-    if (
-      !artPlayerRef.current ||
-      !currentSourceRef.current ||
-      !currentIdRef.current ||
-      !videoTitleRef.current ||
-      !detailRef.current?.source_name
-    ) {
-      return;
-    }
+    if (!artPlayerRef.current) return;
 
     const player = artPlayerRef.current;
     const currentTime = player.currentTime || 0;
     const duration = player.duration || 0;
 
-    // 如果播放时间太短（少于5秒）或者视频时长无效，不保存
     if (currentTime < 1 || !duration) {
       return;
     }
 
-    try {
-      await savePlayRecord(currentSourceRef.current, currentIdRef.current, {
-        title: videoTitleRef.current,
-        source_name: detailRef.current?.source_name || '',
-        year: detailRef.current?.year,
-        cover: detailRef.current?.poster || '',
-        index: currentEpisodeIndexRef.current + 1, // 转换为1基索引
-        total_episodes: detailRef.current?.episodes?.length || 1,
-        play_time: Math.floor(currentTime),
-        total_time: Math.floor(duration),
-        save_time: Date.now(),
-        search_title: searchTitle,
-      });
-
-      lastSaveTimeRef.current = Date.now();
-      console.log('播放进度已保存:', {
-        title: videoTitleRef.current,
-        episode: currentEpisodeIndexRef.current + 1,
-        year: detailRef.current?.year,
-        progress: `${Math.floor(currentTime)}/${Math.floor(duration)}`,
-      });
-    } catch (err) {
-      console.error('保存播放进度失败:', err);
+    if (contentType === 'video') {
+      if (
+        !currentSourceRef.current ||
+        !currentIdRef.current ||
+        !videoTitleRef.current ||
+        !detailRef.current?.source_name
+      ) {
+        return;
+      }
+      try {
+        await savePlayRecord(currentSourceRef.current, currentIdRef.current, {
+          title: videoTitleRef.current,
+          source_name: detailRef.current?.source_name || '',
+          year: detailRef.current?.year,
+          cover: detailRef.current?.poster || '',
+          index: currentEpisodeIndexRef.current + 1,
+          total_episodes: detailRef.current?.episodes?.length || 1,
+          play_time: Math.floor(currentTime),
+          total_time: Math.floor(duration),
+          save_time: Date.now(),
+          search_title: searchTitle,
+        });
+        lastSaveTimeRef.current = Date.now();
+      } catch (err) {
+        console.error('保存视频播放进度失败:', err);
+      }
+    } else if (contentType === 'audiobook') {
+      if (!albumId || !videoTitleRef.current) {
+        return;
+      }
+      try {
+        await savePlayRecord('audiobook', albumId, {
+          title: videoTitleRef.current,
+          source_name: '有声书',
+          year: videoYearRef.current,
+          cover: videoCover,
+          index: currentEpisodeIndexRef.current + 1,
+          total_episodes: audiobookTotalTracks,
+          play_time: Math.floor(currentTime),
+          total_time: Math.floor(duration),
+          save_time: Date.now(),
+          search_title: searchTitle,
+          type: 'audiobook',
+          albumId: albumId,
+          intro: videoIntro,
+        });
+        lastSaveTimeRef.current = Date.now();
+      } catch (err) {
+        console.error('保存有声书播放进度失败:', err);
+      }
     }
   };
 
@@ -1014,63 +1067,111 @@ function PlayPageClient() {
   // ---------------------------------------------------------------------------
   // 每当 source 或 id 变化时检查收藏状态
   useEffect(() => {
-    if (!currentSource || !currentId) return;
-    (async () => {
+    const checkFavorite = async () => {
       try {
-        const fav = await isFavorited(currentSource, currentId);
-        setFavorited(fav);
+        let key: string | null = null;
+        if (contentType === 'video' && currentSource && currentId) {
+          key = generateStorageKey(currentSource, currentId);
+        } else if (contentType === 'audiobook' && albumId) {
+          key = generateStorageKey('audiobook', albumId);
+        }
+
+        if (key) {
+          const fav = await isFavorited(key);
+          setFavorited(fav);
+        } else {
+          setFavorited(false);
+        }
       } catch (err) {
         console.error('检查收藏状态失败:', err);
       }
-    })();
-  }, [currentSource, currentId]);
+    };
+    checkFavorite();
+  }, [contentType, currentSource, currentId, albumId]);
 
   // 监听收藏数据更新事件
   useEffect(() => {
-    if (!currentSource || !currentId) return;
+    let key: string | null = null;
+    if (contentType === 'video' && currentSource && currentId) {
+      key = generateStorageKey(currentSource, currentId);
+    } else if (contentType === 'audiobook' && albumId) {
+      key = generateStorageKey('audiobook', albumId);
+    }
 
+    if (!key) return;
+
+    const finalKey = key;
     const unsubscribe = subscribeToDataUpdates(
       'favoritesUpdated',
       (favorites: Record<string, any>) => {
-        const key = generateStorageKey(currentSource, currentId);
-        const isFav = !!favorites[key];
+        const isFav = !!favorites[finalKey];
         setFavorited(isFav);
       }
     );
 
     return unsubscribe;
-  }, [currentSource, currentId]);
+  }, [contentType, currentSource, currentId, albumId]);
 
   // 切换收藏
   const handleToggleFavorite = async () => {
-    if (
-      !videoTitleRef.current ||
-      !detailRef.current ||
-      !currentSourceRef.current ||
-      !currentIdRef.current
-    )
-      return;
+    if (contentType === 'video') {
+      if (
+        !videoTitleRef.current ||
+        !detailRef.current ||
+        !currentSourceRef.current ||
+        !currentIdRef.current
+      )
+        return;
 
-    try {
-      if (favorited) {
-        // 如果已收藏，删除收藏
-        await deleteFavorite(currentSourceRef.current, currentIdRef.current);
-        setFavorited(false);
-      } else {
-        // 如果未收藏，添加收藏
-        await saveFavorite(currentSourceRef.current, currentIdRef.current, {
-          title: videoTitleRef.current,
-          source_name: detailRef.current?.source_name || '',
-          year: detailRef.current?.year,
-          cover: detailRef.current?.poster || '',
-          total_episodes: detailRef.current?.episodes?.length || 1,
-          save_time: Date.now(),
-          search_title: searchTitle,
-        });
-        setFavorited(true);
+      try {
+        const key = generateStorageKey(currentSourceRef.current, currentIdRef.current);
+        if (favorited) {
+          await deleteFavorite(key);
+          setFavorited(false);
+        } else {
+          await saveFavorite(key, {
+            title: videoTitleRef.current,
+            source_name: detailRef.current?.source_name || '',
+            year: detailRef.current?.year,
+            cover: detailRef.current?.poster || '',
+            total_episodes: detailRef.current?.episodes?.length || 1,
+            save_time: Date.now(),
+            search_title: searchTitle,
+            source: currentSourceRef.current,
+            id: currentIdRef.current,
+            type: 'video',
+          });
+          setFavorited(true);
+        }
+      } catch (err) {
+        console.error('切换视频收藏失败:', err);
       }
-    } catch (err) {
-      console.error('切换收藏失败:', err);
+    } else if (contentType === 'audiobook') {
+      if (!albumId || !videoTitleRef.current) return;
+
+      try {
+        const key = generateStorageKey('audiobook', albumId);
+        if (favorited) {
+          await deleteFavorite(key);
+          setFavorited(false);
+        } else {
+          await saveFavorite(key, {
+            title: videoTitleRef.current,
+            source_name: '有声书',
+            year: videoYearRef.current,
+            cover: videoCover,
+            total_episodes: audiobookTotalTracks,
+            save_time: Date.now(),
+            search_title: searchTitle,
+            type: 'audiobook',
+            albumId: albumId,
+            intro: videoIntro,
+          });
+          setFavorited(true);
+        }
+      } catch (err) {
+        console.error('切换有声书收藏失败:', err);
+      }
     }
   };
 

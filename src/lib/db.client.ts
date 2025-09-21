@@ -28,6 +28,13 @@ export interface PlayRecord {
   total_time: number; // 总进度（秒）
   save_time: number; // 记录保存时间（时间戳）
   search_title?: string; // 搜索时使用的标题
+
+  // For audiobook
+  type?: 'video' | 'audiobook';
+  albumId?: string;
+  source?: string;
+  id?: string;
+  intro?: string;
 }
 
 // ---- 收藏类型 ----
@@ -39,6 +46,13 @@ export interface Favorite {
   total_episodes: number;
   save_time: number;
   search_title?: string;
+
+  // For audiobook
+  type?: 'video' | 'audiobook';
+  albumId?: string;
+  source?: string;
+  id?: string;
+  intro?: string;
 }
 
 // ---- 片头片尾跳过配置类型 ----
@@ -909,12 +923,9 @@ export async function getAllFavorites(): Promise<Record<string, Favorite>> {
  * 数据库存储模式下使用乐观更新：先更新缓存，再异步同步到数据库。
  */
 export async function saveFavorite(
-  source: string,
-  id: string,
+  key: string,
   favorite: Favorite
 ): Promise<void> {
-  const key = generateStorageKey(source, id);
-
   // 数据库存储模式：乐观更新策略（包括 redis、d1、upstash）
   if (STORAGE_TYPE !== 'localstorage') {
     // 立即更新缓存
@@ -971,12 +982,7 @@ export async function saveFavorite(
  * 删除收藏。
  * 数据库存储模式下使用乐观更新：先更新缓存，再异步同步到数据库。
  */
-export async function deleteFavorite(
-  source: string,
-  id: string
-): Promise<void> {
-  const key = generateStorageKey(source, id);
-
+export async function deleteFavorite(key: string): Promise<void> {
   // 数据库存储模式：乐观更新策略（包括 redis、d1、upstash）
   if (STORAGE_TYPE !== 'localstorage') {
     // 立即更新缓存
@@ -1029,12 +1035,7 @@ export async function deleteFavorite(
  * 判断是否已收藏。
  * 数据库存储模式下使用混合缓存策略：优先返回缓存数据，后台异步同步最新数据。
  */
-export async function isFavorited(
-  source: string,
-  id: string
-): Promise<boolean> {
-  const key = generateStorageKey(source, id);
-
+export async function isFavorited(key: string): Promise<boolean> {
   // 数据库存储模式：使用混合缓存策略（包括 redis、d1、upstash）
   if (STORAGE_TYPE !== 'localstorage') {
     const cachedFavorites = cacheManager.getCachedFavorites();
@@ -1272,7 +1273,7 @@ export function subscribeToDataUpdates<T>(
   callback: (data: T) => void
 ): () => void {
   if (typeof window === 'undefined') {
-    return () => {};
+    return () => { };
   }
 
   const handleUpdate = (event: CustomEvent) => {

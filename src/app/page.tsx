@@ -23,6 +23,7 @@ import PageLayout from '@/components/PageLayout';
 import PaginatedRow from '@/components/PaginatedRow';
 import { useSite } from '@/components/SiteProvider';
 import VideoCard from '@/components/VideoCard';
+import AudiobookCard from '@/components/AudiobookCard';
 
 // 主内容区大型 KatelyaTV Logo 组件
 const MainKatelyaLogo = () => {
@@ -121,6 +122,10 @@ function HomeClient() {
     source_name: string;
     currentEpisode?: number;
     search_title?: string;
+    type?: 'video' | 'audiobook';
+    albumId?: string;
+    intro?: string;
+    year?: string;
   };
 
   const [favoriteItems, setFavoriteItems] = useState<FavoriteItem[]>([]);
@@ -265,25 +270,40 @@ function HomeClient() {
     const sorted = Object.entries(allFavorites)
       .sort(([, a], [, b]) => b.save_time - a.save_time)
       .map(([key, fav]) => {
-        const plusIndex = key.indexOf('+');
-        const source = key.slice(0, plusIndex);
-        const id = key.slice(plusIndex + 1);
-
-        // 查找对应的播放记录，获取当前集数
         const playRecord = allPlayRecords[key];
         const currentEpisode = playRecord?.index;
 
-        return {
-          id,
-          source,
-          title: fav.title,
-          year: fav.year,
-          poster: fav.cover,
-          episodes: fav.total_episodes,
-          source_name: fav.source_name,
-          currentEpisode,
-          search_title: fav?.search_title,
-        } as FavoriteItem;
+        if (fav.albumId) {
+          return {
+            id: fav.albumId,
+            albumId: fav.albumId,
+            source: fav.source,
+            title: fav.title,
+            poster: fav.cover,
+            episodes: fav.total_episodes,
+            source_name: fav.source_name,
+            currentEpisode,
+            search_title: fav?.search_title,
+            type: 'audiobook',
+            intro: fav.intro,
+          } as FavoriteItem;
+        } else {
+          const plusIndex = key.indexOf('+');
+          const source = key.slice(0, plusIndex);
+          const id = key.slice(plusIndex + 1);
+          return {
+            id,
+            source,
+            title: fav.title,
+            year: fav.year,
+            poster: fav.cover,
+            episodes: fav.total_episodes,
+            source_name: fav.source_name,
+            currentEpisode,
+            search_title: fav?.search_title,
+            type: 'video',
+          } as FavoriteItem;
+        }
       });
     setFavoriteItems(sorted);
   };
@@ -362,12 +382,24 @@ function HomeClient() {
                       key={item.id + item.source}
                       className='w-full max-w-44'
                     >
-                      <VideoCard
-                        query={item.search_title}
-                        {...item}
-                        from='favorite'
-                        type={item.episodes > 1 ? 'tv' : ''}
-                      />
+                      {item.type === 'audiobook' ? (
+                        <AudiobookCard
+                          albumId={item.albumId!}
+                          title={item.title}
+                          cover={item.poster}
+                          intro={item.intro!}
+                          from='favorite'
+                          currentEpisode={item.currentEpisode}
+                          totalEpisodes={item.episodes}
+                        />
+                      ) : (
+                        <VideoCard
+                          query={item.search_title}
+                          {...item}
+                          from='favorite'
+                          type={item.episodes > 1 ? 'tv' : ''}
+                        />
+                      )}
                     </div>
                   ))}
                   {favoriteItems.length === 0 && (
@@ -401,7 +433,7 @@ function HomeClient() {
                     <ChevronRight className='w-4 h-4 ml-1' />
                   </Link>
                 </div>
-                <PaginatedRow 
+                <PaginatedRow
                   itemsPerPage={10}
                   onLoadMore={loadMoreMovies}
                   hasMoreData={hasMoreData.movies}
@@ -409,34 +441,34 @@ function HomeClient() {
                 >
                   {loading
                     ? // 加载状态显示灰色占位数据 (显示10个，2行x5列)
-                      Array.from({ length: 10 }).map((_, index) => (
-                        <div
-                          key={index}
-                          className='w-full'
-                        >
-                          <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-purple-200 animate-pulse dark:bg-purple-800'>
-                            <div className='absolute inset-0 bg-purple-300 dark:bg-purple-700'></div>
-                          </div>
-                          <div className='mt-2 h-4 bg-purple-200 rounded animate-pulse dark:bg-purple-800'></div>
+                    Array.from({ length: 10 }).map((_, index) => (
+                      <div
+                        key={index}
+                        className='w-full'
+                      >
+                        <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-purple-200 animate-pulse dark:bg-purple-800'>
+                          <div className='absolute inset-0 bg-purple-300 dark:bg-purple-700'></div>
                         </div>
-                      ))
+                        <div className='mt-2 h-4 bg-purple-200 rounded animate-pulse dark:bg-purple-800'></div>
+                      </div>
+                    ))
                     : // 显示真实数据
-                      hotMovies.map((movie, index) => (
-                        <div
-                          key={index}
-                          className='w-full'
-                        >
-                          <VideoCard
-                            from='douban'
-                            title={movie.title}
-                            poster={movie.poster}
-                            douban_id={movie.id}
-                            rate={movie.rate}
-                            year={movie.year}
-                            type='movie'
-                          />
-                        </div>
-                      ))}
+                    hotMovies.map((movie, index) => (
+                      <div
+                        key={index}
+                        className='w-full'
+                      >
+                        <VideoCard
+                          from='douban'
+                          title={movie.title}
+                          poster={movie.poster}
+                          douban_id={movie.id}
+                          rate={movie.rate}
+                          year={movie.year}
+                          type='movie'
+                        />
+                      </div>
+                    ))}
                 </PaginatedRow>
               </section>
 
@@ -454,7 +486,7 @@ function HomeClient() {
                     <ChevronRight className='w-4 h-4 ml-1' />
                   </Link>
                 </div>
-                <PaginatedRow 
+                <PaginatedRow
                   itemsPerPage={10}
                   onLoadMore={loadMoreTvShows}
                   hasMoreData={hasMoreData.tvShows}
@@ -462,33 +494,33 @@ function HomeClient() {
                 >
                   {loading
                     ? // 加载状态显示灰色占位数据 (显示10个，2行x5列)
-                      Array.from({ length: 10 }).map((_, index) => (
-                        <div
-                          key={index}
-                          className='w-full'
-                        >
-                          <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-purple-200 animate-pulse dark:bg-purple-800'>
-                            <div className='absolute inset-0 bg-purple-300 dark:bg-purple-700'></div>
-                          </div>
-                          <div className='mt-2 h-4 bg-purple-200 rounded animate-pulse dark:bg-purple-800'></div>
+                    Array.from({ length: 10 }).map((_, index) => (
+                      <div
+                        key={index}
+                        className='w-full'
+                      >
+                        <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-purple-200 animate-pulse dark:bg-purple-800'>
+                          <div className='absolute inset-0 bg-purple-300 dark:bg-purple-700'></div>
                         </div>
-                      ))
+                        <div className='mt-2 h-4 bg-purple-200 rounded animate-pulse dark:bg-purple-800'></div>
+                      </div>
+                    ))
                     : // 显示真实数据
-                      hotTvShows.map((show, index) => (
-                        <div
-                          key={index}
-                          className='w-full'
-                        >
-                          <VideoCard
-                            from='douban'
-                            title={show.title}
-                            poster={show.poster}
-                            douban_id={show.id}
-                            rate={show.rate}
-                            year={show.year}
-                          />
-                        </div>
-                      ))}
+                    hotTvShows.map((show, index) => (
+                      <div
+                        key={index}
+                        className='w-full'
+                      >
+                        <VideoCard
+                          from='douban'
+                          title={show.title}
+                          poster={show.poster}
+                          douban_id={show.id}
+                          rate={show.rate}
+                          year={show.year}
+                        />
+                      </div>
+                    ))}
                 </PaginatedRow>
               </section>
 
@@ -506,7 +538,7 @@ function HomeClient() {
                     <ChevronRight className='w-4 h-4 ml-1' />
                   </Link>
                 </div>
-                <PaginatedRow 
+                <PaginatedRow
                   itemsPerPage={10}
                   onLoadMore={loadMoreVarietyShows}
                   hasMoreData={hasMoreData.varietyShows}
@@ -514,33 +546,33 @@ function HomeClient() {
                 >
                   {loading
                     ? // 加载状态显示灰色占位数据 (显示10个，2行x5列)
-                      Array.from({ length: 10 }).map((_, index) => (
-                        <div
-                          key={index}
-                          className='w-full'
-                        >
-                          <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-purple-200 animate-pulse dark:bg-purple-800'>
-                            <div className='absolute inset-0 bg-purple-300 dark:bg-purple-700'></div>
-                          </div>
-                          <div className='mt-2 h-4 bg-purple-200 rounded animate-pulse dark:bg-purple-800'></div>
+                    Array.from({ length: 10 }).map((_, index) => (
+                      <div
+                        key={index}
+                        className='w-full'
+                      >
+                        <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-purple-200 animate-pulse dark:bg-purple-800'>
+                          <div className='absolute inset-0 bg-purple-300 dark:bg-purple-700'></div>
                         </div>
-                      ))
+                        <div className='mt-2 h-4 bg-purple-200 rounded animate-pulse dark:bg-purple-800'></div>
+                      </div>
+                    ))
                     : // 显示真实数据
-                      hotVarietyShows.map((show, index) => (
-                        <div
-                          key={index}
-                          className='w-full'
-                        >
-                          <VideoCard
-                            from='douban'
-                            title={show.title}
-                            poster={show.poster}
-                            douban_id={show.id}
-                            rate={show.rate}
-                            year={show.year}
-                          />
-                        </div>
-                      ))}
+                    hotVarietyShows.map((show, index) => (
+                      <div
+                        key={index}
+                        className='w-full'
+                      >
+                        <VideoCard
+                          from='douban'
+                          title={show.title}
+                          poster={show.poster}
+                          douban_id={show.id}
+                          rate={show.rate}
+                          year={show.year}
+                        />
+                      </div>
+                    ))}
                 </PaginatedRow>
               </section>
 
@@ -552,9 +584,8 @@ function HomeClient() {
       </div>
       {announcement && showAnnouncement && (
         <div
-          className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm dark:bg-black/70 p-4 transition-opacity duration-300 ${
-            showAnnouncement ? '' : 'opacity-0 pointer-events-none'
-          }`}
+          className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm dark:bg-black/70 p-4 transition-opacity duration-300 ${showAnnouncement ? '' : 'opacity-0 pointer-events-none'
+            }`}
         >
           <div className='w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-gray-900 transform transition-all duration-300 hover:shadow-2xl'>
             <div className='flex justify-between items-start mb-4'>
