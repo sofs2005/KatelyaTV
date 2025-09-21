@@ -1447,6 +1447,12 @@ function PlayPageClient() {
       });
 
       artPlayerRef.current.on('video:timeupdate', () => {
+        const player = artPlayerRef.current;
+        if (player) {
+          setCurrentPlayTime(player.currentTime);
+          setVideoDuration(player.duration);
+        }
+
         const now = Date.now();
         let interval = 5000;
         if (process.env.NEXT_PUBLIC_STORAGE_TYPE === 'd1') {
@@ -1664,9 +1670,10 @@ function PlayPageClient() {
           </h1>
 
           {/* 跳过设置按钮 */}
-          {currentSource && currentId && (
-            <SkipSettingsButton onClick={() => setIsSkipSettingMode(true)} />
-          )}
+          {((contentType === 'video' && currentSource && currentId) ||
+            (contentType === 'audiobook' && albumId)) && (
+              <SkipSettingsButton onClick={() => setIsSkipSettingMode(true)} />
+            )}
         </div>
         {/* 第二行：播放器和选集 */}
         <div className='space-y-2'>
@@ -1727,19 +1734,23 @@ function PlayPageClient() {
                 ></div>
 
                 {/* 跳过片头片尾控制器 */}
-                {currentSource && currentId && videoTitle && (
-                  <SkipController
-                    source={currentSource}
-                    id={currentId}
-                    title={videoTitle}
-                    artPlayerRef={artPlayerRef}
-                    currentTime={currentPlayTime}
-                    duration={videoDuration}
-                    isSettingMode={isSkipSettingMode}
-                    onSettingModeChange={setIsSkipSettingMode}
-                    onNextEpisode={handleNextEpisode}
-                  />
-                )}
+                {((contentType === 'video' && currentSource && currentId) ||
+                  (contentType === 'audiobook' && albumId)) &&
+                  videoTitle && (
+                    <SkipController
+                      source={
+                        contentType === 'audiobook' ? 'audiobook' : currentSource
+                      }
+                      id={contentType === 'audiobook' ? albumId : currentId}
+                      title={videoTitle}
+                      artPlayerRef={artPlayerRef}
+                      currentTime={currentPlayTime}
+                      duration={videoDuration}
+                      isSettingMode={isSkipSettingMode}
+                      onSettingModeChange={setIsSkipSettingMode}
+                      onNextEpisode={handleNextEpisode}
+                    />
+                  )}
 
                 {/* 换源加载蒙层 */}
                 {isVideoLoading && (
