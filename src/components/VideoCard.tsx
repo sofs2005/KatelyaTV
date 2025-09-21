@@ -131,8 +131,10 @@ export default function VideoCard({
 
     const fetchFavoriteStatus = async () => {
       try {
-        const fav = await isFavorited(storageKey);
-        setFavorited(fav);
+        if (storageKey) {
+          const fav = await isFavorited(storageKey);
+          setFavorited(fav);
+        }
       } catch (err) {
         console.error('检查收藏状态失败:', err);
       }
