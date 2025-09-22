@@ -41,7 +41,7 @@ NODE_ENV = "production"
 
 [[env.production.d1_databases]]
 binding = "DB"
-database_name = "katelyatv"
+database_name = "katelya"
 database_id = "89f98a01-7a27-41d2-9d1c-2bd2959393be"
 
 [build]
