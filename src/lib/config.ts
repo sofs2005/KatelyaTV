@@ -53,6 +53,9 @@ async function initConfig() {
     return;
   }
 
+  const isBrowser =
+    typeof window !== 'undefined' && typeof window.document !== 'undefined';
+
   if (process.env.DOCKER_ENV === 'true') {
     // eslint-disable-next-line @typescript-eslint/no-implied-eval
     const _require = eval('require') as NodeRequire;
@@ -67,134 +70,81 @@ async function initConfig() {
     // 默认使用编译时生成的配置
     fileConfig = runtimeConfig as unknown as ConfigFileStruct;
   }
+
+  const createFileBasedConfig = () =>
+  ({
+    SiteConfig: {
+      SiteName: process.env.SITE_NAME || 'KatelyaTV',
+      Announcement:
+        process.env.ANNOUNCEMENT ||
+        '本网站仅提供影视信息搜索服务，所有内容均来自第三方网站。本站不存储任何视频资源，不对任何内容的准确性、合法性、完整性负责。',
+      SearchDownstreamMaxPage:
+        Number(process.env.NEXT_PUBLIC_SEARCH_MAX_PAGE) || 5,
+      SiteInterfaceCacheTime: fileConfig.cache_time || 7200,
+      ImageProxy: process.env.NEXT_PUBLIC_IMAGE_PROXY || '',
+      DoubanProxy: process.env.NEXT_PUBLIC_DOUBAN_PROXY || '',
+    },
+    UserConfig: {
+      AllowRegister: process.env.NEXT_PUBLIC_ENABLE_REGISTER === 'true',
+      Users: [],
+    },
+    SourceConfig: Object.entries(fileConfig.api_site).map(([key, site]) => ({
+      key,
+      name: site.name,
+      api: site.api,
+      detail: site.detail,
+      from: 'config',
+      disabled: false,
+      is_adult: (site as any).is_adult || false,
+      type: (site as any).type,
+    })),
+    CustomCategories:
+      fileConfig.custom_category?.map((category) => ({
+        name: category.name,
+        type: category.type,
+        query: category.query,
+        from: 'config',
+        disabled: false,
+      })) || [],
+  } as AdminConfig);
+
   const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
-  if (storageType !== 'localstorage') {
-    // 数据库存储，读取并补全管理员配置
-    const storage = getStorage();
+  if (storageType === 'localstorage' || isBrowser) {
+    cachedConfig = createFileBasedConfig();
+    return;
+  }
 
-    try {
-      // 尝试从数据库获取管理员配置
-      let adminConfig: AdminConfig | null = null;
-      if (storage && typeof (storage as any).getAdminConfig === 'function') {
-        adminConfig = await (storage as any).getAdminConfig();
+  // 数据库存储，读取并补全管理员配置 (仅限服务器端)
+  const storage = getStorage();
+  try {
+    // 尝试从数据库获取管理员配置
+    let adminConfig: AdminConfig | null = null;
+    if (storage && typeof (storage as any).getAdminConfig === 'function') {
+      adminConfig = await (storage as any).getAdminConfig();
+    }
+
+    // 获取所有用户名，用于补全 Users
+    let userNames: string[] = [];
+    if (storage && typeof (storage as any).getAllUsers === 'function') {
+      try {
+        userNames = await (storage as any).getAllUsers();
+      } catch (e) {
+        console.error('获取用户列表失败:', e);
       }
+    }
 
-      // 获取所有用户名，用于补全 Users
-      let userNames: string[] = [];
-      if (storage && typeof (storage as any).getAllUsers === 'function') {
-        try {
-          userNames = await (storage as any).getAllUsers();
-        } catch (e) {
-          console.error('获取用户列表失败:', e);
-        }
-      }
+    // 从文件中获取源信息，用于补全源
+    const apiSiteEntries = Object.entries(fileConfig.api_site);
+    const customCategories = fileConfig.custom_category || [];
 
-      // 从文件中获取源信息，用于补全源
-      const apiSiteEntries = Object.entries(fileConfig.api_site);
-      const customCategories = fileConfig.custom_category || [];
-
-      if (adminConfig) {
-        // 补全 SourceConfig
-        const existed = new Set(
-          (adminConfig.SourceConfig || []).map((s) => s.key)
-        );
-        apiSiteEntries.forEach(([key, site]) => {
-          if (!existed.has(key)) {
-            adminConfig!.SourceConfig.push({
-              key,
-              name: site.name,
-              api: site.api,
-              detail: site.detail,
-              from: 'config',
-              disabled: false,
-              is_adult: (site as any).is_adult || false, // 确保 is_adult 字段被正确处理
-              type: (site as any).type,
-            });
-          }
-        });
-
-        // 检查现有源是否在 fileConfig.api_site 中，如果不在则标记为 custom
-        const apiSiteKeys = new Set(apiSiteEntries.map(([key]) => key));
-        adminConfig.SourceConfig.forEach((source) => {
-          if (!apiSiteKeys.has(source.key)) {
-            source.from = 'custom';
-          } else {
-            // 更新现有源的 is_adult 字段
-            const siteConfig = fileConfig.api_site[source.key];
-            if (siteConfig) {
-              source.is_adult = (siteConfig as any).is_adult || false;
-              source.type = (siteConfig as any).type;
-            }
-          }
-        });
-
-        // 确保 CustomCategories 被初始化
-        if (!adminConfig.CustomCategories) {
-          adminConfig.CustomCategories = [];
-        }
-
-        // 始终使用文件中的 CustomCategories 覆盖
-        adminConfig.CustomCategories = customCategories.map((category) => ({
-          name: category.name,
-          type: category.type,
-          query: category.query,
-          from: 'config',
-          disabled: false,
-        }));
-
-        const existedUsers = new Set(
-          (adminConfig.UserConfig.Users || []).map((u) => u.username)
-        );
-        userNames.forEach((uname) => {
-          if (!existedUsers.has(uname)) {
-            adminConfig!.UserConfig.Users.push({
-              username: uname,
-              role: 'user',
-            });
-          }
-        });
-        // 站长
-        const ownerUser = process.env.USERNAME;
-        if (ownerUser) {
-          adminConfig!.UserConfig.Users = adminConfig!.UserConfig.Users.filter(
-            (u) => u.username !== ownerUser
-          );
-          adminConfig!.UserConfig.Users.unshift({
-            username: ownerUser,
-            role: 'owner',
-          });
-        }
-      } else {
-        // 数据库中没有配置，创建新的管理员配置
-        let allUsers = userNames.map((uname) => ({
-          username: uname,
-          role: 'user',
-        }));
-        const ownerUser = process.env.USERNAME;
-        if (ownerUser) {
-          allUsers = allUsers.filter((u) => u.username !== ownerUser);
-          allUsers.unshift({
-            username: ownerUser,
-            role: 'owner',
-          });
-        }
-        adminConfig = {
-          SiteConfig: {
-            SiteName: process.env.SITE_NAME || 'KatelyaTV',
-            Announcement:
-              process.env.ANNOUNCEMENT ||
-              '本网站仅提供影视信息搜索服务，所有内容均来自第三方网站。本站不存储任何视频资源，不对任何内容的准确性、合法性、完整性负责。',
-            SearchDownstreamMaxPage:
-              Number(process.env.NEXT_PUBLIC_SEARCH_MAX_PAGE) || 5,
-            SiteInterfaceCacheTime: fileConfig.cache_time || 7200,
-            ImageProxy: process.env.NEXT_PUBLIC_IMAGE_PROXY || '',
-            DoubanProxy: process.env.NEXT_PUBLIC_DOUBAN_PROXY || '',
-          },
-          UserConfig: {
-            AllowRegister: process.env.NEXT_PUBLIC_ENABLE_REGISTER === 'true',
-            Users: allUsers as any,
-          },
-          SourceConfig: apiSiteEntries.map(([key, site]) => ({
+    if (adminConfig) {
+      // 补全 SourceConfig
+      const existed = new Set(
+        (adminConfig.SourceConfig || []).map((s) => s.key)
+      );
+      apiSiteEntries.forEach(([key, site]) => {
+        if (!existed.has(key)) {
+          adminConfig!.SourceConfig.push({
             key,
             name: site.name,
             api: site.api,
@@ -203,27 +153,76 @@ async function initConfig() {
             disabled: false,
             is_adult: (site as any).is_adult || false, // 确保 is_adult 字段被正确处理
             type: (site as any).type,
-          })),
-          CustomCategories: customCategories.map((category) => ({
-            name: category.name,
-            type: category.type,
-            query: category.query,
-            from: 'config',
-            disabled: false,
-          })),
-        };
+          });
+        }
+      });
+
+      // 检查现有源是否在 fileConfig.api_site 中，如果不在则标记为 custom
+      const apiSiteKeys = new Set(apiSiteEntries.map(([key]) => key));
+      adminConfig.SourceConfig.forEach((source) => {
+        if (!apiSiteKeys.has(source.key)) {
+          source.from = 'custom';
+        } else {
+          // 更新现有源的 is_adult 字段
+          const siteConfig = fileConfig.api_site[source.key];
+          if (siteConfig) {
+            source.is_adult = (siteConfig as any).is_adult || false;
+            source.type = (siteConfig as any).type;
+          }
+        }
+      });
+
+      // 确保 CustomCategories 被初始化
+      if (!adminConfig.CustomCategories) {
+        adminConfig.CustomCategories = [];
       }
 
-      // 写回数据库（更新/创建）
-      if (storage && typeof (storage as any).setAdminConfig === 'function') {
-        await (storage as any).setAdminConfig(adminConfig);
-      }
+      // 始终使用文件中的 CustomCategories 覆盖
+      adminConfig.CustomCategories = customCategories.map((category) => ({
+        name: category.name,
+        type: category.type,
+        query: category.query,
+        from: 'config',
+        disabled: false,
+      }));
 
-      // 更新缓存
-      cachedConfig = adminConfig;
-    } catch (err) {
-      console.error('加载管理员配置失败, 回退到文件配置:', err);
-      cachedConfig = {
+      const existedUsers = new Set(
+        (adminConfig.UserConfig.Users || []).map((u) => u.username)
+      );
+      userNames.forEach((uname) => {
+        if (!existedUsers.has(uname)) {
+          adminConfig!.UserConfig.Users.push({
+            username: uname,
+            role: 'user',
+          });
+        }
+      });
+      // 站长
+      const ownerUser = process.env.USERNAME;
+      if (ownerUser) {
+        adminConfig!.UserConfig.Users = adminConfig!.UserConfig.Users.filter(
+          (u) => u.username !== ownerUser
+        );
+        adminConfig!.UserConfig.Users.unshift({
+          username: ownerUser,
+          role: 'owner',
+        });
+      }
+    } else {
+      // 数据库中没有配置，创建新的管理员配置
+      let allUsers = userNames.map((uname) => ({
+        username: uname,
+        role: 'user',
+      }));
+      const ownerUser = process.env.USERNAME;
+      if (ownerUser) {
+        allUsers = allUsers.filter((u) => u.username !== ownerUser);
+        allUsers.unshift({
+          username: ownerUser,
+          role: 'owner',
+        });
+      }
+      adminConfig = {
         SiteConfig: {
           SiteName: process.env.SITE_NAME || 'KatelyaTV',
           Announcement:
@@ -237,170 +236,43 @@ async function initConfig() {
         },
         UserConfig: {
           AllowRegister: process.env.NEXT_PUBLIC_ENABLE_REGISTER === 'true',
-          Users: [],
+          Users: allUsers as any,
         },
-        SourceConfig: Object.entries(fileConfig.api_site).map(([key, site]) => ({
+        SourceConfig: apiSiteEntries.map(([key, site]) => ({
           key,
           name: site.name,
           api: site.api,
           detail: site.detail,
           from: 'config',
           disabled: false,
-          is_adult: (site as any).is_adult || false,
+          is_adult: (site as any).is_adult || false, // 确保 is_adult 字段被正确处理
           type: (site as any).type,
         })),
-        CustomCategories:
-          fileConfig.custom_category?.map((category) => ({
-            name: category.name,
-            type: category.type,
-            query: category.query,
-            from: 'config',
-            disabled: false,
-          })) || [],
-      } as AdminConfig;
-    }
-  } else {
-    // 本地存储直接使用文件配置
-    cachedConfig = {
-      SiteConfig: {
-        SiteName: process.env.SITE_NAME || 'KatelyaTV',
-        Announcement:
-          process.env.ANNOUNCEMENT ||
-          '本网站仅提供影视信息搜索服务，所有内容均来自第三方网站。本站不存储任何视频资源，不对任何内容的准确性、合法性、完整性负责。',
-        SearchDownstreamMaxPage:
-          Number(process.env.NEXT_PUBLIC_SEARCH_MAX_PAGE) || 5,
-        SiteInterfaceCacheTime: fileConfig.cache_time || 7200,
-        ImageProxy: process.env.NEXT_PUBLIC_IMAGE_PROXY || '',
-        DoubanProxy: process.env.NEXT_PUBLIC_DOUBAN_PROXY || '',
-      },
-      UserConfig: {
-        AllowRegister: process.env.NEXT_PUBLIC_ENABLE_REGISTER === 'true',
-        Users: [],
-      },
-      SourceConfig: Object.entries(fileConfig.api_site).map(([key, site]) => ({
-        key,
-        name: site.name,
-        api: site.api,
-        detail: site.detail,
-        from: 'config',
-        disabled: false,
-        is_adult: (site as any).is_adult || false,
-        type: (site as any).type,
-      })),
-      CustomCategories:
-        fileConfig.custom_category?.map((category) => ({
+        CustomCategories: customCategories.map((category) => ({
           name: category.name,
           type: category.type,
           query: category.query,
           from: 'config',
           disabled: false,
-        })) || [],
-    } as AdminConfig;
+        })),
+      };
+    }
+
+    // 写回数据库（更新/创建）
+    if (storage && typeof (storage as any).setAdminConfig === 'function') {
+      await (storage as any).setAdminConfig(adminConfig);
+    }
+
+    // 更新缓存
+    cachedConfig = adminConfig;
+  } catch (err) {
+    console.error('加载管理员配置失败, 回退到文件配置:', err);
+    cachedConfig = createFileBasedConfig();
   }
 }
 
 export async function getConfig(): Promise<AdminConfig> {
-  const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
-  if (process.env.DOCKER_ENV === 'true' || storageType === 'localstorage') {
-    await initConfig();
-    return cachedConfig;
-  }
-  // 非 docker 环境且 DB 存储，直接读 db 配置
-  const storage = getStorage();
-  let adminConfig: AdminConfig | null = null;
-  if (storage && typeof (storage as any).getAdminConfig === 'function') {
-    try {
-      adminConfig = await (storage as any).getAdminConfig();
-    } catch (e) {
-      console.error('getConfig failed to get admin config, will fallback to initConfig', e);
-      adminConfig = null;
-    }
-  }
-  if (adminConfig) {
-    // 确保 CustomCategories 被初始化
-    if (!adminConfig.CustomCategories) {
-      adminConfig.CustomCategories = [];
-    }
-
-    // 合并一些环境变量配置
-    adminConfig.SiteConfig.SiteName = process.env.SITE_NAME || 'KatelyaTV';
-    adminConfig.SiteConfig.Announcement =
-      process.env.ANNOUNCEMENT ||
-      '本网站仅提供影视信息搜索服务，所有内容均来自第三方网站。本站不存储任何视频资源，不对任何内容的准确性、合法性、完整性负责。';
-    adminConfig.UserConfig.AllowRegister =
-      process.env.NEXT_PUBLIC_ENABLE_REGISTER === 'true';
-    adminConfig.SiteConfig.ImageProxy =
-      process.env.NEXT_PUBLIC_IMAGE_PROXY || '';
-    adminConfig.SiteConfig.DoubanProxy =
-      process.env.NEXT_PUBLIC_DOUBAN_PROXY || '';
-
-    // 合并文件中的源信息
-    fileConfig = runtimeConfig as unknown as ConfigFileStruct;
-    const apiSiteEntries = Object.entries(fileConfig.api_site);
-    const existed = new Set((adminConfig.SourceConfig || []).map((s) => s.key));
-    apiSiteEntries.forEach(([key, site]) => {
-      if (!existed.has(key)) {
-        adminConfig!.SourceConfig.push({
-          key,
-          name: site.name,
-          api: site.api,
-          detail: site.detail,
-          from: 'config',
-          disabled: false,
-          is_adult: (site as any).is_adult || false, // 确保处理 is_adult 字段
-          type: (site as any).type,
-        });
-      }
-    });
-
-    // 检查现有源是否在 fileConfig.api_site 中，如果不在则标记为 custom
-    const apiSiteKeys = new Set(apiSiteEntries.map(([key]) => key));
-    adminConfig.SourceConfig.forEach((source) => {
-      if (!apiSiteKeys.has(source.key)) {
-        source.from = 'custom';
-      } else {
-        // 更新现有源的 is_adult 字段
-        const siteConfig = fileConfig.api_site[source.key];
-        if (siteConfig) {
-          source.is_adult = (siteConfig as any).is_adult || false;
-          source.type = (siteConfig as any).type;
-        }
-      }
-    });
-
-    // 始终使用文件中的 CustomCategories 覆盖
-    const customCategories = fileConfig.custom_category || [];
-    adminConfig.CustomCategories = customCategories.map((category) => ({
-      name: category.name,
-      type: category.type,
-      query: category.query,
-      from: 'config',
-      disabled: false,
-    }));
-
-    const ownerUser = process.env.USERNAME || '';
-    // 检查配置中的站长用户是否和 USERNAME 匹配，如果不匹配则降级为普通用户
-    let containOwner = false;
-    adminConfig.UserConfig.Users.forEach((user) => {
-      if (user.username !== ownerUser && user.role === 'owner') {
-        user.role = 'user';
-      }
-      if (user.username === ownerUser) {
-        containOwner = true;
-        user.role = 'owner';
-      }
-    });
-
-    // 如果不在则添加
-    if (!containOwner) {
-      adminConfig.UserConfig.Users.unshift({
-        username: ownerUser,
-        role: 'owner',
-      });
-    }
-    cachedConfig = adminConfig;
-  } else {
-    // DB 无配置，执行一次初始化
+  if (!cachedConfig) {
     await initConfig();
   }
   return cachedConfig;

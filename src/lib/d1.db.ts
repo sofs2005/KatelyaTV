@@ -18,9 +18,6 @@ interface D1Database {
 
 // Ziska globalni instanci D1 databaze
 function getD1Database(): D1Database {
-  if (!(process.env as any).DB) {
-    throw new Error('D1 database binding is not available on process.env.DB');
-  }
   return (process.env as any).DB as D1Database;
 }
 
