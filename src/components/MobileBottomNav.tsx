@@ -41,7 +41,7 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
       try {
         const config = await getConfig();
         if (config.CustomCategories && config.CustomCategories.length > 0) {
-          // 移动端最多显示5个，所以我们替换掉最后一个“综艺”
+          // 添加“分类”菜单项，总共6个
           setNavItems([
             { icon: Home, label: '首页', href: '/' },
             { icon: Search, label: '搜索', href: '/search' },
@@ -54,6 +54,11 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
               icon: Tv,
               label: '剧集',
               href: '/douban?type=tv',
+            },
+            {
+              icon: Clover,
+              label: '综艺',
+              href: '/douban?type=show',
             },
             {
               icon: Star,
@@ -103,12 +108,12 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
         {navItems.map((item) => {
           const active = isActive(item.href);
           return (
-            <li key={item.href} className='flex-shrink-0 w-1/5'>
+            <li key={item.href} className='flex-shrink-0 w-1/6'>
               <Link
                 href={item.href}
                 className={`flex flex-col items-center justify-center w-full h-14 gap-1 text-xs transition-all duration-200 relative ${active
-                    ? 'transform -translate-y-1'
-                    : 'hover:transform hover:-translate-y-0.5'
+                  ? 'transform -translate-y-1'
+                  : 'hover:transform hover:-translate-y-0.5'
                   }`}
               >
                 {/* 激活状态的背景光晕 */}
@@ -118,14 +123,14 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
 
                 <item.icon
                   className={`h-6 w-6 transition-all duration-200 ${active
-                      ? 'text-purple-600 dark:text-purple-400 scale-110'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-purple-500 dark:hover:text-purple-300'
+                    ? 'text-purple-600 dark:text-purple-400 scale-110'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-purple-500 dark:hover:text-purple-300'
                     }`}
                 />
                 <span
                   className={`transition-all duration-200 font-medium ${active
-                      ? 'text-purple-600 dark:text-purple-400'
-                      : 'text-gray-600 dark:text-gray-300 hover:text-purple-500 dark:hover:text-purple-300'
+                    ? 'text-purple-600 dark:text-purple-400'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-purple-500 dark:hover:text-purple-300'
                     }`}
                 >
                   {item.label}
