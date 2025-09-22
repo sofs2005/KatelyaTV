@@ -133,33 +133,14 @@ async function initConfig() {
           adminConfig.CustomCategories = [];
         }
 
-        // 补全 CustomCategories
-        const customCategoriesMap = new Map(
-          adminConfig.CustomCategories.map((c) => [c.query + c.type, c])
-        );
-
-        customCategories.forEach((category) => {
-          customCategoriesMap.set(category.query + category.type, {
-            name: category.name,
-            type: category.type,
-            query: category.query,
-            from: 'config',
-            disabled: false,
-          });
-        });
-
-        // 检查现有 CustomCategories 是否在 fileConfig.custom_category 中，如果不在则标记为 custom
-        const customCategoriesKeys = new Set(
-          customCategories.map((c) => c.query + c.type)
-        );
-        customCategoriesMap.forEach((category) => {
-          if (!customCategoriesKeys.has(category.query + category.type)) {
-            category.from = 'custom';
-          }
-        });
-
-        // 将 Map 转换回数组
-        adminConfig.CustomCategories = Array.from(customCategoriesMap.values());
+        // 覆盖 CustomCategories
+        adminConfig.CustomCategories = customCategories.map((category) => ({
+          name: category.name,
+          type: category.type,
+          query: category.query,
+          from: 'config',
+          disabled: false,
+        }));
 
         const existedUsers = new Set(
           (adminConfig.UserConfig.Users || []).map((u) => u.username)
