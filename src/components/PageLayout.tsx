@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { BackButton } from './BackButton';
 import MobileBottomNav from './MobileBottomNav';
@@ -33,11 +33,27 @@ const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
     setSidebarCollapsed(collapsed);
   }, []);
 
+  useEffect(() => {
+    const setVh = () => {
+      // 我们将视口高度的 1% 定义为一个 CSS 变量 --vh
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    };
+
+    window.addEventListener('resize', setVh);
+    setVh(); // 初始设置
+
+    return () => window.removeEventListener('resize', setVh);
+  }, []);
+
   // 根据当前路径判断是否需要特殊布局（例如播放页面）
   const isSpecialLayout = ['/play'].includes(pathname);
 
   return (
-    <div className='w-full min-h-screen bg-gray-50 dark:bg-gray-900'>
+    <div
+      className='w-full bg-gray-50 dark:bg-gray-900'
+      style={{ minHeight: 'calc(var(--vh, 1vh) * 100)' }}
+    >
       {/* 移动端头部 (fixed) */}
       <MobileHeader showBackButton={isSpecialLayout} />
 
