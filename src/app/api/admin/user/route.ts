@@ -412,3 +412,68 @@ export async function PATCH(request: NextRequest) {
     );
   }
 }
+
+export async function GET(request: NextRequest) {
+  const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
+  if (storageType === 'localstorage') {
+    return NextResponse.json(
+      { error: '不支持本地存储进行管理员配置' },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const authInfo = getAuthInfoFromCookie(request);
+    if (!authInfo || !authInfo.username) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const username = authInfo.username;
+
+    // 获取配置与存储
+    const adminConfig = await getConfig();
+    const storage: IStorage | null = getStorage();
+
+    // 判定操作者是否为管理员
+    const userEntry = adminConfig.UserConfig.Users.find(
+      (u) => u.username === username
+    );
+    if (
+      username !== process.env.USERNAME &&
+      (!userEntry || userEntry.role !== 'admin')
+    ) {
+      return NextResponse.json({ error: '权限不足' }, { status: 401 });
+    }
+
+    // 获取所有用户的设置
+    const usersWithSettings = await Promise.all(
+      adminConfig.UserConfig.Users.map(async (user) => {
+        const settings = await storage.getUserSettings(user.username);
+        return {
+          ...user,
+          settings: settings || {}, // 确保即使没有设置也返回一个空对象
+        };
+      })
+    );
+
+    return NextResponse.json(
+      {
+        users: usersWithSettings,
+        allowRegister: adminConfig.UserConfig.AllowRegister,
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store', // 管理员配置不缓存
+        },
+      }
+    );
+  } catch (error) {
+    console.error('获取用户列表失败:', error);
+    return NextResponse.json(
+      {
+        error: '获取用户列表失败',
+        details: (error as Error).message,
+      },
+      { status: 500 }
+    );
+  }
+}
