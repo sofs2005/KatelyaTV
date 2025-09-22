@@ -13,10 +13,12 @@ import {
   deletePlayRecord,
   generateStorageKey,
   getAllPlayRecords,
+  getUserSettings,
   isFavorited,
   saveFavorite,
   savePlayRecord,
   subscribeToDataUpdates,
+  updateUserSettings,
   Favorite,
   PlayRecord,
 } from '@/lib/db.client';
@@ -179,6 +181,8 @@ function PlayPageClient() {
 
   // 跳过设置状态
   const [isSkipSettingMode, setIsSkipSettingMode] = useState<boolean>(false);
+  // 新增：有声书播放速度状态
+  const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
 
   const artPlayerRef = useRef<any>(null);
   const artRef = useRef<HTMLDivElement | null>(null);
@@ -757,6 +761,21 @@ function PlayPageClient() {
     };
 
     initFromHistory();
+  }, []);
+
+  // 新增：加载用户设置（包括播放速度）
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const settings = await getUserSettings();
+        if (settings && settings.audiobook_playback_speed) {
+          setPlaybackSpeed(settings.audiobook_playback_speed);
+        }
+      } catch (err) {
+        console.error('加载用户设置失败:', err);
+      }
+    };
+    loadSettings();
   }, []);
 
   // 处理换源
@@ -1488,6 +1507,11 @@ function PlayPageClient() {
 
       // 监听视频可播放事件，这时恢复播放进度更可靠
       artPlayerRef.current.on('video:canplay', () => {
+        // 新增：如果是audiobook，应用保存的播放速度
+        if (contentType === 'audiobook') {
+          artPlayerRef.current.playbackRate = playbackSpeed;
+        }
+
         // 若存在需要恢复的播放进度，则跳转
         if (resumeTimeRef.current && resumeTimeRef.current > 0) {
           try {
@@ -1562,6 +1586,18 @@ function PlayPageClient() {
 
       artPlayerRef.current.on('pause', () => {
         saveCurrentPlayProgress();
+      });
+
+      // 新增：监听播放速度变化并保存
+      artPlayerRef.current.on('video:ratechange', (newRate: number) => {
+        if (contentType === 'audiobook') {
+          setPlaybackSpeed(newRate);
+          try {
+            updateUserSettings({ audiobook_playback_speed: newRate });
+          } catch (err) {
+            console.error('保存播放速度失败:', err);
+          }
+        }
       });
 
       if (artPlayerRef.current?.video) {

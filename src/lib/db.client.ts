@@ -73,6 +73,16 @@ export interface EpisodeSkipConfig {
   updated_time: number; // 最后更新时间
 }
 
+// ---- 用户设置类型 ----
+export interface UserSettings {
+  filter_adult_content: boolean;
+  theme: 'light' | 'dark' | 'auto';
+  language: string;
+  auto_play: boolean;
+  video_quality: string;
+  audiobook_playback_speed?: number;
+}
+
 // ---- 缓存数据结构 ----
 interface CacheData<T> {
   data: T;
@@ -85,6 +95,7 @@ interface UserCacheStore {
   favorites?: CacheData<Record<string, Favorite>>;
   searchHistory?: CacheData<string[]>;
   skipConfigs?: CacheData<Record<string, EpisodeSkipConfig>>;
+  userSettings?: CacheData<UserSettings>;
 }
 
 // ---- 常量 ----
@@ -313,6 +324,35 @@ class HybridCacheManager {
 
     const userCache = this.getUserCache(username);
     userCache.skipConfigs = this.createCacheData(data);
+    this.saveUserCache(username, userCache);
+  }
+
+  /**
+   * 获取缓存的用户设置
+   */
+  getCachedUserSettings(): UserSettings | null {
+    const username = this.getCurrentUsername();
+    if (!username) return null;
+
+    const userCache = this.getUserCache(username);
+    const cached = userCache.userSettings;
+
+    if (cached && this.isCacheValid(cached)) {
+      return cached.data;
+    }
+
+    return null;
+  }
+
+  /**
+   * 缓存用户设置
+   */
+  cacheUserSettings(data: UserSettings): void {
+    const username = this.getCurrentUsername();
+    if (!username) return;
+
+    const userCache = this.getUserCache(username);
+    userCache.userSettings = this.createCacheData(data);
     this.saveUserCache(username, userCache);
   }
 
@@ -1544,5 +1584,79 @@ export async function deleteSkipConfig(source: string, id: string): Promise<void
   } catch (err) {
     console.error('删除跳过配置失败:', err);
     throw err;
+  }
+}
+
+// ---------------- 用户设置相关 API ----------------
+
+/**
+ * 获取用户设置
+ */
+export async function getUserSettings(): Promise<UserSettings | null> {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  if (STORAGE_TYPE !== 'localstorage') {
+    const cachedData = cacheManager.getCachedUserSettings();
+
+    if (cachedData) {
+      // Return cached data and update in background
+      fetchFromApi<UserSettings | null>(`/api/user/settings`)
+        .then((freshData) => {
+          if (freshData && JSON.stringify(cachedData) !== JSON.stringify(freshData)) {
+            cacheManager.cacheUserSettings(freshData);
+            window.dispatchEvent(new CustomEvent('userSettingsUpdated', { detail: freshData }));
+          }
+        })
+        .catch((err) => console.warn('后台同步用户设置失败:', err));
+      return cachedData;
+    } else {
+      // Fetch from API and cache
+      try {
+        const freshData = await fetchFromApi<UserSettings | null>(`/api/user/settings`);
+        if (freshData) {
+          cacheManager.cacheUserSettings(freshData);
+        }
+        return freshData;
+      } catch (err) {
+        console.error('获取用户设置失败:', err);
+        return null;
+      }
+    }
+  }
+  // No localstorage implementation for user settings
+  return null;
+}
+
+/**
+ * 更新用户设置
+ */
+export async function updateUserSettings(settings: Partial<UserSettings>): Promise<void> {
+  if (STORAGE_TYPE !== 'localstorage') {
+    // Optimistic update
+    const cachedSettings = cacheManager.getCachedUserSettings();
+    const newSettings = { ...cachedSettings, ...settings } as UserSettings;
+    cacheManager.cacheUserSettings(newSettings);
+
+    window.dispatchEvent(new CustomEvent('userSettingsUpdated', { detail: newSettings }));
+
+    // Sync with backend
+    try {
+      const res = await fetch('/api/user/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+      if (!res.ok) throw new Error(`更新用户设置失败: ${res.status}`);
+    } catch (err) {
+      console.error('更新用户设置失败，正在回滚:', err);
+      // Rollback optimistic update on failure
+      if (cachedSettings) {
+        cacheManager.cacheUserSettings(cachedSettings);
+        window.dispatchEvent(new CustomEvent('userSettingsUpdated', { detail: cachedSettings }));
+      }
+      throw err;
+    }
   }
 }
