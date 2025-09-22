@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getAuthInfoFromCookie } from '@/lib/auth';
-import { getConfig } from '@/lib/config';
+import { getConfig, invalidateConfigCache } from '@/lib/config';
 import { getStorage } from '@/lib/db';
 import { IStorage } from '@/lib/types';
 
@@ -314,6 +314,7 @@ export async function POST(request: NextRequest) {
     // 将更新后的配置写入数据库
     if (storage && typeof (storage as any).setAdminConfig === 'function') {
       await (storage as any).setAdminConfig(adminConfig);
+      invalidateConfigCache(); // 清除缓存，以便下次能获取最新配置
     }
 
     return NextResponse.json(
@@ -445,15 +446,25 @@ export async function GET(request: NextRequest) {
     }
 
     // 获取所有用户的设置
-    const usersWithSettings = await Promise.all(
-      adminConfig.UserConfig.Users.map(async (user) => {
-        const settings = await storage.getUserSettings(user.username);
-        return {
-          ...user,
-          settings: settings || {}, // 确保即使没有设置也返回一个空对象
-        };
+    const userPromises = adminConfig.UserConfig.Users.map(async (user) => {
+      const settings = await storage.getUserSettings(user.username);
+      return {
+        ...user,
+        settings: settings || {},
+      };
+    });
+
+    const results = await Promise.allSettled(userPromises);
+
+    const usersWithSettings = results
+      .map((result) => {
+        if (result.status === 'fulfilled') {
+          return result.value;
+        }
+        console.error('Failed to fetch settings for a user:', result.reason);
+        return null; // 返回 null 表示该用户数据有问题
       })
-    );
+      .filter(Boolean); // 过滤掉 null
 
     return NextResponse.json(
       {

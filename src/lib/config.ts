@@ -278,6 +278,10 @@ export async function getConfig(): Promise<AdminConfig> {
   return cachedConfig;
 }
 
+export function invalidateConfigCache() {
+  cachedConfig = undefined as any;
+}
+
 export async function resetConfig() {
   const storage = getStorage();
   // 获取所有用户名，用于补全 Users
