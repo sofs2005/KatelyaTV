@@ -183,6 +183,7 @@ function PlayPageClient() {
   const [isSkipSettingMode, setIsSkipSettingMode] = useState<boolean>(false);
   // 新增：有声书播放速度状态
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
+  const playbackSpeedRef = useRef(playbackSpeed);
 
   const artPlayerRef = useRef<any>(null);
   const artRef = useRef<HTMLDivElement | null>(null);
@@ -434,6 +435,7 @@ function PlayPageClient() {
         console.error('Error fetching audiobook track URL:', error);
         setError('获取音轨播放地址失败');
         setVideoUrl('');
+        setIsVideoLoading(false); // 修复：在出错时也要关闭加载状态
       }
     }
   };
@@ -689,94 +691,66 @@ function PlayPageClient() {
     }
   }, [contentType, albumId, searchTitle, videoTitle, videoYear, searchType, optimizationEnabled, needPrefer]);
 
-  // 播放记录处理
+  // 统一加载播放记录和用户设置
   useEffect(() => {
-    // 仅在初次挂载时检查播放记录
-    const initFromHistory = async () => {
-      // 优先从 URL 参数获取集数
+    const loadUserDataAndHistory = async () => {
+      // 优先处理URL中的集数参数
       const episodeFromUrl = searchParams.get('episode');
       if (episodeFromUrl) {
         const episodeIndex = parseInt(episodeFromUrl, 10) - 1;
         if (!isNaN(episodeIndex) && episodeIndex >= 0) {
           setCurrentEpisodeIndex(episodeIndex);
           startEpisodeInitialized.current = true;
-          // 注意：这里不再设置 resumeTimeRef.current = 0 并且不再 return
-          // 允许函数继续执行以从播放记录中加载时间戳
         }
       }
 
-      // 如果URL没有指定集数，则从播放记录中恢复
-      if (contentType === 'video' && currentSource && currentId) {
-        try {
-          let allRecords;
-          if (process.env.NEXT_PUBLIC_STORAGE_TYPE === 'd1') {
-            const response = await fetch('/api/playrecords');
-            if (!response.ok) throw new Error('Network response was not ok');
-            allRecords = await response.json();
-          } else {
-            allRecords = await getAllPlayRecords();
-          }
-          const key = generateStorageKey(currentSource, currentId);
-          const record = allRecords[key];
+      // 并行获取播放记录和用户设置
+      const [recordsResult, settingsResult] = await Promise.allSettled([
+        getAllPlayRecords(),
+        getUserSettings(),
+      ]);
 
-          if (record) {
-            const targetIndex = record.index - 1;
-            const targetTime = record.play_time;
-            if (targetIndex !== currentEpisodeIndex) {
-              setCurrentEpisodeIndex(targetIndex);
-              startEpisodeInitialized.current = true;
-            }
-            resumeTimeRef.current = targetTime;
-            startEpisodeInitialized.current = true;
-          }
-        } catch (err) {
-          console.error('读取视频播放记录失败:', err);
+      // 处理用户设置
+      if (
+        settingsResult.status === 'fulfilled' &&
+        settingsResult.value?.audiobook_playback_speed
+      ) {
+        setPlaybackSpeed(settingsResult.value.audiobook_playback_speed);
+      } else if (settingsResult.status === 'rejected') {
+        console.error('加载用户设置失败:', settingsResult.reason);
+      }
+
+      // 处理播放记录
+      if (recordsResult.status === 'fulfilled') {
+        const allRecords = recordsResult.value;
+        let key: string | null = null;
+        if (contentType === 'video' && currentSource && currentId) {
+          key = generateStorageKey(currentSource, currentId);
+        } else if (contentType === 'audiobook' && albumId) {
+          key = generateStorageKey('audiobook', albumId);
         }
-      } else if (contentType === 'audiobook' && albumId) {
-        try {
-          let allRecords;
-          if (process.env.NEXT_PUBLIC_STORAGE_TYPE === 'd1') {
-            const response = await fetch('/api/playrecords');
-            if (!response.ok) throw new Error('Network response was not ok');
-            allRecords = await response.json();
-          } else {
-            allRecords = await getAllPlayRecords();
-          }
-          const key = generateStorageKey('audiobook', albumId);
-          const record = allRecords[key];
 
-          if (record) {
-            const targetIndex = record.index - 1;
-            const targetTime = record.play_time;
+        if (key && allRecords[key]) {
+          const record = allRecords[key];
+          const targetIndex = record.index - 1;
+          const targetTime = record.play_time;
+
+          // 仅当URL没有指定集数时，才从历史记录恢复集数
+          if (!episodeFromUrl) {
             if (targetIndex !== currentEpisodeIndex) {
               setCurrentEpisodeIndex(targetIndex);
             }
-            resumeTimeRef.current = targetTime;
-            startEpisodeInitialized.current = true;
           }
-        } catch (err) {
-          console.error('读取有声书播放记录失败:', err);
+          resumeTimeRef.current = targetTime;
+          startEpisodeInitialized.current = true;
         }
+      } else {
+        console.error('读取播放记录失败:', recordsResult.reason);
       }
     };
 
-    initFromHistory();
-  }, []);
-
-  // 新增：加载用户设置（包括播放速度）
-  useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const settings = await getUserSettings();
-        if (settings && settings.audiobook_playback_speed) {
-          setPlaybackSpeed(settings.audiobook_playback_speed);
-        }
-      } catch (err) {
-        console.error('加载用户设置失败:', err);
-      }
-    };
-    loadSettings();
-  }, []);
+    loadUserDataAndHistory();
+  }, [contentType, currentSource, currentId, albumId]);
 
   // 处理换源
   const handleSourceChange = async (
@@ -1510,9 +1484,9 @@ function PlayPageClient() {
         // 新增：如果是audiobook，应用从状态加载的播放速度
         if (
           contentType === 'audiobook' &&
-          artPlayerRef.current.playbackRate !== playbackSpeed
+          artPlayerRef.current.playbackRate !== playbackSpeedRef.current
         ) {
-          artPlayerRef.current.playbackRate = playbackSpeed;
+          artPlayerRef.current.playbackRate = playbackSpeedRef.current;
         }
 
         // 若存在需要恢复的播放进度，则跳转
@@ -1549,6 +1523,8 @@ function PlayPageClient() {
         if (artPlayerRef.current.currentTime > 0) {
           return;
         }
+        setError(`播放失败，请尝试刷新或换源`);
+        setIsVideoLoading(false);
       });
 
       // 监听视频播放结束事件，自动播放下一集
@@ -1626,6 +1602,10 @@ function PlayPageClient() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    playbackSpeedRef.current = playbackSpeed;
+  }, [playbackSpeed]);
 
   if (loading) {
     return (
