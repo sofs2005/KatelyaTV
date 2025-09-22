@@ -1,128 +1,131 @@
--- D1 数据库初始化脚本
--- 用于创建 KatelyaTV 所需的数据表
+-- KatelyaTV D1 Database Schema
+-- Version: 2.0
+-- Description: This script defines the complete schema for the KatelyaTV application,
+-- ensuring compatibility with the latest application code.
 
--- 用户表
-CREATE TABLE IF NOT EXISTS users (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  username TEXT UNIQUE NOT NULL,
-  password TEXT NOT NULL,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+-- Drop existing tables to start fresh
+DROP TABLE IF EXISTS play_records;
+DROP TABLE IF EXISTS favorites;
+DROP TABLE IF EXISTS user_settings;
+DROP TABLE IF EXISTS search_history;
+DROP TABLE IF EXISTS skip_configs;
+DROP TABLE IF EXISTS admin_configs;
+DROP TABLE IF EXISTS users;
+
+-- Users table to store user credentials and basic information
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 播放记录表
-CREATE TABLE IF NOT EXISTS play_records (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL,
-  record_key TEXT NOT NULL,
-  video_url TEXT,
-  current_time REAL DEFAULT 0,
-  duration REAL DEFAULT 0,
-  episode_index INTEGER DEFAULT 0,
-  episode_url TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  UNIQUE (user_id, record_key)
+-- Play records for tracking user's viewing history
+CREATE TABLE play_records (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    record_key TEXT NOT NULL,
+    title TEXT NOT NULL,
+    source_name TEXT,
+    cover_url TEXT,
+    year TEXT,
+    episode_index INTEGER,
+    total_episodes INTEGER,
+    current_time REAL,
+    duration REAL,
+    search_title TEXT,
+    type TEXT, -- 'video' or 'audiobook'
+    album_id TEXT,
+    source TEXT,
+    intro TEXT,
+    video_url TEXT,
+    episode_url TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE(user_id, record_key)
 );
 
--- 收藏表
-CREATE TABLE IF NOT EXISTS favorites (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL,
-  favorite_key TEXT NOT NULL,
-  title TEXT,
-  cover_url TEXT,
-  video_url TEXT,
-  rating REAL,
-  year TEXT,
-  area TEXT,
-  category TEXT,
-  actors TEXT,
-  director TEXT,
-  description TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  UNIQUE (user_id, favorite_key)
+-- Favorites table for storing user's favorite videos/audiobooks
+CREATE TABLE favorites (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    favorite_key TEXT NOT NULL,
+    title TEXT NOT NULL,
+    cover_url TEXT,
+    video_url TEXT,
+    rating TEXT,
+    year TEXT,
+    area TEXT,
+    category TEXT,
+    actors TEXT,
+    director TEXT,
+    description TEXT,
+    source_name TEXT,
+    total_episodes INTEGER,
+    search_title TEXT,
+    type TEXT, -- 'video' or 'audiobook'
+    album_id TEXT,
+    source TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE(user_id, favorite_key)
 );
 
--- 搜索历史表
-CREATE TABLE IF NOT EXISTS search_history (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL,
-  keyword TEXT NOT NULL,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+-- User settings
+CREATE TABLE user_settings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    username TEXT NOT NULL,
+    filter_adult_content INTEGER DEFAULT 1,
+    theme TEXT DEFAULT 'auto',
+    language TEXT DEFAULT 'zh-CN',
+    auto_play INTEGER DEFAULT 1,
+    video_quality TEXT DEFAULT 'auto',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE(user_id, username)
 );
 
--- 跳过配置表
-CREATE TABLE IF NOT EXISTS skip_configs (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL,
-  config_key TEXT NOT NULL,
-  start_time INTEGER DEFAULT 0,
-  end_time INTEGER DEFAULT 0,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  UNIQUE (user_id, config_key)
+-- Search history
+CREATE TABLE search_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    keyword TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- 用户设置表
-CREATE TABLE IF NOT EXISTS user_settings (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL,
-  username TEXT NOT NULL,
-  filter_adult_content BOOLEAN DEFAULT 1,
-  theme TEXT DEFAULT 'auto',
-  language TEXT DEFAULT 'zh-CN',
-  auto_play BOOLEAN DEFAULT 1,
-  video_quality TEXT DEFAULT 'auto',
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  UNIQUE (user_id, username)
+-- Skip configurations for episodes (opening/ending)
+CREATE TABLE skip_configs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    config_key TEXT NOT NULL,
+    source TEXT,
+    title TEXT,
+    segments TEXT, -- JSON array of skip segments
+    start_time REAL,
+    end_time REAL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE(user_id, config_key)
 );
 
--- 管理员配置表
-CREATE TABLE IF NOT EXISTS admin_configs (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  config_key TEXT UNIQUE NOT NULL,
-  config_value TEXT,
-  description TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+-- Admin configurations
+CREATE TABLE admin_configs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    config_key TEXT NOT NULL UNIQUE,
+    config_value TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 插入默认管理员配置
-INSERT OR IGNORE INTO admin_configs (config_key, config_value, description) VALUES
-('site_name', 'KatelyaTV', '站点名称'),
-('site_description', '高性能影视播放平台', '站点描述'),
-('enable_register', 'true', '是否允许用户注册'),
-('max_users', '100', '最大用户数量'),
-('cache_ttl', '3600', '缓存时间（秒）');
-
--- 创建索引以提高查询性能
-CREATE INDEX IF NOT EXISTS idx_play_records_user_id ON play_records(user_id);
-CREATE INDEX IF NOT EXISTS idx_play_records_record_key ON play_records(record_key);
-CREATE INDEX IF NOT EXISTS idx_favorites_user_id ON favorites(user_id);
-CREATE INDEX IF NOT EXISTS idx_search_history_user_id ON search_history(user_id);
-CREATE INDEX IF NOT EXISTS idx_skip_configs_user_id ON skip_configs(user_id);
-CREATE INDEX IF NOT EXISTS idx_user_settings_user_id ON user_settings(user_id);
-CREATE INDEX IF NOT EXISTS idx_user_settings_username ON user_settings(username);
-
--- 创建视图以简化查询
-CREATE VIEW IF NOT EXISTS user_stats AS
-SELECT 
-  u.id,
-  u.username,
-  COUNT(DISTINCT pr.id) as play_count,
-  COUNT(DISTINCT f.id) as favorite_count,
-  COUNT(DISTINCT sh.id) as search_count,
-  u.created_at
-FROM users u
-LEFT JOIN play_records pr ON u.id = pr.user_id
-LEFT JOIN favorites f ON u.id = f.user_id
-LEFT JOIN search_history sh ON u.id = sh.user_id
-GROUP BY u.id, u.username, u.created_at;
+-- Indexes for performance
+CREATE INDEX idx_users_username ON users(username);
+CREATE INDEX idx_play_records_user_id ON play_records(user_id);
+CREATE INDEX idx_favorites_user_id ON favorites(user_id);
+CREATE INDEX idx_search_history_user_id ON search_history(user_id);
