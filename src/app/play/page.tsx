@@ -778,16 +778,6 @@ function PlayPageClient() {
     loadSettings();
   }, []);
 
-  // 新增：当播放速度状态或播放器实例变化时，更新播放器实例的播放速度
-  useEffect(() => {
-    if (artPlayerRef.current && contentType === 'audiobook') {
-      // 确保播放器实例存在且当前是audiobook模式
-      if (artPlayerRef.current.playbackRate !== playbackSpeed) {
-        artPlayerRef.current.playbackRate = playbackSpeed;
-      }
-    }
-  }, [playbackSpeed, videoUrl]); // 依赖播放速度和videoUrl（videoUrl变化会重建播放器）
-
   // 处理换源
   const handleSourceChange = async (
     newSource: string,
@@ -1517,6 +1507,14 @@ function PlayPageClient() {
 
       // 监听视频可播放事件，这时恢复播放进度更可靠
       artPlayerRef.current.on('video:canplay', () => {
+        // 新增：如果是audiobook，应用从状态加载的播放速度
+        if (
+          contentType === 'audiobook' &&
+          artPlayerRef.current.playbackRate !== playbackSpeed
+        ) {
+          artPlayerRef.current.playbackRate = playbackSpeed;
+        }
+
         // 若存在需要恢复的播放进度，则跳转
         if (resumeTimeRef.current && resumeTimeRef.current > 0) {
           try {
