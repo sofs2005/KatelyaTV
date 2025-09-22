@@ -46,7 +46,7 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
         setLoading(true);
         // In the local environment, directly access localStorage through db.client
         // In the production environment, obtain through the API route
-        if (process.env.NODE_ENV === 'production') {
+        if (process.env.NEXT_PUBLIC_STORAGE_TYPE === 'd1') {
           const response = await fetch('/api/playrecords');
           if (!response.ok) {
             throw new Error('Failed to fetch play records');
@@ -106,7 +106,7 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
             className='text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
             onClick={async () => {
               try {
-                if (process.env.NODE_ENV === 'production') {
+                if (process.env.NEXT_PUBLIC_STORAGE_TYPE === 'd1') {
                   const response = await fetch('/api/playrecords', {
                     method: 'DELETE',
                   });

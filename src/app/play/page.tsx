@@ -705,7 +705,7 @@ function PlayPageClient() {
       if (contentType === 'video' && currentSource && currentId) {
         try {
           let allRecords;
-          if (process.env.NODE_ENV === 'production') {
+          if (process.env.NEXT_PUBLIC_STORAGE_TYPE === 'd1') {
             const response = await fetch('/api/playrecords');
             if (!response.ok) throw new Error('Network response was not ok');
             allRecords = await response.json();
@@ -731,7 +731,7 @@ function PlayPageClient() {
       } else if (contentType === 'audiobook' && albumId) {
         try {
           let allRecords;
-          if (process.env.NODE_ENV === 'production') {
+          if (process.env.NEXT_PUBLIC_STORAGE_TYPE === 'd1') {
             const response = await fetch('/api/playrecords');
             if (!response.ok) throw new Error('Network response was not ok');
             allRecords = await response.json();
@@ -781,7 +781,7 @@ function PlayPageClient() {
             currentSourceRef.current,
             currentIdRef.current
           );
-          if (process.env.NODE_ENV === 'production') {
+          if (process.env.NEXT_PUBLIC_STORAGE_TYPE === 'd1') {
             await fetch(`/api/playrecords?key=${encodeURIComponent(key)}`, {
               method: 'DELETE',
             });
@@ -1028,7 +1028,7 @@ function PlayPageClient() {
           save_time: Date.now(),
           search_title: searchTitle,
         };
-        if (process.env.NODE_ENV === 'production') {
+        if (process.env.NEXT_PUBLIC_STORAGE_TYPE === 'd1') {
           await fetch('/api/playrecords', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1066,7 +1066,7 @@ function PlayPageClient() {
           albumId: albumId,
           intro: videoIntro,
         };
-        if (process.env.NODE_ENV === 'production') {
+        if (process.env.NEXT_PUBLIC_STORAGE_TYPE === 'd1') {
           await fetch('/api/playrecords', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1130,7 +1130,7 @@ function PlayPageClient() {
         }
 
         if (key) {
-          if (process.env.NODE_ENV === 'production') {
+          if (process.env.NEXT_PUBLIC_STORAGE_TYPE === 'd1') {
             const response = await fetch(
               `/api/favorites?key=${encodeURIComponent(key)}`
             );
@@ -1189,7 +1189,7 @@ function PlayPageClient() {
       try {
         const key = generateStorageKey(currentSourceRef.current, currentIdRef.current);
         if (favorited) {
-          if (process.env.NODE_ENV === 'production') {
+          if (process.env.NEXT_PUBLIC_STORAGE_TYPE === 'd1') {
             await fetch(`/api/favorites?key=${encodeURIComponent(key)}`, {
               method: 'DELETE',
             });
@@ -1210,7 +1210,7 @@ function PlayPageClient() {
             id: currentIdRef.current,
             type: 'video',
           };
-          if (process.env.NODE_ENV === 'production') {
+          if (process.env.NEXT_PUBLIC_STORAGE_TYPE === 'd1') {
             await fetch('/api/favorites', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -1230,7 +1230,7 @@ function PlayPageClient() {
       try {
         const key = generateStorageKey('audiobook', albumId);
         if (favorited) {
-          if (process.env.NODE_ENV === 'production') {
+          if (process.env.NEXT_PUBLIC_STORAGE_TYPE === 'd1') {
             await fetch(`/api/favorites?key=${encodeURIComponent(key)}`, {
               method: 'DELETE',
             });
@@ -1251,7 +1251,7 @@ function PlayPageClient() {
             albumId: albumId,
             intro: videoIntro,
           };
-          if (process.env.NODE_ENV === 'production') {
+          if (process.env.NEXT_PUBLIC_STORAGE_TYPE === 'd1') {
             await fetch('/api/favorites', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
