@@ -1598,11 +1598,34 @@ export async function getUserSettings(): Promise<UserSettings | null> {
   }
 
   if (STORAGE_TYPE !== 'localstorage') {
+    const authInfo = getAuthInfoFromBrowserCookie();
+    // 如果用户未登录，则不可能有用户设置
+    if (!authInfo?.username) {
+      return null;
+    }
+
+    const fetchSettings = async (): Promise<UserSettings | null> => {
+      const res = await fetch(`/api/user/settings`, {
+        headers: {
+          Authorization: `Bearer ${authInfo.username}`,
+        },
+      });
+      if (!res.ok) {
+        // 404 表示用户还没有设置，这是正常情况，不算作错误
+        if (res.status === 404) {
+          return null;
+        }
+        throw new Error(`请求 /api/user/settings 失败: ${res.status}`);
+      }
+      const data = await res.json();
+      return data.settings || null;
+    };
+
     const cachedData = cacheManager.getCachedUserSettings();
 
     if (cachedData) {
-      // Return cached data and update in background
-      fetchFromApi<UserSettings | null>(`/api/user/settings`)
+      // 返回缓存数据，同时后台异步更新
+      fetchSettings()
         .then((freshData) => {
           if (freshData && JSON.stringify(cachedData) !== JSON.stringify(freshData)) {
             cacheManager.cacheUserSettings(freshData);
@@ -1612,9 +1635,9 @@ export async function getUserSettings(): Promise<UserSettings | null> {
         .catch((err) => console.warn('后台同步用户设置失败:', err));
       return cachedData;
     } else {
-      // Fetch from API and cache
+      // 缓存为空，直接从 API 获取并缓存
       try {
-        const freshData = await fetchFromApi<UserSettings | null>(`/api/user/settings`);
+        const freshData = await fetchSettings();
         if (freshData) {
           cacheManager.cacheUserSettings(freshData);
         }
@@ -1625,7 +1648,7 @@ export async function getUserSettings(): Promise<UserSettings | null> {
       }
     }
   }
-  // No localstorage implementation for user settings
+  // localstorage 模式下没有用户设置功能
   return null;
 }
 
