@@ -159,7 +159,8 @@ export interface UserSettings {
   language: string;
   auto_play: boolean;
   video_quality: string;
-  [key: string]: string | boolean | number; // 允许其他设置
+  audiobook_playback_speed?: number; // 有声书播放速度
+  [key: string]: string | boolean | number | undefined; // 允许其他设置
 }
 
 // 搜索结果（支持成人内容分组）

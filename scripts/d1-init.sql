@@ -84,6 +84,7 @@ CREATE TABLE user_settings (
     language TEXT DEFAULT 'zh-CN',
     auto_play INTEGER DEFAULT 1,
     video_quality TEXT DEFAULT 'auto',
+    audiobook_playback_speed REAL DEFAULT 1.0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,

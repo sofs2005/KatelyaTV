@@ -291,6 +291,7 @@ export class D1Storage implements IStorage {
         language: 'zh-CN',
         auto_play: true,
         video_quality: 'auto',
+        audiobook_playback_speed: 1.0,
       };
     }
 
@@ -300,6 +301,7 @@ export class D1Storage implements IStorage {
       language: result.language as string,
       auto_play: result.auto_play === 1,
       video_quality: result.video_quality as string,
+      audiobook_playback_speed: (result.audiobook_playback_speed as number) || 1.0,
     };
   }
 
@@ -309,14 +311,15 @@ export class D1Storage implements IStorage {
 
     const db = await this.getDatabase();
     const stmt = db.prepare(`
-      INSERT INTO user_settings (user_id, username, filter_adult_content, theme, language, auto_play, video_quality)
-      VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+      INSERT INTO user_settings (user_id, username, filter_adult_content, theme, language, auto_play, video_quality, audiobook_playback_speed)
+      VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
       ON CONFLICT(user_id, username) DO UPDATE SET
         filter_adult_content = excluded.filter_adult_content,
         theme = excluded.theme,
         language = excluded.language,
         auto_play = excluded.auto_play,
         video_quality = excluded.video_quality,
+        audiobook_playback_speed = excluded.audiobook_playback_speed,
         updated_at = CURRENT_TIMESTAMP
     `).bind(
       userId, userName,
@@ -324,7 +327,8 @@ export class D1Storage implements IStorage {
       settings.theme,
       settings.language,
       settings.auto_play ? 1 : 0,
-      settings.video_quality
+      settings.video_quality,
+      settings.audiobook_playback_speed || 1.0
     );
     await stmt.run();
   }
