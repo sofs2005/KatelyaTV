@@ -702,7 +702,10 @@ function PlayPageClient() {
       // 如果URL没有指定集数，则从播放记录中恢复
       if (contentType === 'video' && currentSource && currentId) {
         try {
-          const allRecords = await getAllPlayRecords();
+          // API a-based fetch
+          const response = await fetch('/api/playrecords');
+          if (!response.ok) throw new Error('Network response was not ok');
+          const allRecords = await response.json();
           const key = generateStorageKey(currentSource, currentId);
           const record = allRecords[key];
 
@@ -721,7 +724,10 @@ function PlayPageClient() {
         }
       } else if (contentType === 'audiobook' && albumId) {
         try {
-          const allRecords = await getAllPlayRecords();
+          // API-based fetch
+          const response = await fetch('/api/playrecords');
+          if (!response.ok) throw new Error('Network response was not ok');
+          const allRecords = await response.json();
           const key = generateStorageKey('audiobook', albumId);
           const record = allRecords[key];
 
@@ -761,10 +767,13 @@ function PlayPageClient() {
       // 清除前一个历史记录
       if (currentSourceRef.current && currentIdRef.current) {
         try {
-          await deletePlayRecord(
+          const key = generateStorageKey(
             currentSourceRef.current,
             currentIdRef.current
           );
+          await fetch(`/api/playrecords?key=${encodeURIComponent(key)}`, {
+            method: 'DELETE',
+          });
           console.log('已清除前一个播放记录');
         } catch (err) {
           console.error('清除播放记录失败:', err);
@@ -986,7 +995,11 @@ function PlayPageClient() {
         return;
       }
       try {
-        await savePlayRecord(currentSourceRef.current, currentIdRef.current, {
+        const key = generateStorageKey(
+          currentSourceRef.current,
+          currentIdRef.current
+        );
+        const record = {
           title: videoTitleRef.current,
           source_name: detailRef.current?.source_name || '',
           year: detailRef.current?.year,
@@ -997,6 +1010,11 @@ function PlayPageClient() {
           total_time: Math.floor(duration),
           save_time: Date.now(),
           search_title: searchTitle,
+        };
+        await fetch('/api/playrecords', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key, record }),
         });
         lastSaveTimeRef.current = Date.now();
       } catch (err) {
@@ -1007,7 +1025,8 @@ function PlayPageClient() {
         return;
       }
       try {
-        await savePlayRecord('audiobook', albumId, {
+        const key = generateStorageKey('audiobook', albumId);
+        const record = {
           title: videoTitleRef.current,
           source_name: '有声书',
           year: videoYearRef.current,
@@ -1021,6 +1040,11 @@ function PlayPageClient() {
           type: 'audiobook',
           albumId: albumId,
           intro: videoIntro,
+        };
+        await fetch('/api/playrecords', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key, record }),
         });
         lastSaveTimeRef.current = Date.now();
       } catch (err) {
@@ -1077,8 +1101,13 @@ function PlayPageClient() {
         }
 
         if (key) {
-          const fav = await isFavorited(key);
-          setFavorited(fav);
+          const response = await fetch(
+            `/api/favorites?key=${encodeURIComponent(key)}`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            setFavorited(!!data);
+          }
         } else {
           setFavorited(false);
         }
@@ -1126,10 +1155,12 @@ function PlayPageClient() {
       try {
         const key = generateStorageKey(currentSourceRef.current, currentIdRef.current);
         if (favorited) {
-          await deleteFavorite(key);
+          await fetch(`/api/favorites?key=${encodeURIComponent(key)}`, {
+            method: 'DELETE',
+          });
           setFavorited(false);
         } else {
-          await saveFavorite(key, {
+          const record = {
             title: videoTitleRef.current,
             source_name: detailRef.current?.source_name || '',
             year: detailRef.current?.year,
@@ -1140,6 +1171,11 @@ function PlayPageClient() {
             source: currentSourceRef.current,
             id: currentIdRef.current,
             type: 'video',
+          };
+          await fetch('/api/favorites', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key, favorite: record }),
           });
           setFavorited(true);
         }
@@ -1152,10 +1188,12 @@ function PlayPageClient() {
       try {
         const key = generateStorageKey('audiobook', albumId);
         if (favorited) {
-          await deleteFavorite(key);
+          await fetch(`/api/favorites?key=${encodeURIComponent(key)}`, {
+            method: 'DELETE',
+          });
           setFavorited(false);
         } else {
-          await saveFavorite(key, {
+          const record = {
             title: videoTitleRef.current,
             source_name: '有声书',
             year: videoYearRef.current,
@@ -1166,6 +1204,11 @@ function PlayPageClient() {
             type: 'audiobook',
             albumId: albumId,
             intro: videoIntro,
+          };
+          await fetch('/api/favorites', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key, favorite: record }),
           });
           setFavorited(true);
         }

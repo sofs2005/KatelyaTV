@@ -45,8 +45,12 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
       try {
         setLoading(true);
 
-        // 从缓存或API获取所有播放记录
-        const allRecords = await getAllPlayRecords();
+        // 通过 API 路由获取播放记录
+        const response = await fetch('/api/playrecords');
+        if (!response.ok) {
+          throw new Error('Failed to fetch play records');
+        }
+        const allRecords = await response.json();
         updatePlayRecords(allRecords);
       } catch (error) {
         console.error('获取播放记录失败:', error);
@@ -96,8 +100,17 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
           <button
             className='text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
             onClick={async () => {
-              await clearAllPlayRecords();
-              setPlayRecords([]);
+              try {
+                const response = await fetch('/api/playrecords', {
+                  method: 'DELETE',
+                });
+                if (!response.ok) {
+                  throw new Error('Failed to clear play records');
+                }
+                setPlayRecords([]);
+              } catch (error) {
+                console.error('清空播放记录失败:', error);
+              }
             }}
           >
             清空
