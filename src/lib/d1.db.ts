@@ -473,7 +473,10 @@ export class D1Storage implements IStorage {
 
   async setAdminConfig(config: AdminConfig): Promise<void> {
     const db = await this.getDatabase();
-    const value = JSON.stringify(config);
+    // 创建一个不包含 CustomCategories 的副本以存入数据库
+    const configForDb = { ...config };
+    delete (configForDb as Partial<AdminConfig>).CustomCategories;
+    const value = JSON.stringify(configForDb);
     const stmt = db.prepare(`
       INSERT INTO admin_configs (config_key, config_value) VALUES (?1, ?2)
       ON CONFLICT(config_key) DO UPDATE SET config_value = excluded.config_value, updated_at = CURRENT_TIMESTAMP

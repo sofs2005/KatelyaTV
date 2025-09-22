@@ -133,7 +133,7 @@ async function initConfig() {
           adminConfig.CustomCategories = [];
         }
 
-        // 覆盖 CustomCategories
+        // 始终使用文件中的 CustomCategories 覆盖
         adminConfig.CustomCategories = customCategories.map((category) => ({
           name: category.name,
           type: category.type,
@@ -368,7 +368,7 @@ export async function getConfig(): Promise<AdminConfig> {
       }
     });
 
-    // 覆盖 CustomCategories
+    // 始终使用文件中的 CustomCategories 覆盖
     const customCategories = fileConfig.custom_category || [];
     adminConfig.CustomCategories = customCategories.map((category) => ({
       name: category.name,
