@@ -1643,10 +1643,22 @@ export async function updateUserSettings(settings: Partial<UserSettings>): Promi
 
     // Sync with backend
     try {
+      const authInfo = getAuthInfoFromBrowserCookie();
+      if (!authInfo?.username) {
+        // 如果用户未登录，则不发送请求，直接静默失败
+        console.warn('用户未登录，无法同步设置');
+        return;
+      }
+
       const res = await fetch('/api/user/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
+        method: 'PATCH', // 修复：使用 PATCH 方法
+        headers: {
+          'Content-Type': 'application/json',
+          // 修复：添加授权头
+          Authorization: `Bearer ${authInfo.username}`,
+        },
+        // 修复：使用正确的请求体格式
+        body: JSON.stringify({ settings }),
       });
       if (!res.ok) throw new Error(`更新用户设置失败: ${res.status}`);
     } catch (err) {

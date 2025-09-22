@@ -1596,11 +1596,14 @@ function PlayPageClient() {
       // 新增：监听播放速度变化并保存
       artPlayerRef.current.on('video:ratechange', (newRate: number) => {
         if (contentType === 'audiobook') {
-          setPlaybackSpeed(newRate);
-          try {
-            updateUserSettings({ audiobook_playback_speed: newRate });
-          } catch (err) {
-            console.error('保存播放速度失败:', err);
+          // 增加保护，防止无效值导致崩溃
+          if (typeof newRate === 'number' && isFinite(newRate)) {
+            setPlaybackSpeed(newRate);
+            try {
+              updateUserSettings({ audiobook_playback_speed: newRate });
+            } catch (err) {
+              console.error('保存播放速度失败:', err);
+            }
           }
         }
       });
