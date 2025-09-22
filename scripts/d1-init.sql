@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS favorites (
   favorite_key TEXT NOT NULL,
   title TEXT,
   cover_url TEXT,
+  video_url TEXT,
   rating REAL,
   year TEXT,
   area TEXT,

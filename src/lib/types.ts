@@ -1,4 +1,5 @@
 import { AdminConfig } from './admin.types';
+export type { AdminConfig };
 
 // 播放记录数据结构
 export interface PlayRecord {
@@ -43,6 +44,7 @@ export interface Favorite {
   title: string;
   year: string;
   cover: string;
+  video_url?: string;
   save_time: number;
   search_title: string;
   type?: 'video' | 'audiobook';

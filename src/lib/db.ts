@@ -19,7 +19,7 @@ const STORAGE_TYPE =
     | undefined) || 'localstorage';
 
 // 创建存储实例
-function createStorage(): IStorage {
+function createStorage(env?: any): IStorage {
   switch (STORAGE_TYPE) {
     case 'redis':
       return new RedisStorage();
@@ -28,7 +28,10 @@ function createStorage(): IStorage {
     case 'upstash':
       return new UpstashRedisStorage();
     case 'd1':
-      return new D1Storage();
+      if (!env || !env.DB) {
+        throw new Error('D1 database binding (env.DB) is not available.');
+      }
+      return new D1Storage(env.DB);
     case 'localstorage':
     default:
       // 使用 LocalStorage 实现，适用于本地开发和简单部署
@@ -39,9 +42,9 @@ function createStorage(): IStorage {
 // 单例存储实例
 let storageInstance: IStorage | null = null;
 
-export function getStorage(): IStorage {
+export function getStorage(env?: any): IStorage {
   if (!storageInstance) {
-    storageInstance = createStorage();
+    storageInstance = createStorage(env);
   }
   return storageInstance;
 }
@@ -55,8 +58,8 @@ export function generateStorageKey(source: string, id: string): string {
 export class DbManager {
   private storage: IStorage;
 
-  constructor() {
-    this.storage = getStorage();
+  constructor(env?: any) {
+    this.storage = getStorage(env);
   }
 
   // 播放记录相关方法
@@ -228,4 +231,7 @@ export class DbManager {
 }
 
 // 导出默认实例
+// 注意：默认导出的 db 实例不适用于 D1。
+// 在 D1 环境中，应该手动创建 DbManager 实例并传入 env 对象。
+// 例如: const db = new DbManager(env);
 export const db = new DbManager();
