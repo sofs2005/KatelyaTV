@@ -19,7 +19,7 @@ const STORAGE_TYPE =
     | undefined) || 'localstorage';
 
 // 创建存储实例
-function createStorage(env?: any): IStorage {
+function createStorage(env?: { DB?: any }): IStorage {
   switch (STORAGE_TYPE) {
     case 'redis':
       return new RedisStorage();
@@ -42,7 +42,7 @@ function createStorage(env?: any): IStorage {
 // 单例存储实例
 let storageInstance: IStorage | null = null;
 
-export function getStorage(env?: any): IStorage {
+export function getStorage(env?: { DB?: any }): IStorage {
   if (!storageInstance) {
     storageInstance = createStorage(env);
   }
@@ -58,7 +58,7 @@ export function generateStorageKey(source: string, id: string): string {
 export class DbManager {
   private storage: IStorage;
 
-  constructor(env?: any) {
+  constructor(env?: { DB?: any }) {
     this.storage = getStorage(env);
   }
 

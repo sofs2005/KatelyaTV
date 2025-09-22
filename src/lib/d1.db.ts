@@ -36,7 +36,7 @@ export class D1Storage implements IStorage {
     if (!userId) return null;
 
     const stmt = this.db.prepare('SELECT * FROM play_records WHERE user_id = ?1 AND record_key = ?2').bind(userId, key);
-    const { results } = await stmt.all<any>();
+    const { results } = await stmt.all<Record<string, any>>();
     if (results.length === 0) return null;
 
     const record = results[0];
@@ -97,7 +97,7 @@ export class D1Storage implements IStorage {
     if (!userId) return {};
 
     const stmt = this.db.prepare('SELECT * FROM play_records WHERE user_id = ?1').bind(userId);
-    const { results } = await stmt.all<any>();
+    const { results } = await stmt.all<Record<string, any>>();
 
     const records: { [key: string]: PlayRecord } = {};
     for (const record of results) {
@@ -136,7 +136,7 @@ export class D1Storage implements IStorage {
     if (!userId) return null;
 
     const stmt = this.db.prepare('SELECT * FROM favorites WHERE user_id = ?1 AND favorite_key = ?2').bind(userId, key);
-    const { results } = await stmt.all<any>();
+    const { results } = await stmt.all<Record<string, any>>();
     if (results.length === 0) return null;
 
     const fav = results[0];
@@ -194,7 +194,7 @@ export class D1Storage implements IStorage {
     if (!userId) return {};
 
     const stmt = this.db.prepare('SELECT * FROM favorites WHERE user_id = ?1').bind(userId);
-    const { results } = await stmt.all<any>();
+    const { results } = await stmt.all<Record<string, any>>();
 
     const favorites: { [key: string]: Favorite } = {};
     for (const fav of results) {
@@ -403,7 +403,7 @@ export class D1Storage implements IStorage {
     if (!userId) return {};
 
     const stmt = this.db.prepare('SELECT * FROM skip_configs WHERE user_id = ?1').bind(userId);
-    const { results } = await stmt.all<any>();
+    const { results } = await stmt.all<Record<string, any>>();
 
     const configs: { [key: string]: EpisodeSkipConfig } = {};
     for (const config of results) {
@@ -435,30 +435,24 @@ export class D1Storage implements IStorage {
 
   // ---------- 管理员配置 ----------
   async getAdminConfig(): Promise<AdminConfig | null> {
-    const stmt = this.db.prepare('SELECT config_key, config_value FROM admin_configs');
-    const { results } = await stmt.all<{ config_key: string; config_value: string }>();
-    if (results.length === 0) return null;
+    const stmt = this.db.prepare('SELECT config_value FROM admin_configs WHERE config_key = ?1').bind('main_config');
+    const result = await stmt.first<{ config_value: string }>();
+    if (!result) return null;
 
-    const config: any = {};
-    for (const row of results) {
-      try {
-        config[row.config_key] = JSON.parse(row.config_value);
-      } catch {
-        config[row.config_key] = row.config_value;
-      }
+    try {
+      return JSON.parse(result.config_value) as AdminConfig;
+    } catch (error) {
+      console.error('Failed to parse admin config from D1:', error);
+      return null;
     }
-    return config as AdminConfig;
   }
 
   async setAdminConfig(config: AdminConfig): Promise<void> {
-    // This is a simplified implementation. A more robust one would handle updates/deletes of existing keys.
-    // For now, we'll clear and re-insert.
-    await this.db.prepare('DELETE FROM admin_configs').run();
-    for (const key in config) {
-      const configValue = (config as any)[key];
-      const value = typeof configValue === 'object' ? JSON.stringify(configValue) : String(configValue);
-      const stmt = this.db.prepare('INSERT INTO admin_configs (config_key, config_value) VALUES (?1, ?2)').bind(key, value);
-      await stmt.run();
-    }
+    const value = JSON.stringify(config);
+    const stmt = this.db.prepare(`
+      INSERT INTO admin_configs (config_key, config_value) VALUES (?1, ?2)
+      ON CONFLICT(config_key) DO UPDATE SET config_value = excluded.config_value, updated_at = CURRENT_TIMESTAMP
+    `).bind('main_config', value);
+    await stmt.run();
   }
 }
