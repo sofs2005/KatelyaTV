@@ -1,7 +1,20 @@
 /* eslint-disable no-console */
-import { IStorage, PlayRecord, Favorite, UserSettings, EpisodeSkipConfig, AdminConfig } from './types';
-// @ts-ignore
-import { D1Database } from '@cloudflare/workers-types';
+import { AdminConfig, EpisodeSkipConfig, Favorite, IStorage, PlayRecord, UserSettings } from './types';
+
+// Define D1Database and related types locally to avoid dependency on @cloudflare/workers-types
+// This makes the code runnable in environments where the package is not installed (e.g., local dev)
+// but still provides type safety.
+interface D1PreparedStatement {
+  bind(...values: (string | number | null)[]): D1PreparedStatement;
+  first<T = Record<string, unknown>>(): Promise<T | null>;
+  run(): Promise<{ success: boolean; error?: string }>;
+  all<T = Record<string, unknown>>(): Promise<{ results: T[]; success?: boolean; error?: string }>;
+  raw<T = unknown>(): Promise<T[]>;
+}
+
+interface D1Database {
+  prepare(query: string): D1PreparedStatement;
+}
 
 /**
  * D1 数据库存储实现
@@ -36,26 +49,26 @@ export class D1Storage implements IStorage {
     if (!userId) return null;
 
     const stmt = this.db.prepare('SELECT * FROM play_records WHERE user_id = ?1 AND record_key = ?2').bind(userId, key);
-    const { results } = await stmt.all<Record<string, any>>();
+    const { results } = await stmt.all<Record<string, unknown>>();
     if (results.length === 0) return null;
 
     const record = results[0];
     return {
-      title: record.title,
-      source_name: record.source_name,
-      cover: record.cover_url,
-      year: record.year,
-      index: record.episode_index,
-      total_episodes: record.total_episodes,
-      play_time: record.current_time,
-      total_time: record.duration,
-      save_time: new Date(record.updated_at).getTime(),
-      search_title: record.search_title,
-      type: record.type,
-      albumId: record.album_id,
-      source: record.source,
-      id: record.id,
-      intro: record.intro,
+      title: record.title as string,
+      source_name: record.source_name as string,
+      cover: record.cover_url as string,
+      year: record.year as string,
+      index: record.episode_index as number,
+      total_episodes: record.total_episodes as number,
+      play_time: record.current_time as number,
+      total_time: record.duration as number,
+      save_time: new Date(record.updated_at as string).getTime(),
+      search_title: record.search_title as string,
+      type: record.type as 'video' | 'audiobook' | undefined,
+      albumId: record.album_id as string | undefined,
+      source: record.source as string | undefined,
+      id: record.id as string | undefined,
+      intro: record.intro as string | undefined,
     };
   }
 
@@ -86,8 +99,8 @@ export class D1Storage implements IStorage {
     `).bind(
       userId, key, record.title, record.source_name, record.cover, record.year,
       record.index, record.total_episodes, record.play_time, record.total_time,
-      record.search_title, record.type, record.albumId, record.source, record.intro,
-      record.id, record.id // Assuming video_url and episode_url map to record.id for now
+      record.search_title, record.type ?? null, record.albumId ?? null, record.source ?? null, record.intro ?? null,
+      record.id ?? null, record.id ?? null // Assuming video_url and episode_url map to record.id for now
     );
     await stmt.run();
   }
@@ -97,26 +110,26 @@ export class D1Storage implements IStorage {
     if (!userId) return {};
 
     const stmt = this.db.prepare('SELECT * FROM play_records WHERE user_id = ?1').bind(userId);
-    const { results } = await stmt.all<Record<string, any>>();
+    const { results } = await stmt.all<Record<string, unknown>>();
 
     const records: { [key: string]: PlayRecord } = {};
     for (const record of results) {
-      records[record.record_key] = {
-        title: record.title,
-        source_name: record.source_name,
-        cover: record.cover_url,
-        year: record.year,
-        index: record.episode_index,
-        total_episodes: record.total_episodes,
-        play_time: record.current_time,
-        total_time: record.duration,
-        save_time: new Date(record.updated_at).getTime(),
-        search_title: record.search_title,
-        type: record.type,
-        albumId: record.album_id,
-        source: record.source,
-        id: record.id,
-        intro: record.intro,
+      records[record.record_key as string] = {
+        title: record.title as string,
+        source_name: record.source_name as string,
+        cover: record.cover_url as string,
+        year: record.year as string,
+        index: record.episode_index as number,
+        total_episodes: record.total_episodes as number,
+        play_time: record.current_time as number,
+        total_time: record.duration as number,
+        save_time: new Date(record.updated_at as string).getTime(),
+        search_title: record.search_title as string,
+        type: record.type as 'video' | 'audiobook' | undefined,
+        albumId: record.album_id as string | undefined,
+        source: record.source as string | undefined,
+        id: record.id as string | undefined,
+        intro: record.intro as string | undefined,
       };
     }
     return records;
@@ -136,24 +149,24 @@ export class D1Storage implements IStorage {
     if (!userId) return null;
 
     const stmt = this.db.prepare('SELECT * FROM favorites WHERE user_id = ?1 AND favorite_key = ?2').bind(userId, key);
-    const { results } = await stmt.all<Record<string, any>>();
+    const { results } = await stmt.all<Record<string, unknown>>();
     if (results.length === 0) return null;
 
     const fav = results[0];
     return {
-      source_name: fav.source_name,
-      total_episodes: fav.total_episodes,
-      title: fav.title,
-      year: fav.year,
-      cover: fav.cover_url,
-      video_url: fav.video_url,
-      save_time: new Date(fav.updated_at).getTime(),
-      search_title: fav.search_title,
-      type: fav.type,
-      albumId: fav.album_id,
-      source: fav.source,
-      id: fav.id,
-      intro: fav.description,
+      source_name: fav.source_name as string,
+      total_episodes: fav.total_episodes as number,
+      title: fav.title as string,
+      year: fav.year as string,
+      cover: fav.cover_url as string,
+      video_url: fav.video_url as string | undefined,
+      save_time: new Date(fav.updated_at as string).getTime(),
+      search_title: fav.search_title as string,
+      type: fav.type as 'video' | 'audiobook' | undefined,
+      albumId: fav.album_id as string | undefined,
+      source: fav.source as string | undefined,
+      id: fav.id as string | undefined,
+      intro: fav.description as string | undefined,
     };
   }
 
@@ -183,8 +196,8 @@ export class D1Storage implements IStorage {
         source = excluded.source,
         updated_at = CURRENT_TIMESTAMP
     `).bind(
-      userId, key, favorite.title, favorite.cover, favorite.id, null, favorite.year, null, null, null, null, favorite.intro,
-      favorite.source_name, favorite.total_episodes, favorite.search_title, favorite.type, favorite.albumId, favorite.source
+      userId, key, favorite.title, favorite.cover, favorite.id ?? null, null, favorite.year, null, null, null, null, favorite.intro ?? null,
+      favorite.source_name, favorite.total_episodes, favorite.search_title, favorite.type ?? null, favorite.albumId ?? null, favorite.source ?? null
     );
     await stmt.run();
   }
@@ -194,24 +207,24 @@ export class D1Storage implements IStorage {
     if (!userId) return {};
 
     const stmt = this.db.prepare('SELECT * FROM favorites WHERE user_id = ?1').bind(userId);
-    const { results } = await stmt.all<Record<string, any>>();
+    const { results } = await stmt.all<Record<string, unknown>>();
 
     const favorites: { [key: string]: Favorite } = {};
     for (const fav of results) {
-      favorites[fav.favorite_key] = {
-        source_name: fav.source_name,
-        total_episodes: fav.total_episodes,
-        title: fav.title,
-        year: fav.year,
-        cover: fav.cover_url,
-        video_url: fav.video_url,
-        save_time: new Date(fav.updated_at).getTime(),
-        search_title: fav.search_title,
-        type: fav.type,
-        albumId: fav.album_id,
-        source: fav.source,
-        id: fav.id,
-        intro: fav.description,
+      favorites[fav.favorite_key as string] = {
+        source_name: fav.source_name as string,
+        total_episodes: fav.total_episodes as number,
+        title: fav.title as string,
+        year: fav.year as string,
+        cover: fav.cover_url as string,
+        video_url: fav.video_url as string | undefined,
+        save_time: new Date(fav.updated_at as string).getTime(),
+        search_title: fav.search_title as string,
+        type: fav.type as 'video' | 'audiobook' | undefined,
+        albumId: fav.album_id as string | undefined,
+        source: fav.source as string | undefined,
+        id: fav.id as string | undefined,
+        intro: fav.description as string | undefined,
       };
     }
     return favorites;
@@ -265,7 +278,7 @@ export class D1Storage implements IStorage {
     if (!userId) return null;
 
     const stmt = this.db.prepare('SELECT * FROM user_settings WHERE user_id = ?1').bind(userId);
-    const { results } = await stmt.all<any>();
+    const { results } = await stmt.all<Record<string, unknown>>();
     if (results.length === 0) {
       // Return default settings if not found
       return {
@@ -280,10 +293,10 @@ export class D1Storage implements IStorage {
     const settings = results[0];
     return {
       filter_adult_content: settings.filter_adult_content === 1,
-      theme: settings.theme,
-      language: settings.language,
+      theme: settings.theme as 'light' | 'dark' | 'auto',
+      language: settings.language as string,
       auto_play: settings.auto_play === 1,
-      video_quality: settings.video_quality,
+      video_quality: settings.video_quality as string,
     };
   }
 
@@ -319,7 +332,7 @@ export class D1Storage implements IStorage {
     const newSettings = { ...currentSettings, ...settings };
     // Filter out undefined values before setting
     const filteredSettings = Object.fromEntries(
-      Object.entries(newSettings).filter(([_, value]) => value !== undefined)
+      Object.entries(newSettings).filter(([, value]) => value !== undefined)
     );
     await this.setUserSettings(userName, filteredSettings as UserSettings);
   }
@@ -363,16 +376,16 @@ export class D1Storage implements IStorage {
     if (!userId) return null;
 
     const stmt = this.db.prepare('SELECT * FROM skip_configs WHERE user_id = ?1 AND config_key = ?2').bind(userId, key);
-    const { results } = await stmt.all<any>();
+    const { results } = await stmt.all<Record<string, unknown>>();
     if (results.length === 0) return null;
 
     const config = results[0];
     return {
-      source: config.source,
-      id: config.id,
-      title: config.title,
-      segments: JSON.parse(config.segments || '[]'),
-      updated_time: new Date(config.updated_at).getTime(),
+      source: config.source as string,
+      id: config.id as string,
+      title: config.title as string,
+      segments: JSON.parse(config.segments as string || '[]'),
+      updated_time: new Date(config.updated_at as string).getTime(),
     };
   }
 
@@ -403,16 +416,16 @@ export class D1Storage implements IStorage {
     if (!userId) return {};
 
     const stmt = this.db.prepare('SELECT * FROM skip_configs WHERE user_id = ?1').bind(userId);
-    const { results } = await stmt.all<Record<string, any>>();
+    const { results } = await stmt.all<Record<string, unknown>>();
 
     const configs: { [key: string]: EpisodeSkipConfig } = {};
     for (const config of results) {
-      configs[config.config_key] = {
-        source: config.source,
-        id: config.id,
-        title: config.title,
-        segments: JSON.parse(config.segments || '[]'),
-        updated_time: new Date(config.updated_at).getTime(),
+      configs[config.config_key as string] = {
+        source: config.source as string,
+        id: config.id as string,
+        title: config.title as string,
+        segments: JSON.parse(config.segments as string || '[]'),
+        updated_time: new Date(config.updated_at as string).getTime(),
       };
     }
     return configs;
