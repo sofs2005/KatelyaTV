@@ -1,9 +1,9 @@
-/* eslint-disable no-console */
+/* eslint-disable no-console, @typescript-eslint/no-explicit-any */
 import { AdminConfig, EpisodeSkipConfig, Favorite, IStorage, PlayRecord, UserSettings } from './types';
 
-// Define D1Database and related types locally to avoid dependency on @cloudflare/workers-types
-// This makes the code runnable in environments where the package is not installed (e.g., local dev)
-// but still provides type safety.
+// D1 a D1PreparedStatement a D1Result a D1ExecResult
+// jsou definovany lokalne, aby se predeslo zavislosti na @cloudflare/workers-types
+// a zaroven byla zachovana typova bezpecnost.
 interface D1PreparedStatement {
   bind(...values: (string | number | null)[]): D1PreparedStatement;
   first<T = Record<string, unknown>>(): Promise<T | null>;
@@ -16,67 +16,66 @@ interface D1Database {
   prepare(query: string): D1PreparedStatement;
 }
 
-/**
- * D1 数据库存储实现
- * 用于 Cloudflare Workers/D1 部署场景
- */
-export class D1Storage implements IStorage {
-  constructor(private db: D1Database) { }
+// Ziska globalni instanci D1 databaze
+function getD1Database(): D1Database {
+  if (!(process.env as any).DB) {
+    throw new Error('D1 database binding is not available on process.env.DB');
+  }
+  return (process.env as any).DB as D1Database;
+}
 
-  // ---------- 辅助函数 ----------
+export class D1Storage implements IStorage {
+  private db: D1Database | null = null;
+
+  private async getDatabase(): Promise<D1Database> {
+    if (!this.db) {
+      this.db = getD1Database();
+    }
+    return this.db;
+  }
+
   private async getUserIdByUsername(username: string): Promise<number | null> {
-    const stmt = this.db.prepare('SELECT id FROM users WHERE username = ?1').bind(username);
+    const db = await this.getDatabase();
+    const stmt = db.prepare('SELECT id FROM users WHERE username = ?1').bind(username);
     const { results } = await stmt.all<{ id: number }>();
     return results.length > 0 ? results[0].id : null;
   }
 
-  private async ensureUserExists(username: string, password: string): Promise<number> {
-    let userId = await this.getUserIdByUsername(username);
-    if (!userId) {
-      const stmt = this.db.prepare('INSERT INTO users (username, password) VALUES (?1, ?2)').bind(username, password);
-      await stmt.run();
-      userId = await this.getUserIdByUsername(username);
-    }
-    if (!userId) {
-      throw new Error('Failed to create or retrieve user');
-    }
-    return userId;
-  }
-
-  // ---------- 播放记录 ----------
+  // ---------- Zaznamy o prehrani ----------
   async getPlayRecord(userName: string, key: string): Promise<PlayRecord | null> {
     const userId = await this.getUserIdByUsername(userName);
     if (!userId) return null;
 
-    const stmt = this.db.prepare('SELECT * FROM play_records WHERE user_id = ?1 AND record_key = ?2').bind(userId, key);
-    const { results } = await stmt.all<Record<string, unknown>>();
-    if (results.length === 0) return null;
+    const db = await this.getDatabase();
+    const stmt = db.prepare('SELECT * FROM play_records WHERE user_id = ?1 AND record_key = ?2').bind(userId, key);
+    const result = await stmt.first<Record<string, unknown>>();
+    if (!result) return null;
 
-    const record = results[0];
     return {
-      title: record.title as string,
-      source_name: record.source_name as string,
-      cover: record.cover_url as string,
-      year: record.year as string,
-      index: record.episode_index as number,
-      total_episodes: record.total_episodes as number,
-      play_time: record.current_time as number,
-      total_time: record.duration as number,
-      save_time: new Date(record.updated_at as string).getTime(),
-      search_title: record.search_title as string,
-      type: record.type as 'video' | 'audiobook' | undefined,
-      albumId: record.album_id as string | undefined,
-      source: record.source as string | undefined,
-      id: record.id as string | undefined,
-      intro: record.intro as string | undefined,
+      title: result.title as string,
+      source_name: result.source_name as string,
+      cover: result.cover_url as string,
+      year: result.year as string,
+      index: result.episode_index as number,
+      total_episodes: result.total_episodes as number,
+      play_time: result.current_time as number,
+      total_time: result.duration as number,
+      save_time: new Date(result.updated_at as string).getTime(),
+      search_title: result.search_title as string,
+      type: result.type as 'video' | 'audiobook' | undefined,
+      albumId: result.album_id as string | undefined,
+      source: result.source as string | undefined,
+      id: result.id as string | undefined,
+      intro: result.intro as string | undefined,
     };
   }
 
   async setPlayRecord(userName: string, key: string, record: PlayRecord): Promise<void> {
     const userId = await this.getUserIdByUsername(userName);
-    if (!userId) return; // Or throw an error
+    if (!userId) return;
 
-    const stmt = this.db.prepare(`
+    const db = await this.getDatabase();
+    const stmt = db.prepare(`
       INSERT INTO play_records (user_id, record_key, title, source_name, cover_url, year, episode_index, total_episodes, current_time, duration, search_title, type, album_id, source, intro, video_url, episode_url)
       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17)
       ON CONFLICT(user_id, record_key) DO UPDATE SET
@@ -100,7 +99,7 @@ export class D1Storage implements IStorage {
       userId, key, record.title, record.source_name, record.cover, record.year,
       record.index, record.total_episodes, record.play_time, record.total_time,
       record.search_title, record.type ?? null, record.albumId ?? null, record.source ?? null, record.intro ?? null,
-      record.id ?? null, record.id ?? null // Assuming video_url and episode_url map to record.id for now
+      record.id ?? null, record.id ?? null
     );
     await stmt.run();
   }
@@ -109,7 +108,8 @@ export class D1Storage implements IStorage {
     const userId = await this.getUserIdByUsername(userName);
     if (!userId) return {};
 
-    const stmt = this.db.prepare('SELECT * FROM play_records WHERE user_id = ?1').bind(userId);
+    const db = await this.getDatabase();
+    const stmt = db.prepare('SELECT * FROM play_records WHERE user_id = ?1').bind(userId);
     const { results } = await stmt.all<Record<string, unknown>>();
 
     const records: { [key: string]: PlayRecord } = {};
@@ -139,34 +139,35 @@ export class D1Storage implements IStorage {
     const userId = await this.getUserIdByUsername(userName);
     if (!userId) return;
 
-    const stmt = this.db.prepare('DELETE FROM play_records WHERE user_id = ?1 AND record_key = ?2').bind(userId, key);
+    const db = await this.getDatabase();
+    const stmt = db.prepare('DELETE FROM play_records WHERE user_id = ?1 AND record_key = ?2').bind(userId, key);
     await stmt.run();
   }
 
-  // ---------- 收藏 ----------
+  // ---------- Oblibene ----------
   async getFavorite(userName: string, key: string): Promise<Favorite | null> {
     const userId = await this.getUserIdByUsername(userName);
     if (!userId) return null;
 
-    const stmt = this.db.prepare('SELECT * FROM favorites WHERE user_id = ?1 AND favorite_key = ?2').bind(userId, key);
-    const { results } = await stmt.all<Record<string, unknown>>();
-    if (results.length === 0) return null;
+    const db = await this.getDatabase();
+    const stmt = db.prepare('SELECT * FROM favorites WHERE user_id = ?1 AND favorite_key = ?2').bind(userId, key);
+    const result = await stmt.first<Record<string, unknown>>();
+    if (!result) return null;
 
-    const fav = results[0];
     return {
-      source_name: fav.source_name as string,
-      total_episodes: fav.total_episodes as number,
-      title: fav.title as string,
-      year: fav.year as string,
-      cover: fav.cover_url as string,
-      video_url: fav.video_url as string | undefined,
-      save_time: new Date(fav.updated_at as string).getTime(),
-      search_title: fav.search_title as string,
-      type: fav.type as 'video' | 'audiobook' | undefined,
-      albumId: fav.album_id as string | undefined,
-      source: fav.source as string | undefined,
-      id: fav.id as string | undefined,
-      intro: fav.description as string | undefined,
+      source_name: result.source_name as string,
+      total_episodes: result.total_episodes as number,
+      title: result.title as string,
+      year: result.year as string,
+      cover: result.cover_url as string,
+      video_url: result.video_url as string | undefined,
+      save_time: new Date(result.updated_at as string).getTime(),
+      search_title: result.search_title as string,
+      type: result.type as 'video' | 'audiobook' | undefined,
+      albumId: result.album_id as string | undefined,
+      source: result.source as string | undefined,
+      id: result.id as string | undefined,
+      intro: result.description as string | undefined,
     };
   }
 
@@ -174,7 +175,8 @@ export class D1Storage implements IStorage {
     const userId = await this.getUserIdByUsername(userName);
     if (!userId) return;
 
-    const stmt = this.db.prepare(`
+    const db = await this.getDatabase();
+    const stmt = db.prepare(`
       INSERT INTO favorites (user_id, favorite_key, title, cover_url, video_url, rating, year, area, category, actors, director, description, source_name, total_episodes, search_title, type, album_id, source)
       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18)
       ON CONFLICT(user_id, favorite_key) DO UPDATE SET
@@ -206,7 +208,8 @@ export class D1Storage implements IStorage {
     const userId = await this.getUserIdByUsername(userName);
     if (!userId) return {};
 
-    const stmt = this.db.prepare('SELECT * FROM favorites WHERE user_id = ?1').bind(userId);
+    const db = await this.getDatabase();
+    const stmt = db.prepare('SELECT * FROM favorites WHERE user_id = ?1').bind(userId);
     const { results } = await stmt.all<Record<string, unknown>>();
 
     const favorites: { [key: string]: Favorite } = {};
@@ -234,20 +237,23 @@ export class D1Storage implements IStorage {
     const userId = await this.getUserIdByUsername(userName);
     if (!userId) return;
 
-    const stmt = this.db.prepare('DELETE FROM favorites WHERE user_id = ?1 AND favorite_key = ?2').bind(userId, key);
+    const db = await this.getDatabase();
+    const stmt = db.prepare('DELETE FROM favorites WHERE user_id = ?1 AND favorite_key = ?2').bind(userId, key);
     await stmt.run();
   }
 
-  // ---------- 用户管理 ----------
+  // ---------- Sprava uzivatelu ----------
   async registerUser(userName: string, password: string): Promise<void> {
-    await this.ensureUserExists(userName, password);
+    const db = await this.getDatabase();
+    const stmt = db.prepare('INSERT INTO users (username, password) VALUES (?1, ?2)').bind(userName, password);
+    await stmt.run();
   }
 
   async verifyUser(userName: string, password: string): Promise<boolean> {
-    const stmt = this.db.prepare('SELECT password FROM users WHERE username = ?1').bind(userName);
-    const { results } = await stmt.all<{ password: string }>();
-    if (results.length === 0) return false;
-    return results[0].password === password;
+    const db = await this.getDatabase();
+    const stmt = db.prepare('SELECT password FROM users WHERE username = ?1').bind(userName);
+    const result = await stmt.first<{ password: string }>();
+    return result?.password === password;
   }
 
   async checkUserExist(userName: string): Promise<boolean> {
@@ -256,7 +262,8 @@ export class D1Storage implements IStorage {
   }
 
   async changePassword(userName: string, newPassword: string): Promise<void> {
-    const stmt = this.db.prepare('UPDATE users SET password = ?1, updated_at = CURRENT_TIMESTAMP WHERE username = ?2').bind(newPassword, userName);
+    const db = await this.getDatabase();
+    const stmt = db.prepare('UPDATE users SET password = ?1, updated_at = CURRENT_TIMESTAMP WHERE username = ?2').bind(newPassword, userName);
     const { success } = await stmt.run();
     if (!success) {
       throw new Error('User not found or password update failed');
@@ -267,20 +274,20 @@ export class D1Storage implements IStorage {
     const userId = await this.getUserIdByUsername(userName);
     if (!userId) return;
 
-    // D1's ON DELETE CASCADE should handle deleting related records in other tables.
-    const stmt = this.db.prepare('DELETE FROM users WHERE id = ?1').bind(userId);
+    const db = await this.getDatabase();
+    const stmt = db.prepare('DELETE FROM users WHERE id = ?1').bind(userId);
     await stmt.run();
   }
 
-  // ---------- 用户设置 ----------
+  // ---------- Nastaveni uzivatele ----------
   async getUserSettings(userName: string): Promise<UserSettings | null> {
     const userId = await this.getUserIdByUsername(userName);
     if (!userId) return null;
 
-    const stmt = this.db.prepare('SELECT * FROM user_settings WHERE user_id = ?1').bind(userId);
-    const { results } = await stmt.all<Record<string, unknown>>();
-    if (results.length === 0) {
-      // Return default settings if not found
+    const db = await this.getDatabase();
+    const stmt = db.prepare('SELECT * FROM user_settings WHERE user_id = ?1').bind(userId);
+    const result = await stmt.first<Record<string, unknown>>();
+    if (!result) {
       return {
         filter_adult_content: true,
         theme: 'auto',
@@ -290,13 +297,12 @@ export class D1Storage implements IStorage {
       };
     }
 
-    const settings = results[0];
     return {
-      filter_adult_content: settings.filter_adult_content === 1,
-      theme: settings.theme as 'light' | 'dark' | 'auto',
-      language: settings.language as string,
-      auto_play: settings.auto_play === 1,
-      video_quality: settings.video_quality as string,
+      filter_adult_content: result.filter_adult_content === 1,
+      theme: result.theme as 'light' | 'dark' | 'auto',
+      language: result.language as string,
+      auto_play: result.auto_play === 1,
+      video_quality: result.video_quality as string,
     };
   }
 
@@ -304,7 +310,8 @@ export class D1Storage implements IStorage {
     const userId = await this.getUserIdByUsername(userName);
     if (!userId) return;
 
-    const stmt = this.db.prepare(`
+    const db = await this.getDatabase();
+    const stmt = db.prepare(`
       INSERT INTO user_settings (user_id, username, filter_adult_content, theme, language, auto_play, video_quality)
       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
       ON CONFLICT(user_id, username) DO UPDATE SET
@@ -327,33 +334,31 @@ export class D1Storage implements IStorage {
 
   async updateUserSettings(userName: string, settings: Partial<UserSettings>): Promise<void> {
     const currentSettings = await this.getUserSettings(userName);
-    if (!currentSettings) return;
-
     const newSettings = { ...currentSettings, ...settings };
-    // Filter out undefined values before setting
     const filteredSettings = Object.fromEntries(
       Object.entries(newSettings).filter(([, value]) => value !== undefined)
     );
     await this.setUserSettings(userName, filteredSettings as UserSettings);
   }
 
-  // ---------- 搜索历史 ----------
+  // ---------- Historie vyhledavani ----------
   async getSearchHistory(userName: string): Promise<string[]> {
     const userId = await this.getUserIdByUsername(userName);
     if (!userId) return [];
 
-    const stmt = this.db.prepare('SELECT keyword FROM search_history WHERE user_id = ?1 ORDER BY created_at DESC').bind(userId);
+    const db = await this.getDatabase();
+    const stmt = db.prepare('SELECT keyword FROM search_history WHERE user_id = ?1 ORDER BY created_at DESC').bind(userId);
     const { results } = await stmt.all<{ keyword: string }>();
-    return results.map((r: { keyword: string }) => r.keyword);
+    return results.map((r) => r.keyword);
   }
 
   async addSearchHistory(userName: string, keyword: string): Promise<void> {
     const userId = await this.getUserIdByUsername(userName);
     if (!userId) return;
 
-    // First, delete the keyword if it already exists to avoid duplicates and re-insert to update timestamp
-    await this.db.prepare('DELETE FROM search_history WHERE user_id = ?1 AND keyword = ?2').bind(userId, keyword).run();
-    const stmt = this.db.prepare('INSERT INTO search_history (user_id, keyword) VALUES (?1, ?2)').bind(userId, keyword);
+    const db = await this.getDatabase();
+    await db.prepare('DELETE FROM search_history WHERE user_id = ?1 AND keyword = ?2').bind(userId, keyword).run();
+    const stmt = db.prepare('INSERT INTO search_history (user_id, keyword) VALUES (?1, ?2)').bind(userId, keyword);
     await stmt.run();
   }
 
@@ -361,31 +366,32 @@ export class D1Storage implements IStorage {
     const userId = await this.getUserIdByUsername(userName);
     if (!userId) return;
 
+    const db = await this.getDatabase();
     if (!keyword) {
-      const stmt = this.db.prepare('DELETE FROM search_history WHERE user_id = ?1').bind(userId);
+      const stmt = db.prepare('DELETE FROM search_history WHERE user_id = ?1').bind(userId);
       await stmt.run();
     } else {
-      const stmt = this.db.prepare('DELETE FROM search_history WHERE user_id = ?1 AND keyword = ?2').bind(userId, keyword);
+      const stmt = db.prepare('DELETE FROM search_history WHERE user_id = ?1 AND keyword = ?2').bind(userId, keyword);
       await stmt.run();
     }
   }
 
-  // ---------- 跳过配置 ----------
+  // ---------- Konfigurace preskoceni ----------
   async getSkipConfig(userName: string, key: string): Promise<EpisodeSkipConfig | null> {
     const userId = await this.getUserIdByUsername(userName);
     if (!userId) return null;
 
-    const stmt = this.db.prepare('SELECT * FROM skip_configs WHERE user_id = ?1 AND config_key = ?2').bind(userId, key);
-    const { results } = await stmt.all<Record<string, unknown>>();
-    if (results.length === 0) return null;
+    const db = await this.getDatabase();
+    const stmt = db.prepare('SELECT * FROM skip_configs WHERE user_id = ?1 AND config_key = ?2').bind(userId, key);
+    const result = await stmt.first<Record<string, unknown>>();
+    if (!result) return null;
 
-    const config = results[0];
     return {
-      source: config.source as string,
-      id: config.id as string,
-      title: config.title as string,
-      segments: JSON.parse(config.segments as string || '[]'),
-      updated_time: new Date(config.updated_at as string).getTime(),
+      source: result.source as string,
+      id: result.id as string,
+      title: result.title as string,
+      segments: JSON.parse(result.segments as string || '[]'),
+      updated_time: new Date(result.updated_at as string).getTime(),
     };
   }
 
@@ -393,7 +399,8 @@ export class D1Storage implements IStorage {
     const userId = await this.getUserIdByUsername(userName);
     if (!userId) return;
 
-    const stmt = this.db.prepare(`
+    const db = await this.getDatabase();
+    const stmt = db.prepare(`
       INSERT INTO skip_configs (user_id, config_key, source, id, title, segments, start_time, end_time)
       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
       ON CONFLICT(user_id, config_key) DO UPDATE SET
@@ -415,7 +422,8 @@ export class D1Storage implements IStorage {
     const userId = await this.getUserIdByUsername(userName);
     if (!userId) return {};
 
-    const stmt = this.db.prepare('SELECT * FROM skip_configs WHERE user_id = ?1').bind(userId);
+    const db = await this.getDatabase();
+    const stmt = db.prepare('SELECT * FROM skip_configs WHERE user_id = ?1').bind(userId);
     const { results } = await stmt.all<Record<string, unknown>>();
 
     const configs: { [key: string]: EpisodeSkipConfig } = {};
@@ -435,20 +443,23 @@ export class D1Storage implements IStorage {
     const userId = await this.getUserIdByUsername(userName);
     if (!userId) return;
 
-    const stmt = this.db.prepare('DELETE FROM skip_configs WHERE user_id = ?1 AND config_key = ?2').bind(userId, key);
+    const db = await this.getDatabase();
+    const stmt = db.prepare('DELETE FROM skip_configs WHERE user_id = ?1 AND config_key = ?2').bind(userId, key);
     await stmt.run();
   }
 
-  // ---------- 用户列表 ----------
+  // ---------- Seznam uzivatelu ----------
   async getAllUsers(): Promise<string[]> {
-    const stmt = this.db.prepare('SELECT username FROM users');
+    const db = await this.getDatabase();
+    const stmt = db.prepare('SELECT username FROM users');
     const { results } = await stmt.all<{ username: string }>();
-    return results.map((r: { username: string }) => r.username);
+    return results.map((r) => r.username);
   }
 
-  // ---------- 管理员配置 ----------
+  // ---------- Konfigurace administratora ----------
   async getAdminConfig(): Promise<AdminConfig | null> {
-    const stmt = this.db.prepare('SELECT config_value FROM admin_configs WHERE config_key = ?1').bind('main_config');
+    const db = await this.getDatabase();
+    const stmt = db.prepare('SELECT config_value FROM admin_configs WHERE config_key = ?1').bind('main_config');
     const result = await stmt.first<{ config_value: string }>();
     if (!result) return null;
 
@@ -461,8 +472,9 @@ export class D1Storage implements IStorage {
   }
 
   async setAdminConfig(config: AdminConfig): Promise<void> {
+    const db = await this.getDatabase();
     const value = JSON.stringify(config);
-    const stmt = this.db.prepare(`
+    const stmt = db.prepare(`
       INSERT INTO admin_configs (config_key, config_value) VALUES (?1, ?2)
       ON CONFLICT(config_key) DO UPDATE SET config_value = excluded.config_value, updated_at = CURRENT_TIMESTAMP
     `).bind('main_config', value);
