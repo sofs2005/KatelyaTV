@@ -17,6 +17,8 @@ import {
   saveFavorite,
   savePlayRecord,
   subscribeToDataUpdates,
+  Favorite,
+  PlayRecord,
 } from '@/lib/db.client';
 import { SearchResult, AudiobookTrack, AudiobookTrackDetail } from '@/lib/types';
 import { getVideoResolutionFromM3u8, processImageUrl } from '@/lib/utils';
@@ -702,10 +704,14 @@ function PlayPageClient() {
       // 如果URL没有指定集数，则从播放记录中恢复
       if (contentType === 'video' && currentSource && currentId) {
         try {
-          // API a-based fetch
-          const response = await fetch('/api/playrecords');
-          if (!response.ok) throw new Error('Network response was not ok');
-          const allRecords = await response.json();
+          let allRecords;
+          if (process.env.NODE_ENV === 'production') {
+            const response = await fetch('/api/playrecords');
+            if (!response.ok) throw new Error('Network response was not ok');
+            allRecords = await response.json();
+          } else {
+            allRecords = await getAllPlayRecords();
+          }
           const key = generateStorageKey(currentSource, currentId);
           const record = allRecords[key];
 
@@ -724,10 +730,14 @@ function PlayPageClient() {
         }
       } else if (contentType === 'audiobook' && albumId) {
         try {
-          // API-based fetch
-          const response = await fetch('/api/playrecords');
-          if (!response.ok) throw new Error('Network response was not ok');
-          const allRecords = await response.json();
+          let allRecords;
+          if (process.env.NODE_ENV === 'production') {
+            const response = await fetch('/api/playrecords');
+            if (!response.ok) throw new Error('Network response was not ok');
+            allRecords = await response.json();
+          } else {
+            allRecords = await getAllPlayRecords();
+          }
           const key = generateStorageKey('audiobook', albumId);
           const record = allRecords[key];
 
@@ -771,9 +781,16 @@ function PlayPageClient() {
             currentSourceRef.current,
             currentIdRef.current
           );
-          await fetch(`/api/playrecords?key=${encodeURIComponent(key)}`, {
-            method: 'DELETE',
-          });
+          if (process.env.NODE_ENV === 'production') {
+            await fetch(`/api/playrecords?key=${encodeURIComponent(key)}`, {
+              method: 'DELETE',
+            });
+          } else {
+            await deletePlayRecord(
+              currentSourceRef.current,
+              currentIdRef.current
+            );
+          }
           console.log('已清除前一个播放记录');
         } catch (err) {
           console.error('清除播放记录失败:', err);
@@ -1011,11 +1028,19 @@ function PlayPageClient() {
           save_time: Date.now(),
           search_title: searchTitle,
         };
-        await fetch('/api/playrecords', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key, record }),
-        });
+        if (process.env.NODE_ENV === 'production') {
+          await fetch('/api/playrecords', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key, record }),
+          });
+        } else {
+          await savePlayRecord(
+            currentSourceRef.current,
+            currentIdRef.current,
+            record
+          );
+        }
         lastSaveTimeRef.current = Date.now();
       } catch (err) {
         console.error('保存视频播放进度失败:', err);
@@ -1026,7 +1051,7 @@ function PlayPageClient() {
       }
       try {
         const key = generateStorageKey('audiobook', albumId);
-        const record = {
+        const record: PlayRecord = {
           title: videoTitleRef.current,
           source_name: '有声书',
           year: videoYearRef.current,
@@ -1041,11 +1066,15 @@ function PlayPageClient() {
           albumId: albumId,
           intro: videoIntro,
         };
-        await fetch('/api/playrecords', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key, record }),
-        });
+        if (process.env.NODE_ENV === 'production') {
+          await fetch('/api/playrecords', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key, record }),
+          });
+        } else {
+          await savePlayRecord('audiobook', albumId, record);
+        }
         lastSaveTimeRef.current = Date.now();
       } catch (err) {
         console.error('保存有声书播放进度失败:', err);
@@ -1101,12 +1130,17 @@ function PlayPageClient() {
         }
 
         if (key) {
-          const response = await fetch(
-            `/api/favorites?key=${encodeURIComponent(key)}`
-          );
-          if (response.ok) {
-            const data = await response.json();
-            setFavorited(!!data);
+          if (process.env.NODE_ENV === 'production') {
+            const response = await fetch(
+              `/api/favorites?key=${encodeURIComponent(key)}`
+            );
+            if (response.ok) {
+              const data = await response.json();
+              setFavorited(!!data);
+            }
+          } else {
+            const isFav = await isFavorited(key);
+            setFavorited(isFav);
           }
         } else {
           setFavorited(false);
@@ -1155,15 +1189,19 @@ function PlayPageClient() {
       try {
         const key = generateStorageKey(currentSourceRef.current, currentIdRef.current);
         if (favorited) {
-          await fetch(`/api/favorites?key=${encodeURIComponent(key)}`, {
-            method: 'DELETE',
-          });
+          if (process.env.NODE_ENV === 'production') {
+            await fetch(`/api/favorites?key=${encodeURIComponent(key)}`, {
+              method: 'DELETE',
+            });
+          } else {
+            await deleteFavorite(key);
+          }
           setFavorited(false);
         } else {
-          const record = {
+          const record: Favorite = {
             title: videoTitleRef.current,
             source_name: detailRef.current?.source_name || '',
-            year: detailRef.current?.year,
+            year: detailRef.current?.year || '',
             cover: detailRef.current?.poster || '',
             total_episodes: detailRef.current?.episodes?.length || 1,
             save_time: Date.now(),
@@ -1172,11 +1210,15 @@ function PlayPageClient() {
             id: currentIdRef.current,
             type: 'video',
           };
-          await fetch('/api/favorites', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ key, favorite: record }),
-          });
+          if (process.env.NODE_ENV === 'production') {
+            await fetch('/api/favorites', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ key, favorite: record }),
+            });
+          } else {
+            await saveFavorite(key, record);
+          }
           setFavorited(true);
         }
       } catch (err) {
@@ -1188,12 +1230,16 @@ function PlayPageClient() {
       try {
         const key = generateStorageKey('audiobook', albumId);
         if (favorited) {
-          await fetch(`/api/favorites?key=${encodeURIComponent(key)}`, {
-            method: 'DELETE',
-          });
+          if (process.env.NODE_ENV === 'production') {
+            await fetch(`/api/favorites?key=${encodeURIComponent(key)}`, {
+              method: 'DELETE',
+            });
+          } else {
+            await deleteFavorite(key);
+          }
           setFavorited(false);
         } else {
-          const record = {
+          const record: Favorite = {
             title: videoTitleRef.current,
             source_name: '有声书',
             year: videoYearRef.current,
@@ -1205,11 +1251,15 @@ function PlayPageClient() {
             albumId: albumId,
             intro: videoIntro,
           };
-          await fetch('/api/favorites', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ key, favorite: record }),
-          });
+          if (process.env.NODE_ENV === 'production') {
+            await fetch('/api/favorites', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ key, favorite: record }),
+            });
+          } else {
+            await saveFavorite(key, record);
+          }
           setFavorited(true);
         }
       } catch (err) {

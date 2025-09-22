@@ -44,14 +44,19 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
     const fetchPlayRecords = async () => {
       try {
         setLoading(true);
-
-        // 通过 API 路由获取播放记录
-        const response = await fetch('/api/playrecords');
-        if (!response.ok) {
-          throw new Error('Failed to fetch play records');
+        // In the local environment, directly access localStorage through db.client
+        // In the production environment, obtain through the API route
+        if (process.env.NODE_ENV === 'production') {
+          const response = await fetch('/api/playrecords');
+          if (!response.ok) {
+            throw new Error('Failed to fetch play records');
+          }
+          const allRecords = await response.json();
+          updatePlayRecords(allRecords);
+        } else {
+          const allRecords = await getAllPlayRecords();
+          updatePlayRecords(allRecords);
         }
-        const allRecords = await response.json();
-        updatePlayRecords(allRecords);
       } catch (error) {
         console.error('获取播放记录失败:', error);
         setPlayRecords([]);
@@ -101,11 +106,15 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
             className='text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
             onClick={async () => {
               try {
-                const response = await fetch('/api/playrecords', {
-                  method: 'DELETE',
-                });
-                if (!response.ok) {
-                  throw new Error('Failed to clear play records');
+                if (process.env.NODE_ENV === 'production') {
+                  const response = await fetch('/api/playrecords', {
+                    method: 'DELETE',
+                  });
+                  if (!response.ok) {
+                    throw new Error('Failed to clear play records');
+                  }
+                } else {
+                  await clearAllPlayRecords();
                 }
                 setPlayRecords([]);
               } catch (error) {
