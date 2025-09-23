@@ -138,6 +138,11 @@ async function initConfig() {
     const customCategories = fileConfig.custom_category || [];
 
     if (adminConfig) {
+      // 确保 CustomCategories 被初始化，以防止从数据库读取的配置缺少此字段
+      if (!adminConfig.CustomCategories) {
+        adminConfig.CustomCategories = [];
+      }
+
       // 补全 SourceConfig
       const existed = new Set(
         (adminConfig.SourceConfig || []).map((s) => s.key)
