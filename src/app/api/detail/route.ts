@@ -27,7 +27,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const apiSites = await getAvailableApiSites();
+    const apiSites = await getAvailableApiSites(false);
     const apiSite = apiSites.find((site) => site.key === sourceCode);
 
     if (!apiSite) {
