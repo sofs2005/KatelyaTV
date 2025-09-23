@@ -311,9 +311,9 @@ export class D1Storage implements IStorage {
 
     const db = await this.getDatabase();
     const stmt = db.prepare(`
-      INSERT INTO user_settings (user_id, username, filter_adult_content, theme, language, auto_play, video_quality, audiobook_playback_speed)
-      VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
-      ON CONFLICT(user_id, username) DO UPDATE SET
+      INSERT INTO user_settings (user_id, filter_adult_content, theme, language, auto_play, video_quality, audiobook_playback_speed)
+      VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+      ON CONFLICT(user_id) DO UPDATE SET
         filter_adult_content = excluded.filter_adult_content,
         theme = excluded.theme,
         language = excluded.language,
@@ -322,7 +322,7 @@ export class D1Storage implements IStorage {
         audiobook_playback_speed = excluded.audiobook_playback_speed,
         updated_at = CURRENT_TIMESTAMP
     `).bind(
-      userId, userName,
+      userId,
       settings.filter_adult_content ? 1 : 0,
       settings.theme,
       settings.language,
