@@ -37,7 +37,38 @@ export async function GET(request: Request) {
       return addCorsHeaders(response);
     }
 
-    const result = await getDetailFromApi(apiSite, id);
+    // [FINAL TEST] Bypassing getDetailFromApi to isolate the fetch call.
+    const detailUrl = `${apiSite.api}?ac=videolist&ids=${id}`;
+    const requestHeaders = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    };
+
+    console.log('--- [FINAL TEST] REQUEST ---');
+    console.log(`URL: ${detailUrl}`);
+    console.log('Headers:', JSON.stringify(requestHeaders, null, 2));
+    console.log('--------------------------');
+
+    const testResponse = await fetch(detailUrl, { headers: requestHeaders });
+
+    const responseHeaders: { [key: string]: string } = {};
+    testResponse.headers.forEach((value, key) => {
+      responseHeaders[key] = value;
+    });
+
+    const responseBody = await testResponse.text();
+
+    console.log('--- [FINAL TEST] RESPONSE ---');
+    console.log(`Status: ${testResponse.status}`);
+    console.log('Headers:', JSON.stringify(responseHeaders, null, 2));
+    console.log('Body:', responseBody);
+    console.log('---------------------------');
+
+    if (!testResponse.ok) {
+      throw new Error(`[FINAL TEST] Downstream failed with status ${testResponse.status}`);
+    }
+
+    const result = JSON.parse(responseBody);
+
     const cacheTime = await getCacheTime();
 
     const response = NextResponse.json(result, {
