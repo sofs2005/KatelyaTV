@@ -37,41 +37,27 @@ export async function GET(request: Request) {
       return addCorsHeaders(response);
     }
 
-    // [FINAL TEST] Bypassing getDetailFromApi to isolate the fetch call.
-    const detailUrl = `${apiSite.api}?ac=videolist&ids=${id}`;
-    const requestHeaders = {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-    };
-
-    console.log('--- [FINAL TEST] REQUEST ---');
-    console.log(`URL: ${detailUrl}`);
-    console.log('Headers:', JSON.stringify(requestHeaders, null, 2));
-    console.log('--------------------------');
-
-    const testResponse = await fetch(detailUrl, { headers: requestHeaders });
-
-    const responseHeaders: { [key: string]: string } = {};
-    testResponse.headers.forEach((value, key) => {
-      responseHeaders[key] = value;
-    });
-
-    const responseBody = await testResponse.text();
-
-    console.log('--- [FINAL TEST] RESPONSE ---');
-    console.log(`Status: ${testResponse.status}`);
-    console.log('Headers:', JSON.stringify(responseHeaders, null, 2));
-    console.log('Body:', responseBody);
-    console.log('---------------------------');
-
-    if (!testResponse.ok) {
-      throw new Error(`[FINAL TEST] Downstream failed with status ${testResponse.status}`);
-    }
-
-    const result = JSON.parse(responseBody);
-
+    const result = await getDetailFromApi(apiSite, id);
     const cacheTime = await getCacheTime();
 
-    const response = NextResponse.json(result, {
+    console.log('\n--- [DEBUG] Variable 1: `result` (raw object from downstream) ---');
+    try {
+      console.log(JSON.stringify(result, null, 2));
+    } catch (e) {
+      console.log('Could not stringify raw result:', e);
+    }
+
+    const resultAsString = JSON.stringify(result);
+    console.log('\n--- [DEBUG] Variable 2: `resultAsString` (the string passed to JSON.parse) ---');
+    console.log(resultAsString);
+
+    // [FINAL FIX] Purify the result object before sending it to NextResponse.json
+    const purifiedResult = JSON.parse(resultAsString);
+    console.log('\n--- [DEBUG] Variable 3: `purifiedResult` (the final object after re-parsing) ---');
+    console.log(JSON.stringify(purifiedResult, null, 2));
+    console.log('---------------------------------------------------------------------\n');
+
+    const response = NextResponse.json(purifiedResult, {
       headers: {
         'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
         'CDN-Cache-Control': `public, s-maxage=${cacheTime}`,

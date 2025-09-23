@@ -211,9 +211,6 @@ export async function getDetailFromApi(
   clearTimeout(timeoutId);
 
   if (!response.ok) {
-    const errorBody = await response.text();
-    console.error(`[DOWNSTREAM_ERROR] Downstream API returned status ${response.status}. Response body:`);
-    console.error(errorBody);
     throw new Error(`详情请求失败: ${response.status}`);
   }
 
