@@ -214,7 +214,12 @@ export async function getDetailFromApi(
     throw new Error(`详情请求失败: ${response.status}`);
   }
 
-  const data = await response.json();
+  let data = await response.json();
+
+  // Edge Runtime an issue with serializing certain complex objects.
+  // We can work around this by first stringifying and then parsing the data back.
+  // This ensures that the object is clean and serializable.
+  data = JSON.parse(JSON.stringify(data));
 
   if (
     !data ||
