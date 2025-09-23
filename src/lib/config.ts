@@ -487,3 +487,22 @@ export async function getAdultApiSites(): Promise<ApiSite[]> {
     detail: s.detail,
   }));
 }
+
+export async function getApiSiteByKey(key: string): Promise<ApiSite | undefined> {
+  const config = await getConfig();
+  if (!config.SourceConfig || !Array.isArray(config.SourceConfig)) {
+    return undefined;
+  }
+  const siteConfig = config.SourceConfig.find((s) => s.key === key);
+  if (!siteConfig) {
+    return undefined;
+  }
+
+  return {
+    key: siteConfig.key,
+    name: siteConfig.name,
+    api: siteConfig.api,
+    detail: siteConfig.detail,
+    type: siteConfig.type,
+  };
+}

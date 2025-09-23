@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { getAvailableApiSites, getCacheTime } from '@/lib/config';
+import { getApiSiteByKey, getCacheTime } from '@/lib/config';
 import { addCorsHeaders, handleOptionsRequest } from '@/lib/cors';
 import { getDetailFromApi } from '@/lib/downstream';
 
@@ -27,8 +27,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const apiSites = await getAvailableApiSites(false);
-    const apiSite = apiSites.find((site) => site.key === sourceCode);
+    const apiSite = await getApiSiteByKey(sourceCode);
 
     if (!apiSite) {
       const response = NextResponse.json({ error: '无效的API来源' }, { status: 400 });
