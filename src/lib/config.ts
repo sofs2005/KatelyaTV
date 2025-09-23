@@ -109,11 +109,6 @@ async function initConfig() {
   } as AdminConfig);
 
   const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
-  // 强制在 D1 环境的服务端 API 路由中回退到文件配置
-  if (storageType === 'd1' && !isBrowser) {
-    cachedConfig = createFileBasedConfig();
-    return;
-  }
 
   if (storageType === 'localstorage' || isBrowser) {
     cachedConfig = createFileBasedConfig();
@@ -494,21 +489,3 @@ export async function getAdultApiSites(): Promise<ApiSite[]> {
   }));
 }
 
-export async function getApiSiteByKey(key: string): Promise<ApiSite | undefined> {
-  const config = await getConfig();
-  if (!config.SourceConfig || !Array.isArray(config.SourceConfig)) {
-    return undefined;
-  }
-  const siteConfig = config.SourceConfig.find((s) => s.key === key);
-  if (!siteConfig) {
-    return undefined;
-  }
-
-  return {
-    key: siteConfig.key,
-    name: siteConfig.name,
-    api: siteConfig.api,
-    detail: siteConfig.detail,
-    type: siteConfig.type,
-  };
-}

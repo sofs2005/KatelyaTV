@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 
 import { getAvailableApiSites, getCacheTime } from '@/lib/config';
 import { addCorsHeaders, handleOptionsRequest } from '@/lib/cors';
-import { getStorage } from '@/lib/db';
 import { getDetailFromApi } from '@/lib/downstream';
 
 export const runtime = 'edge';
@@ -16,15 +15,6 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const sourceCode = searchParams.get('source');
-
-  // 从 Authorization header 或 query parameter 获取用户名
-  let userName: string | undefined = searchParams.get('user') || undefined;
-  if (!userName) {
-    const authHeader = request.headers.get('Authorization');
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      userName = authHeader.substring(7);
-    }
-  }
 
   if (!id || !sourceCode) {
     const response = NextResponse.json({ error: '缺少必要参数' }, { status: 400 });
