@@ -487,6 +487,8 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
+  /* 使用 JS 计算的稳定视口高度 */
+  min-height: calc(var(--vh, 1vh) * 100);
 }
 
 /* 链接样式 */

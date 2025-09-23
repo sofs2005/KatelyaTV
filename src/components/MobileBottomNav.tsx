@@ -105,11 +105,11 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
       {/* 顶部装饰线 */}
       <div className='absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent'></div>
 
-      <ul className='flex items-center'>
+      <ul className='flex items-center overflow-x-auto scrollbar-hide'>
         {navItems.map((item) => {
           const active = isActive(item.href);
           return (
-            <li key={item.href} className='flex-shrink-0 w-1/6'>
+            <li key={item.href} className='flex-shrink-0' style={{ minWidth: '16.666667%' }}>
               <Link
                 href={item.href}
                 className={`flex flex-col items-center justify-center w-full h-14 gap-1 text-xs transition-all duration-200 relative ${active

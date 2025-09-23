@@ -89,10 +89,12 @@ export default async function RootLayout({
         />
       </head>
       <body
-        className={`${inter.className} min-h-screen bg-white text-gray-900 dark:bg-black dark:text-gray-200`}
+        className={`${inter.className} bg-white text-gray-900 dark:bg-black dark:text-gray-200`}
       >
-        {/* 浮动几何形状装饰 */}
-        <FloatingShapes />
+        {/* 浮动几何形状装饰 - 使用一个专门的容器来裁剪溢出 */}
+        <div className='fixed inset-0 -z-10 overflow-hidden pointer-events-none'>
+          <FloatingShapes />
+        </div>
 
         <ThemeProvider
           attribute='class'

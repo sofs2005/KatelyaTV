@@ -50,10 +50,7 @@ const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
   const isSpecialLayout = ['/play'].includes(pathname);
 
   return (
-    <div
-      className='w-full bg-gray-50 dark:bg-gray-900'
-      style={{ minHeight: 'calc(var(--vh, 1vh) * 100)' }}
-    >
+    <div className='w-full min-h-screen bg-gray-50 dark:bg-gray-900'>
       {/* 移动端头部 (fixed) */}
       <MobileHeader showBackButton={isSpecialLayout} />
 
