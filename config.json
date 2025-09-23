@@ -131,7 +131,7 @@
       "api": "https://ckzy.me/api.php/provide/vod",
       "name": "TV-CK资源",
       "detail": "https://ckzy.me",
-      "is_adult": false
+      "is_adult": true
     },
     "api_5": {
       "api": "https://api.ukuapi.com/api.php/provide/vod",
