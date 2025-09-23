@@ -203,16 +203,8 @@ export async function getDetailFromApi(
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-  // [DEBUG] 强制使用和 /api/proxy 一样的简单请求头，并添加 Referer 头
-  const debugHeaders = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-    'Referer': apiSite.api, // 添加 Referer 头，指向 API 根地址
-  };
-
-  console.log(`[DEBUG] Fetching detail from: ${detailUrl} with headers:`, JSON.stringify(debugHeaders));
-
   const response = await fetch(detailUrl, {
-    headers: debugHeaders,
+    headers: API_CONFIG.detail.headers,
     signal: controller.signal,
   });
 

@@ -423,11 +423,12 @@ export async function getAvailableApiSites(
 
 // 根据用户设置动态获取可用资源站（你的想法实现）
 export async function getFilteredApiSites(userName?: string): Promise<ApiSite[]> {
+  console.log(`[getFilteredApiSites] Starting for user: '${userName || 'Guest'}'`);
   const config = await getConfig();
 
   // 防御性检查：确保 SourceConfig 存在且为数组
   if (!config.SourceConfig || !Array.isArray(config.SourceConfig)) {
-    console.warn('SourceConfig is missing or not an array, returning empty array');
+    console.warn('[getFilteredApiSites] SourceConfig is missing or not an array, returning empty array');
     return [];
   }
 
@@ -439,12 +440,14 @@ export async function getFilteredApiSites(userName?: string): Promise<ApiSite[]>
     try {
       const storage = getStorage();
       const userSettings = await storage.getUserSettings(userName);
+      console.log(`[getFilteredApiSites] User settings for '${userName}':`, userSettings);
       shouldFilterAdult = userSettings?.filter_adult_content !== false; // 默认为 true
     } catch (error) {
       // 获取用户设置失败时，默认过滤成人内容
-      console.warn('Failed to get user settings, using default filter:', error);
+      console.warn(`[getFilteredApiSites] Failed to get user settings for '${userName}', using default filter:`, error);
     }
   }
+  console.log(`[getFilteredApiSites] Final decision: shouldFilterAdult = ${shouldFilterAdult}`);
 
   // 防御性处理：为每个源确保 is_adult 字段存在
   let sites = config.SourceConfig
@@ -454,17 +457,25 @@ export async function getFilteredApiSites(userName?: string): Promise<ApiSite[]>
       is_adult: s.is_adult === true // 严格检查，只有明确为 true 的才是成人内容
     }));
 
+  console.log('[getFilteredApiSites] All available sites before filtering:', sites.map(s => ({ key: s.key, is_adult: s.is_adult })));
+
   // 根据用户设置动态过滤成人内容源
   if (shouldFilterAdult) {
     sites = sites.filter((s) => !s.is_adult);
+    console.log('[getFilteredApiSites] Sites after filtering adult content:', sites.map(s => s.key));
+  } else {
+    console.log('[getFilteredApiSites] Adult content filtering is disabled for this user.');
   }
 
-  return sites.map((s) => ({
+  const finalSites = sites.map((s) => ({
     key: s.key,
     name: s.name,
     api: s.api,
     detail: s.detail,
   }));
+
+  console.log('[getFilteredApiSites] Returning final sites:', finalSites.map(s => s.key));
+  return finalSites;
 }
 
 // 获取成人内容资源站
