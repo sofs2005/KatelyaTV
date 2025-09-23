@@ -29,19 +29,13 @@ export async function GET(request: Request) {
 
   try {
     const authInfo = getAuthInfoFromCookie(request as any);
-    console.log(`[DETAIL_API] Auth info from cookie:`, authInfo);
-
     const apiSites = await getFilteredApiSites(authInfo?.username);
-    console.log(`[DETAIL_API] Filtered sites available for this user:`, apiSites.map(s => s.key));
-
     const apiSite = apiSites.find((site) => site.key === sourceCode);
 
     if (!apiSite) {
-      console.error(`[DETAIL_API] Error: Source '${sourceCode}' not found in available sites for user '${authInfo?.username || 'Guest'}'.`);
       const response = NextResponse.json({ error: '无效的API来源' }, { status: 400 });
       return addCorsHeaders(response);
     }
-    console.log(`[DETAIL_API] Successfully found site '${sourceCode}' for user.`);
 
     const result = await getDetailFromApi(apiSite, id);
     const cacheTime = await getCacheTime();
