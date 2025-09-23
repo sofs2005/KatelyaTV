@@ -37,27 +37,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    // 检查是否明确要求包含成人内容（用于关闭过滤时的明确请求）
-    const includeAdult = searchParams.get('include_adult') === 'true';
-
-    // 获取用户的成人内容过滤设置
-    let shouldFilterAdult = true; // 默认过滤
-    if (userName) {
-      try {
-        const storage = getStorage();
-        const userSettings = await storage.getUserSettings(userName);
-        // 如果用户设置存在且明确设为false，则不过滤；否则默认过滤
-        shouldFilterAdult = userSettings?.filter_adult_content !== false;
-      } catch (error) {
-        // 出错时默认过滤成人内容
-        shouldFilterAdult = true;
-      }
-    }
-
-    // 根据用户设置和明确请求决定最终的过滤策略
-    const finalShouldFilter = shouldFilterAdult && !includeAdult;
-
-    const apiSites = await getAvailableApiSites(finalShouldFilter);
+    const apiSites = await getAvailableApiSites(false);
     const apiSite = apiSites.find((site) => site.key === sourceCode);
 
     if (!apiSite) {
