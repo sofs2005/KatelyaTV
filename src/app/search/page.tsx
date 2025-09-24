@@ -192,7 +192,7 @@ function SearchPageClient() {
     setSearchType(type);
 
     const fetchSearchResults = async () => {
-      if (!query) {
+      if (!query || userSettings === null) { // 只有在 userSettings 加载后才执行
         setShowResults(false);
         return;
       }
@@ -253,6 +253,12 @@ function SearchPageClient() {
 
     fetchSearchResults();
   }, [searchParams, userSettings]);
+
+  useEffect(() => {
+    if (groupedResults) {
+      setActiveTab('regular');
+    }
+  }, [groupedResults]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { getAvailableApiSites, getCacheTime } from '@/lib/config';
+import { getAvailableApiSites, getCacheTime, getAdultApiSites } from '@/lib/config';
 import { addCorsHeaders, handleOptionsRequest } from '@/lib/cors';
 import { getStorage } from '@/lib/db';
 import { searchFromApi } from '@/lib/downstream';
@@ -66,35 +66,30 @@ export async function GET(request: Request) {
     const finalShouldFilter = shouldFilterAdult && !includeAdult;
 
     // 使用动态过滤方法，但不依赖缓存，实时获取设置
-    const availableSites = finalShouldFilter
-      ? await getAvailableApiSites(true, type) // 过滤成人内容
-      : await getAvailableApiSites(false, type); // 不过滤成人内容
+    // 获取常规资源站
+    const regularSites = await getAvailableApiSites(true, type);
 
-    if (!availableSites || availableSites.length === 0) {
-      const cacheTime = await getCacheTime();
-      const response = NextResponse.json({
-        regular_results: [],
-        adult_results: []
-      }, {
-        headers: {
-          'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
-          'CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
-          'Vercel-CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
-        },
-      });
-      return addCorsHeaders(response);
+    let regularResults: any[] = [];
+    if (regularSites.length > 0) {
+      const regularPromises = regularSites.map((site) => searchFromApi(site, query));
+      regularResults = (await Promise.all(regularPromises)).flat();
     }
 
-    // 搜索所有可用的资源站（已根据用户设置动态过滤）
-    const searchPromises = availableSites.map((site) => searchFromApi(site, query));
-    const searchResults = (await Promise.all(searchPromises)).flat();
+    // 如果需要，获取成人内容资源站
+    let adultResults: any[] = [];
+    if (!finalShouldFilter) {
+      const adultSites = await getAdultApiSites();
+      if (adultSites.length > 0) {
+        const adultPromises = adultSites.map((site) => searchFromApi(site, query));
+        adultResults = (await Promise.all(adultPromises)).flat();
+      }
+    }
 
-    // 所有结果都作为常规结果返回，因为成人内容源已经在源头被过滤掉了
     const cacheTime = await getCacheTime();
     const response = NextResponse.json(
       {
-        regular_results: searchResults,
-        adult_results: [] // 始终为空，因为成人内容在源头就被过滤了
+        regular_results: regularResults,
+        adult_results: adultResults,
       },
       {
         headers: {
