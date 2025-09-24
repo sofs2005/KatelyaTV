@@ -457,6 +457,7 @@ function SearchPageClient() {
                       title={item.title}
                       cover={item.cover}
                       intro={item.intro}
+                      from='search'
                     />
                   ))}
                   {audiobookSearchResults.length === 0 && (

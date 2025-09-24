@@ -144,6 +144,7 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
           : // 显示真实数据
           playRecords.map((record) => {
             if (record.type === 'audiobook') {
+              const { source, id } = parseKey(record.key);
               return (
                 <div
                   key={record.key}
@@ -154,10 +155,17 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
                     title={record.title}
                     cover={record.cover}
                     intro={record.intro || ''}
-                    from='history'
+                    from='playrecord'
                     progress={getProgress(record)}
                     currentEpisode={record.index}
                     totalEpisodes={record.total_episodes}
+                    source={source}
+                    id={id}
+                    onDelete={() =>
+                      setPlayRecords((prev) =>
+                        prev.filter((r) => r.key !== record.key)
+                      )
+                    }
                   />
                 </div>
               );
