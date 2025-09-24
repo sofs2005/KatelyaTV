@@ -335,11 +335,11 @@ export class D1Storage implements IStorage {
 
   async updateUserSettings(userName: string, settings: Partial<UserSettings>): Promise<void> {
     const currentSettings = await this.getUserSettings(userName);
+    // 合并新旧设置。`getUserSettings` 会提供默认值，因此 `currentSettings` 始终是一个完整的对象。
     const newSettings = { ...currentSettings, ...settings };
-    const filteredSettings = Object.fromEntries(
-      Object.entries(newSettings).filter(([, value]) => value !== undefined)
-    );
-    await this.setUserSettings(userName, filteredSettings as UserSettings);
+
+    // 直接使用合并后的完整对象进行保存，移除之前有害的过滤步骤。
+    await this.setUserSettings(userName, newSettings as UserSettings);
   }
 
   // ---------- Historie vyhledavani ----------
