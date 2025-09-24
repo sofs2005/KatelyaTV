@@ -65,10 +65,12 @@ export async function GET(request: Request) {
     // 根据用户设置和明确请求决定最终的过滤策略
     const finalShouldFilter = shouldFilterAdult && !includeAdult;
 
-    // 1. 获取所有启用的资源站，不过滤成人内容
-    const allEnabledSites = await getAvailableApiSites(false, type);
+    // 使用动态过滤方法，但不依赖缓存，实时获取设置
+    const availableSites = finalShouldFilter
+      ? await getAvailableApiSites(true, type) // 过滤成人内容
+      : await getAvailableApiSites(false, type); // 不过滤成人内容
 
-    if (!allEnabledSites || allEnabledSites.length === 0) {
+    if (!availableSites || availableSites.length === 0) {
       const cacheTime = await getCacheTime();
       const response = NextResponse.json({
         regular_results: [],
@@ -83,21 +85,21 @@ export async function GET(request: Request) {
       return addCorsHeaders(response);
     }
 
-    // 2. 并行搜索所有站点
-    const searchPromises = allEnabledSites.map((site) => searchFromApi(site, query));
-    const allSearchResults = (await Promise.all(searchPromises)).flat();
+    // 搜索所有可用的资源站（已根据用户设置动态过滤）
+    const searchPromises = availableSites.map((site) => searchFromApi(site, query));
+    const searchResults = (await Promise.all(searchPromises)).flat();
 
-    // 3. 获取完整的站点配置，以便区分成人内容
+    // 获取完整的站点配置，以便区分成人内容
     const config = await getConfig();
     const adultSiteKeys = new Set(
       config.SourceConfig.filter(s => s.is_adult).map(s => s.key)
     );
 
-    // 4. 根据来源将结果分类
+    // 根据来源将结果分类
     const regular_results: any[] = [];
     const adult_results: any[] = [];
 
-    allSearchResults.forEach(result => {
+    searchResults.forEach(result => {
       if (adultSiteKeys.has(result.source)) {
         adult_results.push(result);
       } else {
@@ -105,14 +107,11 @@ export async function GET(request: Request) {
       }
     });
 
-    // 5. 根据最终过滤策略决定是否返回成人内容
-    const final_adult_results = finalShouldFilter ? [] : adult_results;
-
     const cacheTime = await getCacheTime();
     const response = NextResponse.json(
       {
         regular_results: regular_results,
-        adult_results: final_adult_results
+        adult_results: finalShouldFilter ? [] : adult_results
       },
       {
         headers: {
