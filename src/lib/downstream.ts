@@ -226,7 +226,6 @@ export async function getDetailFromApi(
   const data = JSON.parse(textData);
   console.log('[downstream] STEP 6: Successfully parsed text to JSON.');
 
-  // ... existing data validation logic ...
   if (
     !data ||
     !data.list ||
@@ -266,16 +265,14 @@ export async function getDetailFromApi(
   }
   console.log('[downstream] STEP 8: Episode processing complete.');
 
-  const finalResult: SearchResult = {
+  const finalResult = {
     id: videoDetail.vod_id.toString(),
     title: videoDetail.vod_name,
     poster: videoDetail.vod_pic,
     source: apiSite.key,
     source_name: apiSite.name,
     year: videoDetail.vod_year,
-    // 'area' is not a property on SearchResult, it should be part of 'desc' or other fields if needed.
-    // 'lang', 'remarks', 'actors', 'director' are also not properties. They should be part of 'desc'.
-    desc: `年份: ${videoDetail.vod_year}\n地区: ${videoDetail.vod_area}\n语言: ${videoDetail.vod_lang}\n备注: ${videoDetail.vod_remarks}\n演员: ${videoDetail.vod_actor}\n导演: ${videoDetail.vod_director}\n简介: ${videoDetail.vod_content}`,
+    desc: videoDetail.vod_content,
     episodes: episodes,
   };
   console.log('[downstream] STEP 9: Final result object created.');

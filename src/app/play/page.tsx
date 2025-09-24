@@ -533,7 +533,9 @@ function PlayPageClient() {
       const fetchSourcesData = async (query: string): Promise<SearchResult[]> => {
         try {
           const response = await fetch(
-            `/api/search?q=${encodeURIComponent(query.trim())}&type=video`
+            `/api/search?q=${encodeURIComponent(
+              query.trim()
+            )}&type=video&include_adult=true`
           );
           if (!response.ok) {
             throw new Error('搜索失败');
