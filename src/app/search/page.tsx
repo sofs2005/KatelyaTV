@@ -254,12 +254,6 @@ function SearchPageClient() {
     fetchSearchResults();
   }, [searchParams, userSettings]);
 
-  useEffect(() => {
-    if (groupedResults) {
-      setActiveTab('regular');
-    }
-  }, [groupedResults]);
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = searchQuery.trim().replace(/\s+/g, ' ');

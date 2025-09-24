@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { getAvailableApiSites, getCacheTime, getAdultApiSites } from '@/lib/config';
+import { getAvailableApiSites, getCacheTime, getConfig } from '@/lib/config';
 import { addCorsHeaders, handleOptionsRequest } from '@/lib/cors';
 import { getStorage } from '@/lib/db';
 import { searchFromApi } from '@/lib/downstream';
@@ -65,31 +65,54 @@ export async function GET(request: Request) {
     // 根据用户设置和明确请求决定最终的过滤策略
     const finalShouldFilter = shouldFilterAdult && !includeAdult;
 
-    // 使用动态过滤方法，但不依赖缓存，实时获取设置
-    // 获取常规资源站
-    const regularSites = await getAvailableApiSites(true, type);
+    // 1. 获取所有启用的资源站，不过滤成人内容
+    const allEnabledSites = await getAvailableApiSites(false, type);
 
-    let regularResults: any[] = [];
-    if (regularSites.length > 0) {
-      const regularPromises = regularSites.map((site) => searchFromApi(site, query));
-      regularResults = (await Promise.all(regularPromises)).flat();
+    if (!allEnabledSites || allEnabledSites.length === 0) {
+      const cacheTime = await getCacheTime();
+      const response = NextResponse.json({
+        regular_results: [],
+        adult_results: []
+      }, {
+        headers: {
+          'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
+          'CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+          'Vercel-CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+        },
+      });
+      return addCorsHeaders(response);
     }
 
-    // 如果需要，获取成人内容资源站
-    let adultResults: any[] = [];
-    if (!finalShouldFilter) {
-      const adultSites = await getAdultApiSites();
-      if (adultSites.length > 0) {
-        const adultPromises = adultSites.map((site) => searchFromApi(site, query));
-        adultResults = (await Promise.all(adultPromises)).flat();
+    // 2. 并行搜索所有站点
+    const searchPromises = allEnabledSites.map((site) => searchFromApi(site, query));
+    const allSearchResults = (await Promise.all(searchPromises)).flat();
+
+    // 3. 获取完整的站点配置，以便区分成人内容
+    const config = await getConfig();
+    const adultSiteKeys = new Set(
+      config.SourceConfig.filter(s => s.is_adult).map(s => s.key)
+    );
+
+    // 4. 根据来源将结果分类
+    const regular_results: any[] = [];
+    const adult_results: any[] = [];
+
+    allSearchResults.forEach(result => {
+      if (adultSiteKeys.has(result.source)) {
+        adult_results.push(result);
+      } else {
+        regular_results.push(result);
       }
-    }
+    });
+
+    // 5. 根据最终过滤策略决定是否返回成人内容
+    const final_adult_results = finalShouldFilter ? [] : adult_results;
 
     const cacheTime = await getCacheTime();
     const response = NextResponse.json(
       {
-        regular_results: regularResults,
-        adult_results: adultResults,
+        regular_results: regular_results,
+        adult_results: final_adult_results
       },
       {
         headers: {
