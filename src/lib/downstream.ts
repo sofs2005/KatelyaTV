@@ -226,14 +226,17 @@ export async function getDetailFromApi(
   const data = JSON.parse(textData);
   console.log('[downstream] STEP 6: Successfully parsed text to JSON.');
 
+  // ... existing data validation logic ...
   if (
     !data ||
     !data.list ||
     !Array.isArray(data.list) ||
     data.list.length === 0
   ) {
+    console.error('[downstream] STEP 7: Data validation failed. Data:', data);
     throw new Error('获取到的详情内容无效');
   }
+  console.log('[downstream] STEP 7: Data validation passed.');
 
   const videoDetail = data.list[0];
   let episodes: string[] = [];
@@ -261,22 +264,23 @@ export async function getDetailFromApi(
     const matches = videoDetail.vod_content.match(M3U8_PATTERN) || [];
     episodes = matches.map((link: string) => link.replace(/^\$/, ''));
   }
+  console.log('[downstream] STEP 8: Episode processing complete.');
 
-  return {
-    id: id.toString(),
+  const finalResult: SearchResult = {
+    id: videoDetail.vod_id.toString(),
     title: videoDetail.vod_name,
     poster: videoDetail.vod_pic,
-    episodes,
     source: apiSite.key,
     source_name: apiSite.name,
-    class: videoDetail.vod_class,
-    year: videoDetail.vod_year
-      ? videoDetail.vod_year.match(/\d{4}/)?.[0] || ''
-      : 'unknown',
-    desc: cleanHtmlTags(videoDetail.vod_content),
-    type_name: videoDetail.type_name,
-    douban_id: videoDetail.vod_douban_id,
+    year: videoDetail.vod_year,
+    // 'area' is not a property on SearchResult, it should be part of 'desc' or other fields if needed.
+    // 'lang', 'remarks', 'actors', 'director' are also not properties. They should be part of 'desc'.
+    desc: `年份: ${videoDetail.vod_year}\n地区: ${videoDetail.vod_area}\n语言: ${videoDetail.vod_lang}\n备注: ${videoDetail.vod_remarks}\n演员: ${videoDetail.vod_actor}\n导演: ${videoDetail.vod_director}\n简介: ${videoDetail.vod_content}`,
+    episodes: episodes,
   };
+  console.log('[downstream] STEP 9: Final result object created.');
+  return finalResult;
+
 }
 
 async function handleSpecialSourceDetail(
