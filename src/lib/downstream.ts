@@ -210,16 +210,24 @@ export async function getDetailFromApi(
 
   clearTimeout(timeoutId);
 
+  console.log('[getDetailFromApi] STEP 1: Fetch completed.');
   if (!response.ok) {
+    console.error(`[getDetailFromApi] STEP 2: Response was not OK. Status: ${response.status}`);
+    const errorBody = await response.text();
+    console.error(`[getDetailFromApi] STEP 2.1: Error body: ${errorBody}`);
     throw new Error(`详情请求失败: ${response.status}`);
   }
+  console.log('[getDetailFromApi] STEP 2: Response is OK (200).');
 
-  let data = await response.json();
+  console.log('[getDetailFromApi] STEP 3: Attempting to get response body as text...');
+  const textData = await response.text();
+  console.log('[getDetailFromApi] STEP 4: Successfully got response body as text.');
+  // For brevity in logs, let's log only the first 500 chars
+  console.log(`[getDetailFromApi] STEP 4.1: Response text (first 500 chars): ${textData.substring(0, 500)}`);
 
-  // Edge Runtime an issue with serializing certain complex objects.
-  // We can work around this by first stringifying and then parsing the data back.
-  // This ensures that the object is clean and serializable.
-  data = JSON.parse(JSON.stringify(data));
+  console.log('[getDetailFromApi] STEP 5: Attempting to parse text data into JSON...');
+  const data = JSON.parse(textData);
+  console.log('[getDetailFromApi] STEP 6: Successfully parsed JSON.');
 
   if (
     !data ||

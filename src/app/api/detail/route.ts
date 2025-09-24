@@ -40,24 +40,7 @@ export async function GET(request: Request) {
     const result = await getDetailFromApi(apiSite, id);
     const cacheTime = await getCacheTime();
 
-    console.log('\n--- [DEBUG] Variable 1: `result` (raw object from downstream) ---');
-    try {
-      console.log(JSON.stringify(result, null, 2));
-    } catch (e) {
-      console.log('Could not stringify raw result:', e);
-    }
-
-    const resultAsString = JSON.stringify(result);
-    console.log('\n--- [DEBUG] Variable 2: `resultAsString` (the string passed to JSON.parse) ---');
-    console.log(resultAsString);
-
-    // [FINAL FIX] Purify the result object before sending it to NextResponse.json
-    const purifiedResult = JSON.parse(resultAsString);
-    console.log('\n--- [DEBUG] Variable 3: `purifiedResult` (the final object after re-parsing) ---');
-    console.log(JSON.stringify(purifiedResult, null, 2));
-    console.log('---------------------------------------------------------------------\n');
-
-    const response = NextResponse.json(purifiedResult, {
+    const response = NextResponse.json(result, {
       headers: {
         'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
         'CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
