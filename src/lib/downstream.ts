@@ -210,24 +210,21 @@ export async function getDetailFromApi(
 
   clearTimeout(timeoutId);
 
-  console.log('[getDetailFromApi] STEP 1: Fetch completed.');
+  console.log('[downstream] STEP 1: Fetch completed.');
   if (!response.ok) {
-    console.error(`[getDetailFromApi] STEP 2: Response was not OK. Status: ${response.status}`);
-    const errorBody = await response.text();
-    console.error(`[getDetailFromApi] STEP 2.1: Error body: ${errorBody}`);
+    const errBody = await response.text();
+    console.error(`[downstream] STEP 2: Response not OK. Status: ${response.status}. Body: ${errBody}`);
     throw new Error(`详情请求失败: ${response.status}`);
   }
-  console.log('[getDetailFromApi] STEP 2: Response is OK (200).');
+  console.log('[downstream] STEP 2: Response is OK.');
 
-  console.log('[getDetailFromApi] STEP 3: Attempting to get response body as text...');
+  console.log('[downstream] STEP 3: Attempting response.text()...');
   const textData = await response.text();
-  console.log('[getDetailFromApi] STEP 4: Successfully got response body as text.');
-  // For brevity in logs, let's log only the first 500 chars
-  console.log(`[getDetailFromApi] STEP 4.1: Response text (first 500 chars): ${textData.substring(0, 500)}`);
+  console.log('[downstream] STEP 4: Successfully got response as text.');
 
-  console.log('[getDetailFromApi] STEP 5: Attempting to parse text data into JSON...');
+  console.log('[downstream] STEP 5: Attempting JSON.parse(textData)...');
   const data = JSON.parse(textData);
-  console.log('[getDetailFromApi] STEP 6: Successfully parsed JSON.');
+  console.log('[downstream] STEP 6: Successfully parsed text to JSON.');
 
   if (
     !data ||

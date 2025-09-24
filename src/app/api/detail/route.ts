@@ -37,9 +37,17 @@ export async function GET(request: Request) {
       return addCorsHeaders(response);
     }
 
+    console.log('[detail/route] STEP 1: Calling getDetailFromApi...');
     const result = await getDetailFromApi(apiSite, id);
-    const cacheTime = await getCacheTime();
+    console.log('[detail/route] STEP 2: Successfully returned from getDetailFromApi.');
+    // Log only the top-level keys of the result to avoid excessive logging
+    console.log(`[detail/route] STEP 2.1: Result object keys: ${Object.keys(result).join(', ')}`);
 
+    console.log('[detail/route] STEP 3: Calling getCacheTime...');
+    const cacheTime = await getCacheTime();
+    console.log(`[detail/route] STEP 4: Got cache time: ${cacheTime}`);
+
+    console.log('[detail/route] STEP 5: Attempting NextResponse.json(result)...');
     const response = NextResponse.json(result, {
       headers: {
         'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
