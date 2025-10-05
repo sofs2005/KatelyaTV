@@ -161,11 +161,10 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
                     totalEpisodes={record.total_episodes}
                     source={source}
                     id={id}
-                    onDelete={() =>
-                      setPlayRecords((prev) =>
-                        prev.filter((r) => r.key !== record.key)
-                      )
-                    }
+                    onDelete={() => {
+                      // 乐观更新由 db.client.ts 的 deletePlayRecord 处理
+                      // 这里不再需要手动过滤，以避免状态冲突
+                    }}
                   />
                 </div>
               );
@@ -188,11 +187,10 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
                     currentEpisode={record.index}
                     query={record.search_title}
                     from='playrecord'
-                    onDelete={() =>
-                      setPlayRecords((prev) =>
-                        prev.filter((r) => r.key !== record.key)
-                      )
-                    }
+                    onDelete={() => {
+                      // 乐观更新由 db.client.ts 的 deletePlayRecord 处理
+                      // 这里不再需要手动过滤，以避免状态冲突
+                    }}
                     type={record.total_episodes > 1 ? 'tv' : ''}
                   />
                 </div>
