@@ -489,6 +489,8 @@ body {
   line-height: 1.6;
   /* 使用 JS 计算的稳定视口高度 */
   min-height: calc(var(--vh, 1vh) * 100);
+  /* 防止 iOS 上的弹性滚动和固定定位元素移动 */
+  overscroll-behavior: contain;
 }
 
 /* 链接样式 */
