@@ -48,6 +48,7 @@ export default function AudiobookCard({
 }: AudiobookCardProps) {
   const router = useRouter();
   const [favorited, setFavorited] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const storageKey = useMemo(
     () => generateStorageKey('audiobook', String(albumId)),
@@ -125,13 +126,20 @@ export default function AudiobookCard({
       e.preventDefault();
       e.stopPropagation();
       if (from !== 'playrecord' || !source || !id) return;
-      try {
-        // Assuming audiobooks also use source and id for play records
-        await deletePlayRecord(source, id);
-        onDelete?.();
-      } catch (err) {
-        console.error('删除播放记录失败:', err);
-      }
+
+      setIsDeleting(true);
+
+      // 延迟以播放动画
+      setTimeout(async () => {
+        try {
+          await deletePlayRecord(source, id);
+          onDelete?.();
+        } catch (err) {
+          console.error('删除播放记录失败:', err);
+          // 如果失败，则恢复卡片可见性
+          setIsDeleting(false);
+        }
+      }, 300);
     },
     [from, source, id, onDelete]
   );
@@ -176,7 +184,8 @@ export default function AudiobookCard({
 
   return (
     <div
-      className="group relative w-full rounded-lg bg-transparent cursor-pointer transition-all duration-300 ease-in-out hover:scale-[1.05] hover:z-[500]"
+      className={`group relative w-full rounded-lg bg-transparent cursor-pointer transition-all duration-300 ease-in-out hover:scale-[1.05] hover:z-[500] ${isDeleting ? 'opacity-0 scale-90' : 'opacity-100 scale-100'
+        }`}
       onClick={handleClick}
     >
       <div className="relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-800">

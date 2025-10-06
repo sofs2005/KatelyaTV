@@ -623,17 +623,19 @@ export async function deletePlayRecord(
 
   // 数据库存储模式：乐观更新策略（包括 redis、d1、upstash）
   if (STORAGE_TYPE !== 'localstorage') {
-    // 立即更新缓存
-    const cachedRecords = cacheManager.getCachedPlayRecords() || {};
-    delete cachedRecords[key];
-    cacheManager.cachePlayRecords(cachedRecords);
+    const cachedRecords = cacheManager.getCachedPlayRecords();
 
-    // 触发立即更新事件
-    window.dispatchEvent(
-      new CustomEvent('playRecordsUpdated', {
-        detail: cachedRecords,
-      })
-    );
+    // 仅当缓存有效时才执行乐观更新
+    if (cachedRecords) {
+      delete cachedRecords[key];
+      cacheManager.cachePlayRecords(cachedRecords);
+      // 触发立即更新事件
+      window.dispatchEvent(
+        new CustomEvent('playRecordsUpdated', {
+          detail: cachedRecords,
+        })
+      );
+    }
 
     // 异步同步到数据库
     try {
@@ -644,6 +646,13 @@ export async function deletePlayRecord(
         }
       );
       if (!res.ok) throw new Error(`删除播放记录失败: ${res.status}`);
+
+      // 如果由于缓存失效而未执行乐观更新，则现在强制刷新数据
+      if (!cachedRecords) {
+        const freshData = await fetchFromApi<Record<string, PlayRecord>>('/api/playrecords');
+        cacheManager.cachePlayRecords(freshData);
+        window.dispatchEvent(new CustomEvent('playRecordsUpdated', { detail: freshData }));
+      }
     } catch (err) {
       await handleDatabaseOperationFailure('playRecords', err);
       throw err;

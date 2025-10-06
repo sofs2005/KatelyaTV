@@ -64,6 +64,7 @@ export default function VideoCard({
   const router = useRouter();
   const [favorited, setFavorited] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const isAggregate = from === 'search' && !!items?.length;
 
@@ -218,12 +219,20 @@ export default function VideoCard({
       e.preventDefault();
       e.stopPropagation();
       if (from !== 'playrecord' || !actualSource || !actualId) return;
-      try {
-        await deletePlayRecord(actualSource, actualId);
-        onDelete?.();
-      } catch (err) {
-        throw new Error('删除播放记录失败');
-      }
+
+      setIsDeleting(true);
+
+      // 延迟以播放动画
+      setTimeout(async () => {
+        try {
+          await deletePlayRecord(actualSource, actualId);
+          onDelete?.();
+        } catch (err) {
+          console.error('删除播放记录失败:', err);
+          // 如果失败，则恢复卡片可见性
+          setIsDeleting(false);
+        }
+      }, 300);
     },
     [from, actualSource, actualId, onDelete]
   );
@@ -314,7 +323,8 @@ export default function VideoCard({
 
   return (
     <div
-      className='group relative w-full rounded-lg bg-transparent cursor-pointer transition-all duration-300 ease-in-out hover:scale-[1.05] hover:z-[500]'
+      className={`group relative w-full rounded-lg bg-transparent cursor-pointer transition-all duration-300 ease-in-out hover:scale-[1.05] hover:z-[500] ${isDeleting ? 'opacity-0 scale-90' : 'opacity-100 scale-100'
+        }`}
       onClick={handleClick}
     >
       {/* 海报容器 */}
