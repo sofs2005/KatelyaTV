@@ -93,7 +93,9 @@ export default function AudiobookCard({
           if (from === 'favorite') {
             setIsUnfavoriting(true);
             setTimeout(async () => {
-              await deleteFavorite(storageKey);
+              if (storageKey) {
+                await deleteFavorite(storageKey);
+              }
             }, 300);
           } else {
             await deleteFavorite(storageKey);

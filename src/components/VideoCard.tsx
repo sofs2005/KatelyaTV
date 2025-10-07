@@ -179,7 +179,9 @@ export default function VideoCard({
           if (from === 'favorite') {
             setIsUnfavoriting(true);
             setTimeout(async () => {
-              await deleteFavorite(storageKey);
+              if (storageKey) {
+                await deleteFavorite(storageKey);
+              }
               // 动画结束后，状态已经在外部更新，这里不需要再设置 favorited
             }, 300);
           } else {
