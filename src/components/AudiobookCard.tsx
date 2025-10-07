@@ -49,6 +49,7 @@ export default function AudiobookCard({
   const router = useRouter();
   const [favorited, setFavorited] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUnfavoriting, setIsUnfavoriting] = useState(false);
 
   const storageKey = useMemo(
     () => generateStorageKey('audiobook', String(albumId)),
@@ -89,8 +90,15 @@ export default function AudiobookCard({
 
       try {
         if (favorited) {
-          await deleteFavorite(storageKey);
-          setFavorited(false);
+          if (from === 'favorite') {
+            setIsUnfavoriting(true);
+            setTimeout(async () => {
+              await deleteFavorite(storageKey);
+            }, 300);
+          } else {
+            await deleteFavorite(storageKey);
+            setFavorited(false);
+          }
         } else {
           const favoriteData: Favorite = {
             title: title,
@@ -184,7 +192,9 @@ export default function AudiobookCard({
 
   return (
     <div
-      className={`group relative w-full rounded-lg bg-transparent cursor-pointer transition-all duration-300 ease-in-out hover:scale-[1.05] hover:z-[500] ${isDeleting ? 'opacity-0 scale-90' : 'opacity-100 scale-100'
+      className={`group relative w-full rounded-lg bg-transparent cursor-pointer transition-all duration-300 ease-in-out hover:scale-[1.05] hover:z-[500] ${isDeleting || isUnfavoriting
+        ? 'opacity-0 scale-90'
+        : 'opacity-100 scale-100'
         }`}
       onClick={handleClick}
     >

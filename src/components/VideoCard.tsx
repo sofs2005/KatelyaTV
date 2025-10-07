@@ -65,6 +65,7 @@ export default function VideoCard({
   const [favorited, setFavorited] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUnfavoriting, setIsUnfavoriting] = useState(false);
 
   const isAggregate = from === 'search' && !!items?.length;
 
@@ -174,9 +175,17 @@ export default function VideoCard({
 
       try {
         if (favorited) {
-          // 如果已收藏，删除收藏
-          await deleteFavorite(storageKey);
-          setFavorited(false);
+          // 如果已收藏，则播放动画并删除收藏
+          if (from === 'favorite') {
+            setIsUnfavoriting(true);
+            setTimeout(async () => {
+              await deleteFavorite(storageKey);
+              // 动画结束后，状态已经在外部更新，这里不需要再设置 favorited
+            }, 300);
+          } else {
+            await deleteFavorite(storageKey);
+            setFavorited(false);
+          }
         } else {
           // 如果未收藏，添加收藏
           const favoriteData: Favorite = {
@@ -323,7 +332,9 @@ export default function VideoCard({
 
   return (
     <div
-      className={`group relative w-full rounded-lg bg-transparent cursor-pointer transition-all duration-300 ease-in-out hover:scale-[1.05] hover:z-[500] ${isDeleting ? 'opacity-0 scale-90' : 'opacity-100 scale-100'
+      className={`group relative w-full rounded-lg bg-transparent cursor-pointer transition-all duration-300 ease-in-out hover:scale-[1.05] hover:z-[500] ${isDeleting || isUnfavoriting
+        ? 'opacity-0 scale-90'
+        : 'opacity-100 scale-100'
         }`}
       onClick={handleClick}
     >
