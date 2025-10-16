@@ -339,6 +339,11 @@ export default function VideoCard({
         : 'opacity-100 scale-100'
         }`}
       onClick={handleClick}
+      style={{
+        touchAction: 'manipulation',
+        WebkitTapHighlightColor: 'transparent',
+        userSelect: 'none',
+      }}
     >
       {/* 海报容器 */}
       <div className='relative aspect-[2/3] overflow-hidden rounded-lg'>

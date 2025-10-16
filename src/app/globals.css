@@ -478,6 +478,16 @@
 
 html {
   scroll-behavior: smooth;
+  /* 防止移动端页面缩放 */
+  -webkit-text-size-adjust: 100%;
+}
+
+html,
+body {
+  height: 100%;
+  overflow-x: hidden;
+  /* 阻止 iOS Safari 拉动回弹 */
+  overscroll-behavior: none;
 }
 
 body {
@@ -487,10 +497,6 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
-  /* 使用 JS 计算的稳定视口高度 */
-  min-height: calc(var(--vh, 1vh) * 100);
-  /* 防止 iOS 上的弹性滚动和固定定位元素移动 */
-  overscroll-behavior: contain;
 }
 
 /* 链接样式 */
@@ -530,6 +536,44 @@ img {
 :focus {
   outline: 2px solid rgba(147, 112, 219, 0.5);
   outline-offset: 2px;
+}
+
+/* 移动端底部固定导航优化 */
+@media (max-width: 768px) {
+  /* 确保 fixed 定位元素在移动端不随滚动移动 */
+  nav[class*='fixed'] {
+    position: fixed !important;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    will-change: transform;
+  }
+
+  /* 移动端触摸优化 - 移除点击延迟和高亮效果 */
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+
+  /* 可点击元素的触摸优化 */
+  a,
+  button,
+  [role='button'],
+  [onclick],
+  .cursor-pointer {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  /* 确保图片和链接不会被长按选中 */
+  img,
+  a {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
 }
 
 /* 减少动画偏好 */

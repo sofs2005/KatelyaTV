@@ -31,6 +31,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export const viewport: Viewport = {
   themeColor: '#000000',
+  viewportFit: 'cover',
 };
 
 // 浮动几何形状组件
@@ -80,6 +81,10 @@ export default async function RootLayout({
   return (
     <html lang='zh-CN' suppressHydrationWarning>
       <head>
+        <meta
+          name='viewport'
+          content='width=device-width, initial-scale=1.0, viewport-fit=cover'
+        />
         {/* 将配置序列化后直接写入脚本，浏览器端可通过 window.RUNTIME_CONFIG 获取 */}
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}
         <script

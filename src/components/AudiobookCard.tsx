@@ -199,6 +199,11 @@ export default function AudiobookCard({
         : 'opacity-100 scale-100'
         }`}
       onClick={handleClick}
+      style={{
+        touchAction: 'manipulation',
+        WebkitTapHighlightColor: 'transparent',
+        userSelect: 'none',
+      }}
     >
       <div className="relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-800">
         <Image
