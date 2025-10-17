@@ -148,12 +148,58 @@ function SearchPageClient() {
 
     document.body.addEventListener('scroll', handleScroll, { passive: true });
 
+    // 修复移动端键盘收起后底部导航不显示的问题
+    const handleViewportResize = () => {
+      // 强制浏览器重新计算视口
+      window.scrollTo(0, window.scrollY);
+    };
+
+    // 监听视口变化（包括虚拟键盘的显示/隐藏）
+    let useVisualViewport = false;
+    if (typeof window !== 'undefined' && 'visualViewport' in window && window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportResize);
+      useVisualViewport = true;
+    } else {
+      // 降级方案：监听 window resize
+      window.addEventListener('resize', handleViewportResize);
+    }
+
+    // 搜索输入框失焦时，确保底部导航可见
+    const searchInput = document.getElementById('searchInput');
+    const handleInputBlur = () => {
+      // 延迟执行，确保键盘完全收起
+      setTimeout(() => {
+        window.scrollTo(0, window.scrollY);
+        // 强制重绘
+        document.body.style.minHeight = `${window.innerHeight}px`;
+        setTimeout(() => {
+          document.body.style.minHeight = '';
+        }, 100);
+      }, 300);
+    };
+
+    if (searchInput) {
+      searchInput.addEventListener('blur', handleInputBlur);
+    }
+
     return () => {
       unsubscribe();
       isRunning = false; // 停止 requestAnimationFrame 循环
 
       // 移除 body 滚动事件监听器
       document.body.removeEventListener('scroll', handleScroll);
+      
+      // 移除视口监听器
+      if (useVisualViewport && window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleViewportResize);
+      } else {
+        window.removeEventListener('resize', handleViewportResize);
+      }
+
+      // 移除输入框监听器
+      if (searchInput) {
+        searchInput.removeEventListener('blur', handleInputBlur);
+      }
     };
   }, []);
 
