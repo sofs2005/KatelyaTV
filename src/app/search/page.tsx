@@ -172,15 +172,37 @@ function SearchPageClient() {
         window.scrollTo(0, window.scrollY);
         // 强制重绘
         document.body.style.minHeight = `${window.innerHeight}px`;
-        setTimeout(() => {
+        requestAnimationFrame(() => {
           document.body.style.minHeight = '';
-        }, 100);
+        });
       }, 300);
     };
 
     if (searchInput) {
       searchInput.addEventListener('blur', handleInputBlur);
     }
+
+    // 监听页面点击，恢复视口（用户点击页面其他地方关闭键盘时）
+    const handlePageClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      // 如果点击的不是输入框，且输入框之前有焦点
+      if (searchInput && target !== searchInput && !searchInput.contains(target)) {
+        if (document.activeElement === searchInput) {
+          // 延迟检查，如果输入框失去焦点，则恢复视口
+          setTimeout(() => {
+            if (document.activeElement !== searchInput) {
+              window.scrollTo(0, window.scrollY);
+              document.body.style.minHeight = `${window.innerHeight}px`;
+              requestAnimationFrame(() => {
+                document.body.style.minHeight = '';
+              });
+            }
+          }, 300);
+        }
+      }
+    };
+
+    document.addEventListener('click', handlePageClick);
 
     return () => {
       unsubscribe();
@@ -200,6 +222,9 @@ function SearchPageClient() {
       if (searchInput) {
         searchInput.removeEventListener('blur', handleInputBlur);
       }
+
+      // 移除页面点击监听器
+      document.removeEventListener('click', handlePageClick);
     };
   }, []);
 
@@ -304,7 +329,23 @@ function SearchPageClient() {
     e.preventDefault();
     const trimmed = searchQuery.trim().replace(/\s+/g, ' ');
     if (!trimmed) return;
-    router.push(`/search?q=${encodeURIComponent(trimmed)}&type=${searchType}`);
+    
+    // 立即让输入框失焦，触发键盘收起
+    const searchInput = document.getElementById('searchInput') as HTMLInputElement;
+    if (searchInput) {
+      searchInput.blur();
+    }
+    
+    // 延迟跳转，等待键盘收起和视口恢复
+    setTimeout(() => {
+      // 强制滚动触发视口重新计算
+      window.scrollTo(0, 0);
+      
+      // 再延迟一点执行路由跳转
+      setTimeout(() => {
+        router.push(`/search?q=${encodeURIComponent(trimmed)}&type=${searchType}`);
+      }, 100);
+    }, 150);
   };
 
   const handleSearchTypeChange = (newType: 'video' | 'audiobook') => {
