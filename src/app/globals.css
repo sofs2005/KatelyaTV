@@ -480,17 +480,14 @@ html {
   scroll-behavior: smooth;
   /* 防止移动端页面缩放 */
   -webkit-text-size-adjust: 100%;
+  height: 100%;
 }
 
-html,
 body {
-  height: 100%;
+  min-height: 100%;
   overflow-x: hidden;
   /* 阻止 iOS Safari 拉动回弹 */
   overscroll-behavior: none;
-}
-
-body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
@@ -540,6 +537,11 @@ img {
 
 /* 移动端底部固定导航优化 */
 @media (max-width: 768px) {
+  /* 确保 body 在键盘弹出时能够正确显示底部导航 */
+  body {
+    position: relative;
+  }
+
   /* 确保 fixed 定位元素在移动端不随滚动移动 */
   nav[class*='fixed'] {
     position: fixed !important;
@@ -548,6 +550,21 @@ img {
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
     will-change: transform;
+  }
+
+  /* iOS 特定优化 - 确保底部导航在虚拟键盘弹出时仍然可见 */
+  @supports (-webkit-touch-callout: none) {
+    /* iOS 设备特定样式 */
+    body {
+      /* 允许 body 滚动，而不是固定高度 */
+      height: auto;
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+    }
+    
+    html {
+      height: -webkit-fill-available;
+    }
   }
 
   /* 移动端触摸优化 - 移除点击延迟和高亮效果 */
